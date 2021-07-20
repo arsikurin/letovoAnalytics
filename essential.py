@@ -1,7 +1,7 @@
 # !/usr/bin/python3.9
 
-import os
-import sys
+# import os
+# import sys
 import sqlite3
 import datetime
 import time
@@ -10,27 +10,25 @@ import logging as log
 
 from ics import Calendar
 from imaplib import IMAP4_SSL
-from bs4 import BeautifulSoup
+# from bs4 import BeautifulSoup
 from colourlib import Fg, Style
 from email import message_from_string
 
 LOGIN_URL = "https://s-api.letovo.ru/api/login"
 start_time = time.perf_counter()
 
-DEBUG = True
+custom_DEBUG = False
 
-if DEBUG == "all":
+if custom_DEBUG == "all":
     log.basicConfig(
         format=f"{Fg.Green}{Style.Bold}%(asctime)s{Fg.Reset}{Style.Bold} %(message)s{Style.Reset}\n[%(name)s]\n",
         level=log.DEBUG)
-elif DEBUG:
+elif custom_DEBUG:
     log.basicConfig(
         format=f"{Fg.Green}{Style.Bold}%(asctime)s{Fg.Reset}{Style.Bold} %(message)s{Style.Reset}\n[%(name)s]\n",
         level=log.DEBUG)
     log.getLogger("urllib3.connectionpool").disabled = True
-else:
-    log.basicConfig(
-        format=f"{Fg.Green}{Style.Bold}%(asctime)s{Fg.Reset}{Style.Bold} %(message)s{Style.Reset}\n[%(name)s]\n")
+    log.getLogger("werkzeug").disabled = True
 
 
 # -----------------------------------------------SQL funcs--------------------------------------------------------------
@@ -239,7 +237,6 @@ def get_otp(chat_id: int, conn: sqlite3.Connection, c: sqlite3.Cursor) -> str:
     except AttributeError:
         print(Fg.Blue, otp, Fg.Reset)
     return otp
-
 
 # def send_certain_day_calendar(certain_day: int, call) -> None:
 #     """

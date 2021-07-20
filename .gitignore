@@ -1,4 +1,8 @@
 app2.py
 users.json
-/sandbox
 schedule.ics
+quiz.py
+sandbox.py
+sandbox.session
+sandbox.session-journal
+/__pycache__
