@@ -1,33 +1,76 @@
 # !/usr/bin/python3.9
 
-import sqlite3
-import logging as log
-import requests as rq
-import telethon
-import re
+import firebase_admin
+# import sqlite3
+# import re
 
-from essential import receive_calendar, receive_token, receive_student_id, get_chat_id, init_user, set_analytics_login,\
-    set_analytics_password, set_mail_address, set_token, set_student_id
+from telethon import Button, TelegramClient, events
+from essential import init_user, LOGIN_URL_LOCAL, API_ID, API_HASH, BOT_TOKEN
+from firebase_admin import credentials
 
-# soup = BeautifulSoup(html, 'lxml')
 "https://s-api.letovo.ru/api/students/54405"
 "https://s-api.letovo.ru/api/studentsimg/54405"
 
-with sqlite3.connect("users.sql") as conn:
-    log.debug("Connected to db")
-    c = conn.cursor()
-    if not get_chat_id(110011, conn, c):
-        init_user(110011, conn, c)
-        log.debug("Initialized new user")
-    else:
-        log.debug("User found")
+client = TelegramClient("letovoAnalytics", API_ID, API_HASH)
+cred_obj = credentials.Certificate("fbAdminConfig.json")
+default_app = firebase_admin.initialize_app(cred_obj, {
+    "databaseURL": "https://authtest-3fcb2-default-rtdb.europe-west1.firebasedatabase.app/"
+})
 
-    with rq.Session() as s:
-        if input("reg?"):
-            set_analytics_login((a := input("analytics login ->")), 110011, conn, c)
-            set_mail_address(f"{a}@student.letovo.ru", 110011, conn, c)
-            set_analytics_password(input("analytics password ->"), 110011, conn, c)
-            set_token(receive_token(s, 110011, conn, c), 110011, conn, c)
-            set_student_id(receive_student_id(s, 110011, conn, c), 110011, conn, c)
 
-        print(receive_calendar(s, 110011, conn, c))
+@client.on(events.NewMessage(pattern=r"(?i).*start"))
+async def handle_start(event):
+    sender = await event.get_sender()
+    print(sender, "\n\n")
+    print(sender.lang_code)
+    await client.send_message(entity=sender,
+                              message=f"""Hello, **{sender.first_name} {sender.last_name}**!\n  I will help you """
+                                      """getting access to your schedule via Telegram.\nAt first, you should provide """
+                                      """your login and password to [Letovo Analytics](s.letovo.ru).\n  To do that """
+                                      f"""click [this]({LOGIN_URL_LOCAL + "?chat_id=" + str(sender.id)}) link""",
+                              parse_mode="md",
+                              buttons=[
+                                  Button.text("Start", resize=True, single_use=False),
+                              ])
+    init_user(chat_id=str(sender.id))
+    # await client.send_message(entity=sender,
+    #                           message="Choose an option below ↴",
+    #                           parse_mode="md",
+    #                           buttons=[[
+    #                               Button.inline("Personal data ->", b"personal_data")
+    #                           ], [
+    #                               Button.inline("2nd btn", b""),
+    #                           ]])
+
+
+@client.on(events.CallbackQuery(data=b"personal_data"))
+async def handle_quiz(event):
+    await event.edit("**Personal data page**",
+                     parse_mode="md",
+                     file="sandbox.py",
+                     buttons=[[
+                         Button.inline("1st btn", b"")
+                     ], [
+                         Button.inline("<- Back", b"back_main")
+                     ]])
+
+
+@client.on(events.CallbackQuery(data=b"back_main"))
+async def handle_quiz(event):
+    await event.edit("**Choose an option below ↴**",
+                     parse_mode="md",
+                     buttons=[[
+                         Button.inline("Personal data ->", b"personal_data")
+                     ], [
+                         Button.inline("2nd btn", b""),
+                     ]])
+
+
+if __name__ == "__main__":
+    client.start(bot_token=BOT_TOKEN)
+    client.run_until_disconnected()
+
+# event.delete()
+# client.delete_messages(sender, msg_id)
+# msg_id = event.original_update.msg_id
+# entity = event.query.peer

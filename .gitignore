@@ -1,8 +1,7 @@
 app2.py
 users.json
 schedule.ics
-quiz.py
 sandbox.py
-sandbox.session
-sandbox.session-journal
+letovoAnalytics.session
+letovoAnalytics.session-journal
 /__pycache__
