@@ -1,82 +1,23 @@
+# !/usr/bin/python3.9
+
 import firebase_admin
-import json
 import requests as rq
 # from functools import wraps
 
-from essential import LOGIN_URL
-from firebase_admin import credentials, db
+from essential import LOGIN_URL_LETOVO
+from firebase_admin import credentials
 from flask import Flask, request, render_template, abort, redirect, url_for
+from essential import update_data
 
 app = Flask(__name__)
 
 cred_obj = credentials.Certificate("fbAdminConfig.json")
 default_app = firebase_admin.initialize_app(cred_obj, {
-    'databaseURL': "https://authtest-3fcb2-default-rtdb.europe-west1.firebasedatabase.app/"
+    "databaseURL": "https://authtest-3fcb2-default-rtdb.europe-west1.firebasedatabase.app/"
 })
 
 
-def init_user(chat_id,
-              student_id=None,
-              mail_address=None,
-              mail_password=None,
-              analytics_login=None,
-              analytics_password=None,
-              token=None):
-    pas = '"tmp": ""'
-    st = f'"student_id": {student_id}'
-    ma = f'"mail_address": "{mail_address}"'
-    mp = f'"mail_password": "{mail_password}"'
-    al = f'"analytics_login": "{analytics_login}"'
-    ap = f'"analytics_password": "{analytics_password}"'
-    t = f'"token": "{token}"'
-    request_payload = '''
-    {
-        "data": {''' + \
-                      f'{st if student_id else pas},' + \
-                      f'{ma if mail_address else pas},' + \
-                      f'{mp if mail_password else pas},' + \
-                      f'{al if analytics_login else pas},' + \
-                      f'{ap if analytics_password else pas},' + \
-                      f'{t if token else pas}' + \
-                      '''},
-                      "preferences": {
-                          "lang": "en"
-                      }
-                  }
-                  '''
-    ref = db.reference(f"/users/{chat_id}")
-    ref.update(json.loads(request_payload))
-
-
-def update_data(chat_id,
-                student_id=None,
-                mail_address=None,
-                mail_password=None,
-                analytics_login=None,
-                analytics_password=None,
-                token=None):
-    pas = '"tmp": ""'
-    si = f'"student_id": {student_id}'
-    ma = f'"mail_address": "{mail_address}"'
-    mp = f'"mail_password": "{mail_password}"'
-    al = f'"analytics_login": "{analytics_login}"'
-    ap = f'"analytics_password": "{analytics_password}"'
-    t = f'"token": "{token}"'
-    request_payload = '''
-        {''' + \
-                      f'{si if student_id else pas},' + \
-                      f'{ma if mail_address else pas},' + \
-                      f'{mp if mail_password else pas},' + \
-                      f'{al if analytics_login else pas},' + \
-                      f'{ap if analytics_password else pas},' + \
-                      f'{t if token else pas}' + \
-                      '''}
-                  '''
-    ref = db.reference(f"/users/{chat_id}")
-    ref.child("data").update(json.loads(request_payload))
-
-
-@app.route('/')
+@app.route("/")
 def index():
     return render_template("index.html")
 
@@ -129,7 +70,7 @@ def unauthorized(error):
                            fix=""), 401
 
 
-@app.route('/login')
+@app.route("/login", methods=["GET"])
 def login():
     chat_id = request.args.get("chat_id")
     if chat_id is None:
@@ -143,7 +84,7 @@ def login_api():
         analytics_login = request.form["login"]
         password = request.form["password"]
         chat_id = request.form["chat_id"]
-    except KeyError as err:
+    except KeyError:
         abort(422)
         return
 
@@ -151,41 +92,15 @@ def login_api():
         "login": analytics_login,
         "password": password
     }
-    if not rq.post(url=LOGIN_URL, data=login_data).status_code == 200:
+    if not rq.post(url=LOGIN_URL_LETOVO, data=login_data).status_code == 200:
         abort(401)
 
     try:
-        # update_data(analytics_login=analytics_login, analytics_password=password, chat_id=chat_id)
-        return redirect(url_for("index")), {'message': f'Successfully logged as {chat_id}'}
+        update_data(analytics_login=analytics_login, analytics_password=password, chat_id=chat_id)
+        return redirect(url_for("index")), {"message": f"Successfully logged as {analytics_login}"}
     except Exception as err:
         print(err)
         abort(400)
-
-
-# @app.route('/signup')
-# def signup():
-#     return render_template("signup.html")
-
-
-# @app.route('/api/signup', methods=["POST"])
-# def signup_api():
-#     try:
-#         username = request.form['username']
-#         password = request.form['password']
-#         chat_id = request.form['chat_id']
-#     except NameError as err:
-#         return {"Error": "Invalid data"}, 403
-#
-#     if username is None or password is None or chat_id is None:
-#         abort(422)
-#     try:
-#         redir = redirect(url_for("index"))
-#         return redir, {'message': f'Successfully inited user {chat_id}'}
-#
-#         # init_user(1100101, , mail_password=password)
-#     except Exception as err:
-#         print(err)
-#         return {'message': 'Error initing user'}, 400
 
 
 if __name__ == "__main__":
