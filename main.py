@@ -1,21 +1,15 @@
-# !/usr/bin/python3.9
+#!/usr/bin/python3.9
 
-import firebase_admin
-# import sqlite3
 # import re
+# import logging as log
 
 from telethon import Button, TelegramClient, events
-from essential import init_user, LOGIN_URL_LOCAL, API_ID, API_HASH, BOT_TOKEN
-from firebase_admin import credentials
+from essential import LOGIN_URL_LOCAL, API_ID, API_HASH, BOT_TOKEN, update_data, is_inited
 
 "https://s-api.letovo.ru/api/students/54405"
 "https://s-api.letovo.ru/api/studentsimg/54405"
 
 client = TelegramClient("letovoAnalytics", API_ID, API_HASH)
-cred_obj = credentials.Certificate("fbAdminConfig.json")
-default_app = firebase_admin.initialize_app(cred_obj, {
-    "databaseURL": "https://authtest-3fcb2-default-rtdb.europe-west1.firebasedatabase.app/"
-})
 
 
 @client.on(events.NewMessage(pattern=r"(?i).*start"))
@@ -32,7 +26,10 @@ async def handle_start(event):
                               buttons=[
                                   Button.text("Start", resize=True, single_use=False),
                               ])
-    init_user(chat_id=str(sender.id))
+    if not is_inited(str(sender.id)):
+        print("user inited")
+        update_data(chat_id=str(sender.id))
+
     # await client.send_message(entity=sender,
     #                           message="Choose an option below ↴",
     #                           parse_mode="md",
@@ -44,7 +41,7 @@ async def handle_start(event):
 
 
 @client.on(events.CallbackQuery(data=b"personal_data"))
-async def handle_quiz(event):
+async def handle_2(event):
     await event.edit("**Personal data page**",
                      parse_mode="md",
                      file="sandbox.py",
@@ -56,7 +53,7 @@ async def handle_quiz(event):
 
 
 @client.on(events.CallbackQuery(data=b"back_main"))
-async def handle_quiz(event):
+async def back_main(event):
     await event.edit("**Choose an option below ↴**",
                      parse_mode="md",
                      buttons=[[
