@@ -1,20 +1,13 @@
-# !/usr/bin/python3.9
+#!/usr/bin/python3.9
 
-import firebase_admin
 import requests as rq
-# from functools import wraps
+import logging as log
 
 from essential import LOGIN_URL_LETOVO
-from firebase_admin import credentials
 from flask import Flask, request, render_template, abort, redirect, url_for
 from essential import update_data
 
 app = Flask(__name__)
-
-cred_obj = credentials.Certificate("fbAdminConfig.json")
-default_app = firebase_admin.initialize_app(cred_obj, {
-    "databaseURL": "https://authtest-3fcb2-default-rtdb.europe-west1.firebasedatabase.app/"
-})
 
 
 @app.route("/")
@@ -24,6 +17,7 @@ def index():
 
 @app.errorhandler(500)
 def internal_server_error(error):
+    log.error(error)
     return render_template(template_name_or_list="pageError.html",
                            error="500 Internal Server Error",
                            explain="",
@@ -32,14 +26,25 @@ def internal_server_error(error):
 
 @app.errorhandler(422)
 def unprocessable_entity(error):
+    log.error(error)
     return render_template(template_name_or_list="pageError.html",
                            error="422 Unprocessable Entity",
                            explain="[Possibly missing query string parameters]",
                            fix="Use the link that bot provided"), 422
 
 
+@app.errorhandler(418)
+def im_a_teapot(error):
+    log.error(error)
+    return render_template(template_name_or_list="pageError.html",
+                           error="418 I'm a teapot",
+                           explain="[This server is a teapot, not a coffee machine]",
+                           fix=""), 418
+
+
 @app.errorhandler(405)
 def method_not_allowed(error):
+    log.error(error)
     return render_template(template_name_or_list="pageError.html",
                            error="405 Method Not Allowed",
                            explain="",
@@ -48,6 +53,7 @@ def method_not_allowed(error):
 
 @app.errorhandler(404)
 def not_found(error):
+    log.error(error)
     return render_template(template_name_or_list="pageError.html",
                            error="404 Not Found",
                            explain="[The page you are looking for does not exist]",
@@ -56,6 +62,7 @@ def not_found(error):
 
 @app.errorhandler(403)
 def forbidden(error):
+    log.error(error)
     return render_template(template_name_or_list="pageError.html",
                            error="403 Forbidden",
                            explain="[You have no access to this page]",
@@ -64,6 +71,7 @@ def forbidden(error):
 
 @app.errorhandler(401)
 def unauthorized(error):
+    log.error(error)
     return render_template(template_name_or_list="pageError.html",
                            error="401 Unauthorized",
                            explain="[Possibly wrong credentials provided]",
@@ -82,7 +90,7 @@ def login():
 def login_api():
     try:
         analytics_login = request.form["login"]
-        password = request.form["password"]
+        analytics_password = request.form["password"]
         chat_id = request.form["chat_id"]
     except KeyError:
         abort(422)
@@ -90,17 +98,24 @@ def login_api():
 
     login_data = {
         "login": analytics_login,
-        "password": password
+        "password": analytics_password
     }
-    if not rq.post(url=LOGIN_URL_LETOVO, data=login_data).status_code == 200:
-        abort(401)
-
     try:
-        update_data(analytics_login=analytics_login, analytics_password=password, chat_id=chat_id)
+        if not rq.post(url=LOGIN_URL_LETOVO, data=login_data).status_code == 200:
+            abort(401)
+    except rq.ConnectionError:
+        abort(400)  # ConnectionError
+    try:
+        update_data(analytics_login=analytics_login, analytics_password=analytics_password, chat_id=chat_id)
         return redirect(url_for("index")), {"message": f"Successfully logged as {analytics_login}"}
     except Exception as err:
         print(err)
         abort(400)
+
+
+@app.route("/coffee", methods=["GET"])
+def brew_coffee():
+    abort(418)
 
 
 if __name__ == "__main__":

@@ -11,6 +11,7 @@ telethon = "*"
 ics = "*"
 colourlib = "*"
 bs4 = "*"
+pyyaml = "*"
 
 [dev-packages]
 

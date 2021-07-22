@@ -1,26 +1,35 @@
-# !/usr/bin/python3.9
+#!/usr/bin/python3.9
 
 # import os
 # import sys
-import sqlite3
+# import sqlite3
 import datetime
 import time
 import requests as rq
 import logging as log
-import json
+# import json
+import yaml
+import firebase_admin
 
 from ics import Calendar
 from imaplib import IMAP4_SSL
 # from bs4 import BeautifulSoup
 from colourlib import Fg, Style
+from typing import Optional, Any
 from email import message_from_string
-from firebase_admin import db
+from firebase_admin import firestore, credentials
 
+# Consts
 LOGIN_URL_LETOVO = "https://s-api.letovo.ru/api/login"
-LOGIN_URL_LOCAL = "10.10.10.80:8080/login"
+LOGIN_URL_LOCAL = "https://letovo-analytics-test.herokuapp.com//login"
 API_ID = 3486313
 API_HASH = "e2e87224f544a2103d75b07e34818563"
 BOT_TOKEN = "1638159959:AAGTSWJV3FGcZLI98WWhKQuIKI1J4NGN_1s"
+
+# Firestore
+cred = credentials.Certificate("fbAdminConfig.json")
+firebase_admin.initialize_app(cred)
+db = firestore.client()
 
 start_time = time.perf_counter()
 # soup = BeautifulSoup(html, 'lxml')
@@ -40,52 +49,40 @@ elif custom_DEBUG:
     log.getLogger("werkzeug").disabled = True
 
 
-# -----------------------------------------------SQL funcs--------------------------------------------------------------
-# def create_table(conn: sqlite3.Connection, c: sqlite3.Cursor) -> None:
-#     with conn:
-#         c.execute(
-#             """CREATE TABLE users (
-#                 chat_id INTEGER PRIMARY KEY,
-#                 student_id INTEGER,
-#                 mail_address VARCHAR (255),
-#                 mail_password VARCHAR (255),
-#                 analytics_login VARCHAR (255),
-#                 analytics_password VARCHAR (255),
-#                 token TEXT
-#                 )""")
+# ----------------------------------------------NoSQL funcs-------------------------------------------------------------
+def is_inited(chat_id) -> bool:
+    docs = db.collection(u"users").stream()
+    if chat_id in [doc.id for doc in docs]:
+        return True
+    return False
 
 
-# def clear_db(conn: sqlite3.Connection, c: sqlite3.Cursor) -> None:
-#     with conn:
-#         c.execute("DELETE FROM users")
+def update_data(
+        chat_id,
+        student_id=None,
+        mail_address=None,
+        mail_password=None,
+        analytics_login=None,
+        analytics_password=None,
+        token=None
+):
+    """Fill out at least one param in every document!!! Otherwise all data in document will be erased"""
+    pas = ""
+    st = f'"student_id": {student_id},'
+    ma = f'"mail_address": "{mail_address}",'
+    mp = f'"mail_password": "{mail_password}",'
+    al = f'"analytics_login": "{analytics_login}",'
+    ap = f'"analytics_password": "{analytics_password}",'
+    t = f'"token": "{token}",'
 
-
-# def add_column_to_db(conn: sqlite3.Connection, c: sqlite3.Cursor) -> None:
-#     with conn:
-#         c.execute("ALTER TABLE users ADD COLUMN name TEXT")
-
-def init_user(chat_id,
-              student_id=None,
-              mail_address=None,
-              mail_password=None,
-              analytics_login=None,
-              analytics_password=None,
-              token=None):
-    pas = '"tmp": ""'
-    st = f'"student_id": {student_id}'
-    ma = f'"mail_address": "{mail_address}"'
-    mp = f'"mail_password": "{mail_password}"'
-    al = f'"analytics_login": "{analytics_login}"'
-    ap = f'"analytics_password": "{analytics_password}"'
-    t = f'"token": "{token}"'
     request_payload = '''
     {
         "data": {''' + \
-                      f'{st if student_id else pas},' + \
-                      f'{ma if mail_address else pas},' + \
-                      f'{mp if mail_password else pas},' + \
-                      f'{al if analytics_login else pas},' + \
-                      f'{ap if analytics_password else pas},' + \
+                      f'{st if student_id else pas}' + \
+                      f'{ma if mail_address else pas}' + \
+                      f'{mp if mail_password else pas}' + \
+                      f'{al if analytics_login else pas}' + \
+                      f'{ap if analytics_password else pas}' + \
                       f'{t if token else pas}' + \
                       '''},
                       "preferences": {
@@ -93,165 +90,114 @@ def init_user(chat_id,
                       }
                   }
                   '''
-    ref = db.reference(f"/users/{chat_id}")
-    ref.update(json.loads(request_payload))
-
-
-def update_data(chat_id,
-                student_id=None,
-                mail_address=None,
-                mail_password=None,
-                analytics_login=None,
-                analytics_password=None,
-                token=None):
-    pas = '"tmp": ""'
-    si = f'"student_id": {student_id}'
-    ma = f'"mail_address": "{mail_address}"'
-    mp = f'"mail_password": "{mail_password}"'
-    al = f'"analytics_login": "{analytics_login}"'
-    ap = f'"analytics_password": "{analytics_password}"'
-    t = f'"token": "{token}"'
-    request_payload = '''
-        {''' + \
-                      f'{si if student_id else pas},' + \
-                      f'{ma if mail_address else pas},' + \
-                      f'{mp if mail_password else pas},' + \
-                      f'{al if analytics_login else pas},' + \
-                      f'{ap if analytics_password else pas},' + \
-                      f'{t if token else pas}' + \
-                      '''}
-                  '''
-    ref = db.reference(f"/users/{chat_id}")
-    ref.child("data").update(json.loads(request_payload))
-
-
-def init_user_sql(chat_id: int, conn: sqlite3.Connection, c: sqlite3.Cursor) -> None:
-    with conn:
-        c.execute(
-            """INSERT INTO users VALUES 
-            (:chat_id, :student_id, :mail_address, :mail_password, :analytics_login, :analytics_password, :token)""",
-            {"mail_address": None, "mail_password": None, "analytics_password": None, "analytics_login": None,
-             "token": None, "student_id": None, "chat_id": chat_id})
-
-
-def delete_user_sql(chat_id: int, conn: sqlite3.Connection, c: sqlite3.Cursor) -> None:
-    with conn:
-        c.execute("DELETE FROM users WHERE chat_id = :chat_id", {"chat_id": chat_id})
-
-
-# --------------------- Setters
-def set_student_id_sql(student_id: int, chat_id: int, conn: sqlite3.Connection, c: sqlite3.Cursor) -> None:
-    with conn:
-        c.execute("UPDATE users SET student_id = :student_id WHERE chat_id = :chat_id",
-                  {"student_id": student_id, "chat_id": chat_id})
-
-
-def set_mail_address_sql(mail_address: str, chat_id: int, conn: sqlite3.Connection, c: sqlite3.Cursor) -> None:
-    with conn:
-        c.execute("UPDATE users SET mail_address = :mail_address WHERE chat_id = :chat_id",
-                  {"mail_address": mail_address, "chat_id": chat_id})
-
-
-def set_mail_password_sql(mail_password: str, chat_id: int, conn: sqlite3.Connection, c: sqlite3.Cursor) -> None:
-    with conn:
-        c.execute("UPDATE users SET mail_password = :mail_password WHERE chat_id = :chat_id",
-                  {"mail_password": mail_password, "chat_id": chat_id})
-
-
-def set_analytics_login(analytics_login: str, chat_id: int, conn: sqlite3.Connection, c: sqlite3.Cursor) -> None:
-    with conn:
-        c.execute("UPDATE users SET analytics_login = :analytics_login WHERE chat_id = :chat_id",
-                  {"analytics_login": analytics_login, "chat_id": chat_id})
-
-
-def set_analytics_password_sql(analytics_password: str, chat_id: int, conn: sqlite3.Connection,
-                               c: sqlite3.Cursor) -> None:
-    with conn:
-        c.execute("UPDATE users SET analytics_password = :analytics_password WHERE chat_id = :chat_id",
-                  {"analytics_password": analytics_password, "chat_id": chat_id})
-
-
-def set_token_sql(token: str, chat_id: int, conn: sqlite3.Connection, c: sqlite3.Cursor) -> None:
-    with conn:
-        c.execute("UPDATE users SET token = :token WHERE chat_id = :chat_id",
-                  {"token": token, "chat_id": chat_id})
+    doc_ref = db.collection(u'users').document(chat_id)
+    doc_ref.set(yaml.load(request_payload, Loader=yaml.FullLoader), merge=True)
 
 
 # --------------------- Getters
-def get_chat_id_sql(chat_id: int, conn: sqlite3.Connection, c: sqlite3.Cursor) -> int:
-    with conn:
-        c.execute("SELECT chat_id FROM users WHERE chat_id = :chat_id", {"chat_id": chat_id})
-        return c.fetchone()[0]
+def get_student_id(chat_id: str) -> Optional[int]:
+    doc = db.collection(u"users").document(chat_id).get()
+    try:
+        if doc.exists:
+            return doc.to_dict()["data"]["student_id"]
+    except KeyError:
+        pass
+    return None
 
 
-def get_student_id_sql(chat_id: int, conn: sqlite3.Connection, c: sqlite3.Cursor) -> int:
-    with conn:
-        c.execute("SELECT student_id FROM users WHERE chat_id = :chat_id", {"chat_id": chat_id})
-        return c.fetchone()[0]
+def get_token(chat_id: str) -> Optional[str]:
+    doc = db.collection(u"users").document(chat_id).get()
+    try:
+        if doc.exists:
+            return doc.to_dict()["data"]["token"]
+    except KeyError:
+        pass
+    return None
 
 
-def get_mail_address_sql(chat_id: int, conn: sqlite3.Connection, c: sqlite3.Cursor) -> str:
-    with conn:
-        c.execute("SELECT mail_address FROM users WHERE chat_id = :chat_id", {"chat_id": chat_id})
-        return c.fetchone()[0]
+def get_analytics_password(chat_id: str) -> Optional[str]:
+    doc = db.collection(u"users").document(chat_id).get()
+    try:
+        if doc.exists:
+            return doc.to_dict()["data"]["analytics_password"]
+    except KeyError:
+        pass
+    return None
 
 
-def get_mail_password_sql(chat_id: int, conn: sqlite3.Connection, c: sqlite3.Cursor) -> str:
-    with conn:
-        c.execute("SELECT mail_password FROM users WHERE chat_id = :chat_id", {"chat_id": chat_id})
-        return c.fetchone()[0]
+def get_analytics_login(chat_id: str) -> Optional[str]:
+    doc = db.collection(u"users").document(chat_id).get()
+    try:
+        if doc.exists:
+            return doc.to_dict()["data"]["analytics_login"]
+    except KeyError:
+        pass
+    return None
 
 
-def get_analytics_login_sql(chat_id: int, conn: sqlite3.Connection, c: sqlite3.Cursor) -> str:
-    with conn:
-        c.execute("SELECT analytics_login FROM users WHERE chat_id = :chat_id", {"chat_id": chat_id})
-        return c.fetchone()[0]
+def get_mail_address(chat_id: str) -> Optional[str]:
+    doc = db.collection(u"users").document(chat_id).get()
+    try:
+        if doc.exists:
+            return doc.to_dict()["data"]["mail_address"]
+    except KeyError:
+        pass
+    return None
 
 
-def get_analytics_password_sql(chat_id: int, conn: sqlite3.Connection, c: sqlite3.Cursor) -> str:
-    with conn:
-        c.execute("SELECT analytics_password FROM users WHERE chat_id = :chat_id", {"chat_id": chat_id})
-        return c.fetchone()[0]
-
-
-def get_token_sql(chat_id: int, conn: sqlite3.Connection, c: sqlite3.Cursor) -> str:
-    with conn:
-        c.execute("SELECT token FROM users WHERE chat_id = :chat_id", {"chat_id": chat_id})
-        return c.fetchone()[0]
+def get_mail_password(chat_id: str) -> Optional[str]:
+    doc = db.collection(u"users").document(chat_id).get()
+    try:
+        if doc.exists:
+            return doc.to_dict()["data"]["mail_password"]
+    except KeyError:
+        pass
+    return None
 
 
 # ---------------------------------------------Other funcs--------------------------------------------------------------
 def is_empty(tmp) -> bool:
-    return len(tmp) == 0
+    if not tmp:
+        return True
+    return False
 
 
-def receive_token(s: rq.Session, chat_id: int, conn: sqlite3.Connection, c: sqlite3.Cursor) -> str:
+def receive_token(s: rq.Session, chat_id: str) -> Optional[str]:
     login_data = {
-        "login": get_analytics_login_sql(chat_id, conn, c),
-        "password": get_analytics_password_sql(chat_id, conn, c)
+        "login": get_analytics_login(chat_id),
+        "password": get_analytics_password(chat_id)
     }
-    login_response = s.post(url=LOGIN_URL_LETOVO, data=login_data)
-    log.debug(f"Token received in: {datetime.timedelta(seconds=time.perf_counter() - start_time)}")
-    return f'{login_response.json()["data"]["token_type"]} {login_response.json()["data"]["token"]}'
+    try:
+        login_response = s.post(url=LOGIN_URL_LETOVO, data=login_data)
+        log.debug(f"Token received in: {datetime.timedelta(seconds=time.perf_counter() - start_time)}")
+        return f'{login_response.json()["data"]["token_type"]} {login_response.json()["data"]["token"]}'
+    except rq.ConnectionError:
+        return None
 
 
-def receive_student_id(s: rq.Session, chat_id: int, conn: sqlite3.Connection, c: sqlite3.Cursor) -> int:
+def receive_student_id(s: rq.Session, chat_id: str) -> Optional[str]:
     me_headers = {
-        "Authorization": get_token_sql(chat_id, conn, c)
+        "Authorization": get_token(chat_id)
     }
-    me_response = s.post("https://s-api.letovo.ru/api/me", headers=me_headers)
-    log.debug(f"Student id received in: {datetime.timedelta(seconds=time.perf_counter() - start_time)}")
-    return me_response.json()["data"]["user"]["student_id"]
+    try:
+        me_response = s.post("https://s-api.letovo.ru/api/me", headers=me_headers)
+        log.debug(f"Student id received in: {datetime.timedelta(seconds=time.perf_counter() - start_time)}")
+        return me_response.json()["data"]["user"]["student_id"]
+    except rq.ConnectionError:
+        return None
 
 
-def receive_calendar(s: rq.Session, chat_id: int, conn: sqlite3.Connection, c: sqlite3.Cursor) -> list[list]:
-    schedule_url = f"https://s-api.letovo.ru/api/schedule/{get_student_id_sql(chat_id, conn, c)}/day/ics?schedule_date=" \
+def receive_calendar(s: rq.Session, chat_id: str) -> Optional[list[list]]:
+    schedule_url = f"https://s-api.letovo.ru/api/schedule/{get_student_id(chat_id)}/day/ics?schedule_date=" \
                    f"{(today := str(datetime.datetime.now()).split()[0])}"
     schedule_headers = {
-        "Authorization": get_token_sql(chat_id, conn, c),
+        "Authorization": get_token(chat_id),
         "schedule_date": today
     }
-    schedule_response = s.get(url=schedule_url, headers=schedule_headers)
+    try:
+        schedule_response = s.get(url=schedule_url, headers=schedule_headers)
+    except rq.ConnectionError:
+        return None
     log.debug(f"Calendar received in: {datetime.timedelta(seconds=time.perf_counter() - start_time)}")
 
     info = []
@@ -293,9 +239,9 @@ def receive_calendar(s: rq.Session, chat_id: int, conn: sqlite3.Connection, c: s
     return info
 
 
-def get_otp(chat_id: int, conn: sqlite3.Connection, c: sqlite3.Cursor) -> str:
+def get_otp(chat_id: str) -> str:
     mail = IMAP4_SSL("outlook.office365.com")
-    mail.login(get_mail_address_sql(chat_id, conn, c), get_mail_password_sql(chat_id, conn, c))
+    mail.login(get_mail_address(chat_id), get_mail_password(chat_id))
     mail.list()
     mail.select("inbox")
     res, data = mail.search(None, "ALL")
