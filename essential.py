@@ -23,8 +23,7 @@ from firebase_admin import firestore, credentials
 
 # Consts
 LOGIN_URL_LETOVO = "https://s-api.letovo.ru/api/login"
-# LOGIN_URL_LOCAL = "http://10.10.10.80:8080/login"
-LOGIN_URL_LOCAL = "https://letovo-analytics.herokuapp.com/login"
+LOGIN_URL_LOCAL = "https://letovo.cf/login"
 API_ID = 3486313
 API_HASH = "e2e87224f544a2103d75b07e34818563"
 BOT_TOKEN = "1638159959:AAGTSWJV3FGcZLI98WWhKQuIKI1J4NGN_1s"
@@ -190,7 +189,7 @@ def receive_student_id(s: rq.Session, chat_id: str) -> Optional[str]:
         return None
 
 
-def receive_schedule(s: rq.Session, chat_id: str) -> Optional[list[list]]:
+def receive_schedule(s: rq.Session, chat_id: str) -> Optional[list[list[list[str]]]]:
     schedule_url = f"https://s-api.letovo.ru/api/schedule/{get_student_id(chat_id)}/day/ics?schedule_date=" \
                    f"{(today := str(datetime.datetime.now()).split()[0])}"
     schedule_headers = {
@@ -335,8 +334,7 @@ async def send_certain_day_schedule(
                                       Button.inline("Certain day schedule »", b"certainDaySchedule"),
                                   ]])
     else:
-        # if is_empty(schedule := receive_schedule(s, chat_id)):
-        if is_empty(schedule := parse_schedule()):
+        if is_empty(schedule := receive_schedule(s, chat_id)):
             await event.answer("There's no schedule for today", alert=True)
             await event.delete()
 
