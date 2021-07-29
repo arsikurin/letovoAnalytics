@@ -2,7 +2,7 @@
 
 # import os
 # import sys
-# import sqlite3
+import sqlite3
 import datetime
 import time
 import requests as rq
@@ -11,8 +11,8 @@ import logging as log
 import yaml
 import firebase_admin
 
-from telethon.client import TelegramClient
 from telethon import Button
+from telethon.client import TelegramClient
 from ics import Calendar
 from imaplib import IMAP4_SSL
 # from bs4 import BeautifulSoup
@@ -67,7 +67,7 @@ def update_data(
         analytics_login=None,
         analytics_password=None,
         token=None
-):
+) -> None:
     """Fill out at least one param in every document!!! Otherwise all data in document will be erased"""
     pas = ""
     st = f'"student_id": {student_id},'
@@ -92,7 +92,7 @@ def update_data(
                       }
                   }
                   '''
-    doc_ref = db.collection(u'users').document(chat_id)
+    doc_ref = db.collection(u"users").document(chat_id)
     doc_ref.set(yaml.load(request_payload, Loader=yaml.FullLoader), merge=True)
 
 
@@ -157,21 +157,63 @@ def get_mail_password(chat_id: str) -> Optional[str]:
     return None
 
 
+# -----------------------------------------------SQL funcs--------------------------------------------------------------
+def is_inited_sql(
+        chat_id: str,
+        conn: sqlite3.Connection,
+        c: sqlite3.Cursor
+) -> str:
+    with conn:
+        c.execute("SELECT chat_id FROM messages WHERE chat_id = :chat_id", {"chat_id": chat_id})
+        return c.fetchone()
+
+
+def init_user_sql(
+        chat_id: str,
+        conn: sqlite3.Connection,
+        c: sqlite3.Cursor
+) -> None:
+    with conn:
+        c.execute("""INSERT INTO messages VALUES (:chat_id, :message_id)""",
+                  {"chat_id": chat_id, "message_id": None})
+
+
+def set_message_sql(
+        chat_id: str,
+        message_id: int,
+        conn: sqlite3.Connection,
+        c: sqlite3.Cursor
+) -> None:
+    with conn:
+        c.execute("UPDATE messages SET message_id = :message_id WHERE chat_id = :chat_id",
+                  {"message_id": message_id, "chat_id": chat_id})
+
+
+def get_message_sql(
+        chat_id: str,
+        conn: sqlite3.Connection,
+        c: sqlite3.Cursor
+) -> int:
+    with conn:
+        c.execute("SELECT message_id FROM messages WHERE chat_id = :chat_id", {"chat_id": chat_id})
+        return c.fetchone()[0]
+
+
 # ---------------------------------------------Other funcs--------------------------------------------------------------
-def is_empty(tmp) -> bool:
-    if not tmp:
+def is_empty(to_check) -> bool:
+    """Dict (map), list (array), tuple, string and None are supported"""
+    if not to_check:
         return True
     return False
 
 
 def receive_token(s: rq.Session, chat_id: str) -> Optional[str]:
     login_data = {
-        "login": get_analytics_login(chat_id),
-        "password": get_analytics_password(chat_id)
+        "login": get_analytics_login(chat_id=chat_id),
+        "password": get_analytics_password(chat_id=chat_id)
     }
     try:
         login_response = s.post(url=LOGIN_URL_LETOVO, data=login_data)
-        log.debug(f"Token received in: {datetime.timedelta(seconds=time.perf_counter() - start_time)}")
         return f'{login_response.json()["data"]["token_type"]} {login_response.json()["data"]["token"]}'
     except rq.ConnectionError:
         return None
@@ -179,14 +221,24 @@ def receive_token(s: rq.Session, chat_id: str) -> Optional[str]:
 
 def receive_student_id(s: rq.Session, chat_id: str) -> Optional[str]:
     me_headers = {
-        "Authorization": get_token(chat_id)
+        "Authorization": get_token(chat_id=chat_id)
     }
     try:
         me_response = s.post("https://s-api.letovo.ru/api/me", headers=me_headers)
-        log.debug(f"Student id received in: {datetime.timedelta(seconds=time.perf_counter() - start_time)}")
         return me_response.json()["data"]["user"]["student_id"]
     except rq.ConnectionError:
         return None
+
+
+async def send_greeting(client: TelegramClient, sender) -> None:
+    await client.send_message(entity=sender,
+                              message=f'Greetings, **{fn if (fn := sender.first_name) else ""} {ln if (ln := sender.last_name) else ""}**!',
+                              parse_mode="md",
+                              buttons=[[
+                                  Button.text("Start", resize=True, single_use=False)
+                              ], [
+                                  Button.text("Clear previous", resize=True, single_use=False)
+                              ]])
 
 
 def receive_schedule(s: rq.Session, chat_id: str) -> Optional[list[list[list[str]]]]:
@@ -200,7 +252,6 @@ def receive_schedule(s: rq.Session, chat_id: str) -> Optional[list[list[list[str
         schedule_response = s.get(url=schedule_url, headers=schedule_headers)
     except rq.ConnectionError:
         return None
-    log.debug(f"Schedule received in: {datetime.timedelta(seconds=time.perf_counter() - start_time)}")
 
     info = []
     ind = 0
@@ -237,7 +288,6 @@ def receive_schedule(s: rq.Session, chat_id: str) -> Optional[list[list[list[str
         info[day][ind].append(f"{e.location}")
         info[day][ind].append(f'{date}')
         ind += 1
-    log.debug(f"Schedule parsed in: {datetime.timedelta(seconds=time.perf_counter() - start_time)}")
     return info
 
 
@@ -280,13 +330,12 @@ def parse_schedule() -> Optional[list[list[list[str]]]]:
         info[day][ind].append(f"{e.location}")
         info[day][ind].append(f'{date}')
         ind += 1
-    log.debug(f"Schedule parsed in: {datetime.timedelta(seconds=time.perf_counter() - start_time)}")
     return info
 
 
 def get_otp(chat_id: str) -> str:
     mail = IMAP4_SSL("outlook.office365.com")
-    mail.login(get_mail_address(chat_id), get_mail_password(chat_id))
+    mail.login(get_mail_address(chat_id=chat_id), get_mail_password(chat_id=chat_id))
     mail.list()
     mail.select("inbox")
     res, data = mail.search(None, "ALL")
@@ -318,64 +367,29 @@ async def send_certain_day_schedule(
 
     sender = await event.get_sender()
     if certain_day == -1:
-        await event.answer("Congrats! It's Sunday, no lessons", alert=True)
+        await event.answer("Congrats! It's Sunday, no lessons", alert=False)
+        return
+
+    if is_empty(schedule := receive_schedule(s, chat_id)):
+    # if is_empty(schedule := parse_schedule()):
+        await event.answer("No schedule found in analytics rn", alert=False)
+        return
+
+    try:
         await event.delete()
-
-        await client.send_message(entity=sender,
-                                  message="Choose an option below ↴",
-                                  parse_mode="md",
-                                  buttons=[[
-                                      Button.inline("Personal data »", b"personal_data")
-                                  ], [
-                                      Button.inline("Entire schedule", b"entireSchedule")
-                                  ], [
-                                      Button.inline("Current day schedule", b"currentDaySchedule"),
-                                  ], [
-                                      Button.inline("Certain day schedule »", b"certainDaySchedule"),
-                                  ]])
-    else:
-        if is_empty(schedule := receive_schedule(s, chat_id)):
-            await event.answer("There's no schedule for today", alert=True)
-            await event.delete()
-
-            await client.send_message(entity=sender,
-                                      message="Choose an option below ↴",
-                                      parse_mode="md",
-                                      buttons=[[
-                                          Button.inline("Personal data »", b"personal_data")
-                                      ], [
-                                          Button.inline("Entire schedule", b"entireSchedule")
-                                      ], [
-                                          Button.inline("Current day schedule", b"currentDaySchedule"),
-                                      ], [
-                                          Button.inline("Certain day schedule »", b"certainDaySchedule"),
-                                      ]])
-            return
-        try:
-            for ind, day in enumerate(schedule):
-                if ind == certain_day or certain_day == -10:
-                    for lesson in day:
-                        await client.send_message(entity=sender.id,
-                                                  message="\n".join(lesson),
-                                                  parse_mode="md",
-                                                  silent=True,
-                                                  buttons=[
-                                                      Button.text("Start", resize=True, single_use=False)
-                                                  ])
-        except Exception as err:
-            print(Fg.Red, err, Fg.Reset)
-            await event.answer("✗ Something went wrong! Try again in 3 secs ✗", alert=True)
-            await event.delete()
-
-            await client.send_message(entity=sender,
-                                      message="Choose an option below ↴",
-                                      parse_mode="md",
-                                      buttons=[[
-                                          Button.inline("Personal data »", b"personal_data")
-                                      ], [
-                                          Button.inline("Entire schedule", b"entireSchedule")
-                                      ], [
-                                          Button.inline("Current day schedule", b"currentDaySchedule"),
-                                      ], [
-                                          Button.inline("Certain day schedule »", b"certainDaySchedule"),
-                                      ]])
+        for ind, day in enumerate(schedule):
+            if ind == certain_day or certain_day == -10:
+                for lesson in day:
+                    await client.send_message(entity=sender,
+                                              message="\n".join(lesson),
+                                              parse_mode="md",
+                                              silent=True,
+                                              buttons=[[
+                                                  Button.text("Start", resize=True, single_use=False)
+                                              ], [
+                                                  Button.text("Clear previous", resize=True, single_use=False)
+                                              ]])
+    except Exception as err:
+        print(Fg.Red, err, Fg.Reset)
+        await event.answer("[✘] Something went wrong!", alert=True)
+        return

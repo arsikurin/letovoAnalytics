@@ -2,12 +2,16 @@
 
 # import re
 # import logging as log
+import sqlite3
 import requests as rq
 
 from datetime import date
 from telethon import Button, TelegramClient, events
-from essential import LOGIN_URL_LOCAL, API_ID, API_HASH, BOT_TOKEN, update_data, is_inited, \
-    send_certain_day_schedule, receive_token, receive_student_id, get_analytics_login
+from telethon.errors import MessageDeleteForbiddenError
+from telethon.errors.common import MultiError
+from essential import LOGIN_URL_LOCAL, API_ID, API_HASH, BOT_TOKEN, init_user_sql, is_inited, is_inited_sql, \
+    send_certain_day_schedule, receive_token, receive_student_id, get_analytics_login, get_message_sql, update_data, \
+    set_message_sql, send_greeting
 
 "https://s-api.letovo.ru/api/students/54405"
 "https://s-api.letovo.ru/api/studentsimg/54405"
@@ -15,18 +19,17 @@ from essential import LOGIN_URL_LOCAL, API_ID, API_HASH, BOT_TOKEN, update_data,
 client = TelegramClient("letovoAnalytics", API_ID, API_HASH)
 
 with rq.Session() as s:
+    with sqlite3.Connection("users.sql") as conn:
+        c = sqlite3.Cursor(conn)
+
+
     @client.on(events.NewMessage(pattern=r"(?i).*start"))
     async def handle_start(event):
         sender = await event.get_sender()
-        chat_id: str = str(sender.id)
-        await client.send_message(entity=sender,
-                                  message=f'Greetings, **{fn if (fn := sender.first_name) else ""} {ln if (ln := sender.last_name) else ""}**!',
-                                  parse_mode="md",
-                                  buttons=[
-                                      Button.text("Start", resize=True, single_use=False)
-                                  ])
+        chat_id = str(sender.id)
+        await send_greeting(client=client, sender=sender)
 
-        if not get_analytics_login(chat_id=chat_id):
+        if not is_inited(chat_id=chat_id):
             await client.send_message(entity=sender,
                                       message=f"I will help you access your schedule via Telegram.\n"
                                               "Initially, you should provide your login and password to"
@@ -35,11 +38,11 @@ with rq.Session() as s:
                                               "__After logging into your account, click Start button again__",
                                       parse_mode="md",
                                       buttons=[
-                                          Button.url(text="Log in",
-                                                     url=f'{LOGIN_URL_LOCAL + "?chat_id=" + chat_id}')
+                                          Button.url(text="Log in", url=f'{LOGIN_URL_LOCAL + "?chat_id=" + chat_id}')
                                       ])
-            if not is_inited(chat_id=chat_id):
-                update_data(chat_id=chat_id)
+
+            if not is_inited_sql(chat_id=chat_id, conn=conn, c=c):
+                init_user_sql(chat_id=chat_id, conn=conn, c=c)
             raise events.StopPropagation
 
         await client.send_message(entity=sender,
@@ -54,23 +57,26 @@ with rq.Session() as s:
                                   ], [
                                       Button.inline("Certain day schedule »", b"certainDaySchedule"),
                                   ]])
+
         update_data(chat_id=chat_id, token=t if (t := receive_token(s, chat_id)) else "error")
         update_data(chat_id=chat_id, student_id=t if (t := receive_student_id(s, chat_id)) else "error")
+        set_message_sql(chat_id=str(sender.id), message_id=event.message.id, conn=conn, c=c)
+        # set_message_sql(chat_id=str(event.original_update.user_id), message_id=event.query.msg_id - 1, conn=conn, c=c)
 
 
     @client.on(events.CallbackQuery(data=b"personal_data"))
-    async def handle_2(event):
+    async def personal_data(event):
         await event.edit("**Personal data page**\nHere will be the data that I store about you",
                          parse_mode="md",
                          buttons=[[
-                             Button.inline("btn", b"")
+                             Button.inline("close", b"close")
                          ], [
                              Button.inline("« Back", b"back_main")
                          ]])
 
 
     @client.on(events.CallbackQuery(data=b"certainDaySchedule"))
-    async def handle_certain(event):
+    async def certain_day_schedule(event):
         await event.edit("Choose a day below ↴",
                          parse_mode="md",
                          buttons=[[
@@ -93,7 +99,6 @@ with rq.Session() as s:
     @client.on(events.CallbackQuery(pattern=r"(?i).*day"))
     async def days(event):
         chat_id = str(event.original_update.user_id)
-
         if event.data == b"todaysSchedule":
             await send_certain_day_schedule(int(date.today().strftime("%w")) - 1, event, client, s, chat_id)
 
@@ -136,9 +141,34 @@ with rq.Session() as s:
 
     @client.on(events.NewMessage())
     async def handle_messages(event):
-        if event.message.message != "Start":
+        sender = await event.get_sender()
+        chat_id: str = str(sender.id)
+        if event.message.message.lower() == "clear previous":
+            await send_greeting(client=client, sender=sender)
+
+            msg_ids = [i for i in range(get_message_sql(chat_id=chat_id, conn=conn, c=c), event.message.id)]
             await event.delete()
-        # await client.delete_messages(await event.get_sender(), event.message.id)
+            try:
+                await client.delete_messages(entity=sender, message_ids=msg_ids)
+            except MultiError or MessageDeleteForbiddenError:
+                pass
+
+            await client.send_message(entity=sender,
+                                      message="Choose an option below ↴",
+                                      parse_mode="md",
+                                      buttons=[[
+                                          Button.inline("Personal data »", b"personal_data")
+                                      ], [
+                                          Button.inline("Entire schedule", b"entiredaySchedule")
+                                      ], [
+                                          Button.inline("Today's schedule", b"todaysSchedule"),
+                                      ], [
+                                          Button.inline("Certain day schedule »", b"certainDaySchedule"),
+                                      ]])
+
+        elif event.message.message.lower() != "start":
+            await event.delete()
+            # await client.delete_messages(await event.get_sender(), event.message.id)
 
 
     if __name__ == "__main__":
