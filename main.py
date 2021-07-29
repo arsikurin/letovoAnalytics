@@ -10,8 +10,10 @@ from telethon import Button, TelegramClient, events
 from telethon.errors import MessageDeleteForbiddenError
 from telethon.errors.common import MultiError
 from essential import LOGIN_URL_LOCAL, API_ID, API_HASH, BOT_TOKEN, init_user_sql, is_inited, is_inited_sql, \
-    send_certain_day_schedule, receive_token, receive_student_id, get_analytics_login, get_message_sql, update_data, \
-    set_message_sql, send_greeting
+    send_certain_day_schedule, send_greeting, send_main_page, send_holidays, \
+    to_main_page, to_schedule_page, to_homework_page, to_personal_page, to_certain_day_schedule_page, \
+    to_certain_day_homework_page, \
+    receive_token, receive_student_id, get_message_sql, update_data, set_message_sql
 
 "https://s-api.letovo.ru/api/students/54405"
 "https://s-api.letovo.ru/api/studentsimg/54405"
@@ -45,18 +47,7 @@ with rq.Session() as s:
                 init_user_sql(chat_id=chat_id, conn=conn, c=c)
             raise events.StopPropagation
 
-        await client.send_message(entity=sender,
-                                  message="Choose an option below ↴",
-                                  parse_mode="md",
-                                  buttons=[[
-                                      Button.inline("Personal data »", b"personal_data")
-                                  ], [
-                                      Button.inline("Entire schedule", b"entiredaySchedule")
-                                  ], [
-                                      Button.inline("Today's schedule", b"todaysSchedule"),
-                                  ], [
-                                      Button.inline("Certain day schedule »", b"certainDaySchedule"),
-                                  ]])
+        await send_main_page(client=client, sender=sender)
 
         update_data(chat_id=chat_id, token=t if (t := receive_token(s, chat_id)) else "error")
         update_data(chat_id=chat_id, student_id=t if (t := receive_student_id(s, chat_id)) else "error")
@@ -64,79 +55,109 @@ with rq.Session() as s:
         # set_message_sql(chat_id=str(event.original_update.user_id), message_id=event.query.msg_id - 1, conn=conn, c=c)
 
 
-    @client.on(events.CallbackQuery(data=b"personal_data"))
-    async def personal_data(event):
-        await event.edit("**Personal data page**\nHere will be the data that I store about you",
-                         parse_mode="md",
-                         buttons=[[
-                             Button.inline("close", b"close")
-                         ], [
-                             Button.inline("« Back", b"back_main")
-                         ]])
-
-
-    @client.on(events.CallbackQuery(data=b"certainDaySchedule"))
-    async def certain_day_schedule(event):
-        await event.edit("Choose a day below ↴",
-                         parse_mode="md",
-                         buttons=[[
-                             Button.inline("Monday", b"monday")
-                         ], [
-                             Button.inline("Tuesday", b"tuesday")
-                         ], [
-                             Button.inline("Wednesday", b"wednesday")
-                         ], [
-                             Button.inline("Thursday", b"thursday")
-                         ], [
-                             Button.inline("Friday", b"friday")
-                         ], [
-                             Button.inline("Saturday", b"saturday")
-                         ], [
-                             Button.inline("« Back", b"back_main")
-                         ]])
-
-
-    @client.on(events.CallbackQuery(pattern=r"(?i).*day"))
-    async def days(event):
+    @client.on(events.CallbackQuery(pattern=r"(?i).*schedule"))
+    async def schedule(event):
         chat_id = str(event.original_update.user_id)
-        if event.data == b"todaysSchedule":
+        if event.data == b"todays_schedule":
             await send_certain_day_schedule(int(date.today().strftime("%w")) - 1, event, client, s, chat_id)
 
-        elif event.data == b"entiredaySchedule":
+        elif event.data == b"entire_schedule":
             await send_certain_day_schedule(-10, event, client, s, chat_id)
 
-        elif event.data == b"monday":
+        elif event.data == b"monday_schedule":
             await send_certain_day_schedule(0, event, client, s, chat_id)
 
-        elif event.data == b"tuesday":
+        elif event.data == b"tuesday_schedule":
             await send_certain_day_schedule(1, event, client, s, chat_id)
 
-        elif event.data == b"wednesday":
+        elif event.data == b"wednesday_schedule":
             await send_certain_day_schedule(2, event, client, s, chat_id)
 
-        elif event.data == b"thursday":
+        elif event.data == b"thursday_schedule":
             await send_certain_day_schedule(3, event, client, s, chat_id)
 
-        elif event.data == b"friday":
+        elif event.data == b"friday_schedule":
             await send_certain_day_schedule(4, event, client, s, chat_id)
 
-        elif event.data == b"saturday":
+        elif event.data == b"saturday_schedule":
             await send_certain_day_schedule(5, event, client, s, chat_id)
 
 
-    @client.on(events.CallbackQuery(data=b"back_main"))
-    async def back_main(event):
-        await event.edit("Choose an option below ↴",
-                         parse_mode="md",
-                         buttons=[[
-                             Button.inline("Personal data »", b"personal_data")
-                         ], [
-                             Button.inline("Entire schedule", b"entiredaySchedule")
-                         ], [
-                             Button.inline("Today's schedule", b"todaysSchedule"),
-                         ], [
-                             Button.inline("Certain day schedule »", b"certainDaySchedule"),
-                         ]])
+    @client.on(events.CallbackQuery(pattern=r"(?i).*homework"))
+    async def homework(event):
+        chat_id = str(event.original_update.user_id)
+        if event.data == b"todays_homework":
+            await event.answer("Under development", alert=False)
+            # await send_certain_day_homework(int(date.today().strftime("%w")) - 1, event, client, s, chat_id)
+
+        elif event.data == b"entire_homework":
+            await event.answer("Under development", alert=False)
+            # await send_certain_day_homework(-10, event, client, s, chat_id)
+
+        elif event.data == b"monday_homework":
+            await event.answer("Under development", alert=False)
+            # await send_certain_day_homework(0, event, client, s, chat_id)
+
+        elif event.data == b"tuesday_homework":
+            await event.answer("Under development", alert=False)
+            # await send_certain_day_homework(1, event, client, s, chat_id)
+
+        elif event.data == b"wednesday_homework":
+            await event.answer("Under development", alert=False)
+            # await send_certain_day_homework(2, event, client, s, chat_id)
+
+        elif event.data == b"thursday_homework":
+            await event.answer("Under development", alert=False)
+            # await send_certain_day_homework(3, event, client, s, chat_id)
+
+        elif event.data == b"friday_homework":
+            await event.answer("Under development", alert=False)
+            # await send_certain_day_homework(4, event, client, s, chat_id)
+
+        elif event.data == b"saturday_homework":
+            await event.answer("Under development", alert=False)
+            # await send_certain_day_homework(5, event, client, s, chat_id)
+
+
+    @client.on(events.CallbackQuery(data=b"main_page"))
+    async def main_page(event):
+        await to_main_page(event=event)
+
+
+    @client.on(events.CallbackQuery(data=b"personal_page"))
+    async def personal_data(event):
+        await to_personal_page(event=event)
+
+
+    @client.on(events.CallbackQuery(data=b"schedule_page"))
+    async def schedule_page(event):
+        await to_schedule_page(event=event)
+
+
+    @client.on(events.CallbackQuery(data=b"homework_page"))
+    async def homework_page(event):
+        await to_homework_page(event=event)
+
+
+    @client.on(events.CallbackQuery(data=b"certain_day_schedule"))
+    async def certain_day_schedule(event):
+        await to_certain_day_schedule_page(event=event)
+
+
+    @client.on(events.CallbackQuery(data=b"certain_day_homework"))
+    async def certain_day_homework(event):
+        await to_certain_day_homework_page(event=event)
+
+
+    @client.on(events.CallbackQuery(data=b"holidays"))
+    async def holidays(event):
+        await event.delete()
+        await send_holidays(client=client, sender=await event.get_sender())
+
+
+    @client.on(events.CallbackQuery(data=b"marks"))
+    async def marks(event):
+        await event.answer("Under development", alert=False)
 
 
     @client.on(events.NewMessage())
@@ -153,18 +174,7 @@ with rq.Session() as s:
             except MultiError or MessageDeleteForbiddenError:
                 pass
 
-            await client.send_message(entity=sender,
-                                      message="Choose an option below ↴",
-                                      parse_mode="md",
-                                      buttons=[[
-                                          Button.inline("Personal data »", b"personal_data")
-                                      ], [
-                                          Button.inline("Entire schedule", b"entiredaySchedule")
-                                      ], [
-                                          Button.inline("Today's schedule", b"todaysSchedule"),
-                                      ], [
-                                          Button.inline("Certain day schedule »", b"certainDaySchedule"),
-                                      ]])
+            await send_main_page(client=client, sender=sender)
 
         elif event.message.message.lower() != "start":
             await event.delete()

@@ -129,7 +129,7 @@ def set_mail_password_sql(mail_password: str, chat_id: int, conn: sqlite3.Connec
                   {"mail_password": mail_password, "chat_id": chat_id})
 
 
-def set_analytics_login(analytics_login: str, chat_id: int, conn: sqlite3.Connection, c: sqlite3.Cursor) -> None:
+def set_analytics_login_sql(analytics_login: str, chat_id: int, conn: sqlite3.Connection, c: sqlite3.Cursor) -> None:
     with conn:
         c.execute("UPDATE users SET analytics_login = :analytics_login WHERE chat_id = :chat_id",
                   {"analytics_login": analytics_login, "chat_id": chat_id})
@@ -189,17 +189,3 @@ def get_token_sql(chat_id: int, conn: sqlite3.Connection, c: sqlite3.Cursor) -> 
     with conn:
         c.execute("SELECT token FROM users WHERE chat_id = :chat_id", {"chat_id": chat_id})
         return c.fetchone()[0]
-
-# Update some data in realtime db
-# ref = db.reference("/users")
-# users = ref.get()
-# for key, value in users.items():
-#     ref.child(key).update({"data/Name": "Arseny"})
-
-# Realtime db initing
-# import firebase_admin
-# from firebase_admin import credentials, db
-# cred_obj = credentials.Certificate("fbAdminConfig.json")
-# default_app = firebase_admin.initialize_app(cred_obj, {
-#     'databaseURL': "https://authtest-3fcb2-default-rtdb.europe-west1.firebasedatabase.app/"
-# })
