@@ -7,18 +7,17 @@ import datetime
 import time
 import requests as rq
 import logging as log
-# import json
 import yaml
 import firebase_admin
 
 from telethon import Button
 from telethon.client import TelegramClient
 from ics import Calendar
-from imaplib import IMAP4_SSL
+# from imaplib import IMAP4_SSL
 # from bs4 import BeautifulSoup
 from colourlib import Fg, Style
 from typing import Optional, Any
-from email import message_from_string
+# from email import message_from_string
 from firebase_admin import firestore, credentials
 
 # Consts
@@ -213,7 +212,7 @@ def receive_token(s: rq.Session, chat_id: str) -> Optional[str]:
         "password": get_analytics_password(chat_id=chat_id)
     }
     try:
-        login_response = s.post(url=LOGIN_URL_LETOVO, data=login_data)
+        login_response: rq.Response = s.post(url=LOGIN_URL_LETOVO, data=login_data)
         return f'{login_response.json()["data"]["token_type"]} {login_response.json()["data"]["token"]}'
     except rq.ConnectionError:
         return None
@@ -224,7 +223,7 @@ def receive_student_id(s: rq.Session, chat_id: str) -> Optional[str]:
         "Authorization": get_token(chat_id=chat_id)
     }
     try:
-        me_response = s.post("https://s-api.letovo.ru/api/me", headers=me_headers)
+        me_response: rq.Response = s.post("https://s-api.letovo.ru/api/me", headers=me_headers)
         return me_response.json()["data"]["user"]["student_id"]
     except rq.ConnectionError:
         return None
@@ -241,13 +240,24 @@ async def send_greeting(client: TelegramClient, sender) -> None:
                               ]])
 
 
+async def send_init_message(client: TelegramClient, sender) -> None:
+    await client.send_message(entity=sender,
+                              message=f"I will help you access your schedule via Telegram.\n"
+                                      "Initially, you should provide your login and password to"
+                                      " [Letovo Analytics](s.letovo.ru).\n  "
+                                      f'To do that click the button below\n'
+                                      "__After logging into your account, click Start button again__",
+                              parse_mode="md",
+                              buttons=[
+                                  Button.url(text="Log in", url=f'{LOGIN_URL_LOCAL + "?chat_id=" + str(sender.id)}')
+                              ])
+
+
 async def send_main_page(client: TelegramClient, sender) -> None:
     await client.send_message(entity=sender,
                               message="Choose an option below ↴",
                               parse_mode="md",
                               buttons=[[
-                                  Button.inline("Personal data »", b"personal_page")
-                              ], [
                                   Button.inline("Schedule »", b"schedule_page")
                               ], [
                                   Button.inline("Homework »", b"homework_page"),
@@ -260,24 +270,19 @@ async def send_main_page(client: TelegramClient, sender) -> None:
 
 async def send_holidays(client: TelegramClient, sender) -> None:
     await client.send_message(entity=sender,
-                              message="**I unit**\n31.10.2021 — 07.11.2021",
-                              parse_mode="md",
-                              buttons=[[
-                                  Button.text("Start", resize=True, single_use=False)
-                              ], [
-                                  Button.text("Clear previous", resize=True, single_use=False)
-                              ]])
-
-    await client.send_message(entity=sender,
-                              message="**II unit**\n26.12.2021 — 9.01.2022",
+                              message="__after__ **I unit**\n31.10.2021 — 07.11.2021",
                               parse_mode="md")
 
     await client.send_message(entity=sender,
-                              message="**III unit**\n13.03.2022 — 20.03.2022",
+                              message="__after__ **II unit**\n26.12.2021 — 09.01.2022",
                               parse_mode="md")
 
     await client.send_message(entity=sender,
-                              message="**IV unit**\n22.05.2022 — 31.08.2022",
+                              message="__after__ **III unit**\n13.03.2022 — 20.03.2022",
+                              parse_mode="md")
+
+    await client.send_message(entity=sender,
+                              message="__after__ **IV unit**\n22.05.2022 — 31.08.2022",
                               parse_mode="md")
 
 
@@ -285,8 +290,6 @@ async def to_main_page(event) -> None:
     await event.edit("Choose an option below ↴",
                      parse_mode="md",
                      buttons=[[
-                         Button.inline("Personal data »", b"personal_page")
-                     ], [
                          Button.inline("Schedule »", b"schedule_page")
                      ], [
                          Button.inline("Homework »", b"homework_page"),
@@ -294,16 +297,6 @@ async def to_main_page(event) -> None:
                          Button.inline("Holidays", b"holidays"),
                      ], [
                          Button.inline("Marks", b"marks"),
-                     ]])
-
-
-async def to_personal_page(event) -> None:
-    await event.edit("**Personal data page**\nHere will be the data that I store about you",
-                     parse_mode="md",
-                     buttons=[[
-                         Button.inline("close", b"close")
-                     ], [
-                         Button.inline("« Back", b"main_page")
                      ]])
 
 
@@ -376,32 +369,34 @@ async def to_certain_day_homework_page(event) -> None:
 
 
 def receive_schedule(s: rq.Session, chat_id: str) -> Optional[list[list[list[str]]]]:
-    schedule_url = f"https://s-api.letovo.ru/api/schedule/{get_student_id(chat_id)}/day/ics?schedule_date=" \
-                   f"{(today := str(datetime.datetime.now()).split()[0])}"
-    schedule_headers = {
+    schedule_url: str = f"https://s-api.letovo.ru/api/schedule/{get_student_id(chat_id)}/day/ics?schedule_date=" \
+                        f"{(today := str(datetime.datetime.now()).split()[0])}"
+    schedule_headers: dict[str, Optional[str]] = {
         "Authorization": get_token(chat_id),
         "schedule_date": today
     }
     try:
-        schedule_response = s.get(url=schedule_url, headers=schedule_headers)
+        schedule_response: rq.Response = s.get(url=schedule_url, headers=schedule_headers)
+        if schedule_response.status_code != 200:
+            return None
     except rq.ConnectionError:
         return None
 
     info = []
-    ind = 0
-    day = -1
+    ind: int = 0
+    day: int = -1
     for ch, e in enumerate(list(Calendar(schedule_response.text).timeline)):
         try:
-            desc = e.description.split()
+            desc: Any = e.description.split()
         except IndexError:
-            desc = []
+            desc: Any = []
 
         if ind != 0 and date != (date := ".".join(reversed(str(e.begin).split("T")[0].split("-")))):
             info.append([])
             day += 1
             ind = 0
         elif ind == 0:
-            date = ".".join(reversed(str(e.begin).split("T")[0].split("-")))
+            date: str = ".".join(reversed(str(e.begin).split("T")[0].split("-")))
             info.append([])
             day += 1
 
@@ -467,23 +462,23 @@ def parse_schedule() -> Optional[list[list[list[str]]]]:
     return info
 
 
-def get_otp(chat_id: str) -> str:
-    mail = IMAP4_SSL("outlook.office365.com")
-    mail.login(get_mail_address(chat_id=chat_id), get_mail_password(chat_id=chat_id))
-    mail.list()
-    mail.select("inbox")
-    res, data = mail.search(None, "ALL")
-    res, data = mail.fetch(data[0].split()[-1], "(RFC822)")
-    otp = message_from_string(data[0][1].decode("utf-8"))
-    try:
-        otp = otp.get_payload().split("<b>")[2].split("=")[0].split("<")[0]
-    except AttributeError:
-        print(Fg.Blue, otp, Fg.Reset)
-    return otp
+# def get_otp(chat_id: str) -> str:
+#     mail = IMAP4_SSL("outlook.office365.com")
+#     mail.login(get_mail_address(chat_id=chat_id), get_mail_password(chat_id=chat_id))
+#     mail.list()
+#     mail.select("inbox")
+#     res, data = mail.search(None, "ALL")
+#     res, data = mail.fetch(data[0].split()[-1], "(RFC822)")
+#     otp = message_from_string(data[0][1].decode("utf-8"))
+#     try:
+#         otp = otp.get_payload().split("<b>")[2].split("=")[0].split("<")[0]
+#     except AttributeError:
+#         print(Fg.Blue, otp, Fg.Reset)
+#     return otp
 
 
 async def send_certain_day_schedule(
-        certain_day: int,
+        day: int,
         event,
         client: TelegramClient,
         s: rq.Session,
@@ -496,33 +491,28 @@ async def send_certain_day_schedule(
     :param client:
     :param s:
     :param chat_id:
-    :param certain_day: day number (-1..5) or (-10) to send entire schedule
+    :param day: day number (-1..5) or (-10) to send entire schedule
     """
 
     sender = await event.get_sender()
-    if certain_day == -1:
-        await event.answer("Congrats! It's Sunday, no lessons", alert=True)
+    if day == -1:
+        await event.answer("Congrats! It's Sunday, no lessons", alert=False)
         return
 
-    if is_empty(schedule := receive_schedule(s, chat_id)):
-        # if is_empty(schedule := parse_schedule()):
-        await event.answer("No schedule found in analytics rn", alert=True)
+    # if is_empty(schedule := receive_schedule(s, chat_id)):
+    if is_empty(schedule := parse_schedule()):
+        await event.answer("No schedule found in analytics rn", alert=False)
         return
 
     try:
-        await event.delete()
+        await event.answer("", alert=False)
         for ind, day in enumerate(schedule):
-            if ind == certain_day or certain_day == -10:
+            if ind == day or day == -10:
                 for lesson in day:
                     await client.send_message(entity=sender,
                                               message="\n".join(lesson),
                                               parse_mode="md",
-                                              silent=True,
-                                              buttons=[[
-                                                  Button.text("Start", resize=True, single_use=False)
-                                              ], [
-                                                  Button.text("Clear previous", resize=True, single_use=False)
-                                              ]])
+                                              silent=True)
     except Exception as err:
         print(Fg.Red, err, Fg.Reset)
         await event.answer("[✘] Something went wrong!", alert=True)
