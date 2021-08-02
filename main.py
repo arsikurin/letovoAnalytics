@@ -1,14 +1,16 @@
 #!/usr/bin/python3.9
 
 # import re
-# import logging as log
+import asyncio
 import sqlite3
+# import sys
+# import datetime
+# import time
+# import logging as log
 import requests as rq
 
 from datetime import date
-from telethon import TelegramClient, events
-from telethon.errors import MessageDeleteForbiddenError
-from telethon.errors.common import MultiError
+from telethon import TelegramClient, events, errors
 from essential import API_ID, API_HASH, BOT_TOKEN, init_user_sql, is_inited, is_inited_sql, \
     send_certain_day_schedule, send_greeting, send_main_page, send_holidays, send_init_message, \
     to_main_page, to_schedule_page, to_homework_page, to_certain_day_schedule_page, to_certain_day_homework_page, \
@@ -25,27 +27,30 @@ with rq.Session() as s:
 
 
     @client.on(events.NewMessage(pattern=r"(?i).*start"))
-    async def handle_start(event):
+    async def handle_start(event: events.NewMessage.Event):
         sender = await event.get_sender()
         chat_id = str(sender.id)
-        await send_greeting(client=client, sender=sender)
+        _, ii = await asyncio.gather(send_greeting(client=client, sender=sender),
+                                     is_inited(chat_id=chat_id))
 
-        if not is_inited(chat_id=chat_id):
+        if not ii:
             await send_init_message(client=client, sender=sender)
 
-            if not is_inited_sql(chat_id=chat_id, conn=conn, c=c):
-                init_user_sql(chat_id=chat_id, conn=conn, c=c)
+            if not await is_inited_sql(chat_id=chat_id, conn=conn, c=c):
+                await init_user_sql(chat_id=chat_id, conn=conn, c=c)
             raise events.StopPropagation
 
         await send_main_page(client=client, sender=sender)
+        await set_message_sql(chat_id=chat_id, message_id=event.message.id + 3, conn=conn, c=c)
 
-        update_data(chat_id=chat_id, token=receive_token(s, chat_id))
-        update_data(chat_id=chat_id, student_id=receive_student_id(s, chat_id))
-        set_message_sql(chat_id=chat_id, message_id=event.message.id + 3, conn=conn, c=c)
+        # await asyncio.gather(send_main_page(client=client, sender=sender),
+        #                      update_data(chat_id=chat_id, student_id=await receive_student_id(s, chat_id)),
+        #                      update_data(chat_id=chat_id, token=await receive_token(s, chat_id)),
+        #                      set_message_sql(chat_id=chat_id, message_id=event.message.id + 3, conn=conn, c=c))
 
 
     @client.on(events.CallbackQuery(pattern=r"(?i).*schedule"))
-    async def schedule(event):
+    async def schedule(event: events.CallbackQuery.Event):
         chat_id: str = str(event.original_update.user_id)
         if event.data == b"todays_schedule":
             await send_certain_day_schedule(day=int(date.today().strftime("%w")) - 1,
@@ -74,7 +79,7 @@ with rq.Session() as s:
 
 
     @client.on(events.CallbackQuery(pattern=r"(?i).*homework"))
-    async def homework(event):
+    async def homework(event: events.CallbackQuery.Event):
         chat_id: str = str(event.original_update.user_id)
         if event.data == b"tomorrows_homework":
             await event.answer("Under development", alert=False)
@@ -110,52 +115,53 @@ with rq.Session() as s:
 
 
     @client.on(events.CallbackQuery(data=b"main_page"))
-    async def main_page(event):
+    async def main_page(event: events.CallbackQuery.Event):
         await to_main_page(event=event)
 
 
     @client.on(events.CallbackQuery(data=b"schedule_page"))
-    async def schedule_page(event):
+    async def schedule_page(event: events.CallbackQuery.Event):
         await to_schedule_page(event=event)
 
 
     @client.on(events.CallbackQuery(data=b"homework_page"))
-    async def homework_page(event):
+    async def homework_page(event: events.CallbackQuery.Event):
         await to_homework_page(event=event)
 
 
     @client.on(events.CallbackQuery(data=b"certain_day_schedule"))
-    async def certain_day_schedule(event):
+    async def certain_day_schedule(event: events.CallbackQuery.Event):
         await to_certain_day_schedule_page(event=event)
 
 
     @client.on(events.CallbackQuery(data=b"certain_day_homework"))
-    async def certain_day_homework(event):
+    async def certain_day_homework(event: events.CallbackQuery.Event):
         await to_certain_day_homework_page(event=event)
 
 
     @client.on(events.CallbackQuery(data=b"holidays"))
-    async def holidays(event):
-        await event.answer("", alert=False)
-        await send_holidays(client=client, sender=await event.get_sender())
+    async def holidays(event: events.CallbackQuery.Event):
+        await asyncio.gather(event.answer("", alert=False),
+                             send_holidays(client=client, sender=await event.get_sender()))
 
 
     @client.on(events.CallbackQuery(data=b"marks"))
-    async def marks(event):
+    async def marks(event: events.CallbackQuery.Event):
         await event.answer("Under development", alert=False)
 
 
     @client.on(events.NewMessage())
-    async def handle_new_messages(event):
+    async def handle_new_messages(event: events.NewMessage.Event):
         sender = await event.get_sender()
         chat_id: str = str(sender.id)
 
         if event.message.message.lower() == "clear previous":
-            msg_ids: list[int] = [i for i in range(get_message_sql(chat_id=chat_id, conn=conn, c=c), event.message.id)]
-            await event.delete()
+            _, msg = await asyncio.gather(event.delete(), get_message_sql(chat_id=chat_id, conn=conn, c=c))
+            msg_ids: list[int] = [i for i in range(msg, event.message.id)]
+
             try:
                 await client.delete_messages(entity=sender, message_ids=msg_ids)
-            except MultiError or MessageDeleteForbiddenError:
+            except errors.common.MultiError or errors.MessageDeleteForbiddenError:
                 pass
 
         elif event.message.message.lower() != "start":
