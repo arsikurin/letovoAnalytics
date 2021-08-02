@@ -2,6 +2,7 @@
 
 # import os
 # import sys
+import asyncio
 import sqlite3
 import datetime
 import time
@@ -10,8 +11,7 @@ import logging as log
 import yaml
 import firebase_admin
 
-from telethon import Button
-from telethon.client import TelegramClient
+from telethon import Button, events, TelegramClient
 from ics import Calendar
 # from imaplib import IMAP4_SSL
 # from bs4 import BeautifulSoup
@@ -20,23 +20,28 @@ from typing import Optional, Any
 # from email import message_from_string
 from firebase_admin import firestore, credentials
 
-# Consts
+
+# --------------------- Constants
 LOGIN_URL_LETOVO = "https://s-api.letovo.ru/api/login"
 LOGIN_URL_LOCAL = "https://letovo.cf/login"
 API_ID = 3486313
 API_HASH = "e2e87224f544a2103d75b07e34818563"
 BOT_TOKEN = "1638159959:AAGTSWJV3FGcZLI98WWhKQuIKI1J4NGN_1s"
 
-# Firestore
+
+# --------------------- Firestore
 cred = credentials.Certificate("fbAdminConfig.json")
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
-start_time = time.perf_counter()
+
+# --------------------- Parsing
 # soup = BeautifulSoup(html, 'lxml')
 
 
+# --------------------- Debug
 custom_DEBUG = False
+start_time = time.perf_counter()
 
 if custom_DEBUG == "all":
     log.basicConfig(
@@ -47,25 +52,29 @@ elif custom_DEBUG:
         format=f"{Fg.Green}{Style.Bold}%(asctime)s{Fg.Reset}{Style.Bold} %(message)s{Style.Reset}\n[%(name)s]\n",
         level=log.DEBUG)
     log.getLogger("urllib3.connectionpool").disabled = True
-    log.getLogger("werkzeug").disabled = True
+
+
+def test(s):
+    q = s.get(url="http://127.0.0.1:8080/test")
+    print(q.result())
 
 
 # ----------------------------------------------NoSQL funcs-------------------------------------------------------------
-def is_inited(chat_id) -> bool:
+async def is_inited(chat_id: str) -> bool:
     docs = db.collection(u"users").stream()
     if chat_id in [doc.id for doc in docs]:
         return True
     return False
 
 
-def update_data(
+async def update_data(
         chat_id: str,
-        student_id=None,
-        mail_address=None,
-        mail_password=None,
-        analytics_login=None,
-        analytics_password=None,
-        token=None
+        student_id: int = None,
+        mail_address: str = None,
+        mail_password: str = None,
+        analytics_login: str = None,
+        analytics_password: str = None,
+        token: str = None
 ) -> None:
     """Fill out at least one param in every document!!! Otherwise all data in document will be erased"""
     pas = ""
@@ -76,27 +85,27 @@ def update_data(
     ap = f'"analytics_password": "{analytics_password}",'
     t = f'"token": "{token}",'
 
-    request_payload = '''
+    request_payload: str = '''
     {
         "data": {''' + \
-                      f'{st if student_id else pas}' + \
-                      f'{ma if mail_address else pas}' + \
-                      f'{mp if mail_password else pas}' + \
-                      f'{al if analytics_login else pas}' + \
-                      f'{ap if analytics_password else pas}' + \
-                      f'{t if token else pas}' + \
-                      '''},
-                      "preferences": {
-                          "lang": "en"
-                      }
-                  }
-                  '''
+                           f'{st if student_id else pas}' + \
+                           f'{ma if mail_address else pas}' + \
+                           f'{mp if mail_password else pas}' + \
+                           f'{al if analytics_login else pas}' + \
+                           f'{ap if analytics_password else pas}' + \
+                           f'{t if token else pas}' + \
+                           '''},
+                           "preferences": {
+                               "lang": "en"
+                           }
+                       }
+                       '''
     doc_ref = db.collection(u"users").document(chat_id)
     doc_ref.set(yaml.load(request_payload, Loader=yaml.FullLoader), merge=True)
 
 
 # --------------------- Getters
-def get_student_id(chat_id: str) -> Optional[int]:
+async def get_student_id(chat_id: str) -> Optional[int]:
     doc = db.collection(u"users").document(chat_id).get()
     try:
         if doc.exists:
@@ -106,7 +115,7 @@ def get_student_id(chat_id: str) -> Optional[int]:
     return None
 
 
-def get_token(chat_id: str) -> Optional[str]:
+async def get_token(chat_id: str) -> Optional[str]:
     doc = db.collection(u"users").document(chat_id).get()
     try:
         if doc.exists:
@@ -116,7 +125,7 @@ def get_token(chat_id: str) -> Optional[str]:
     return None
 
 
-def get_analytics_password(chat_id: str) -> Optional[str]:
+async def get_analytics_password(chat_id: str) -> Optional[str]:
     doc = db.collection(u"users").document(chat_id).get()
     try:
         if doc.exists:
@@ -126,7 +135,7 @@ def get_analytics_password(chat_id: str) -> Optional[str]:
     return None
 
 
-def get_analytics_login(chat_id: str) -> Optional[str]:
+async def get_analytics_login(chat_id: str) -> Optional[str]:
     doc = db.collection(u"users").document(chat_id).get()
     try:
         if doc.exists:
@@ -136,7 +145,7 @@ def get_analytics_login(chat_id: str) -> Optional[str]:
     return None
 
 
-def get_mail_address(chat_id: str) -> Optional[str]:
+async def get_mail_address(chat_id: str) -> Optional[str]:
     doc = db.collection(u"users").document(chat_id).get()
     try:
         if doc.exists:
@@ -146,7 +155,7 @@ def get_mail_address(chat_id: str) -> Optional[str]:
     return None
 
 
-def get_mail_password(chat_id: str) -> Optional[str]:
+async def get_mail_password(chat_id: str) -> Optional[str]:
     doc = db.collection(u"users").document(chat_id).get()
     try:
         if doc.exists:
@@ -157,7 +166,7 @@ def get_mail_password(chat_id: str) -> Optional[str]:
 
 
 # -----------------------------------------------SQL funcs--------------------------------------------------------------
-def is_inited_sql(
+async def is_inited_sql(
         chat_id: str,
         conn: sqlite3.Connection,
         c: sqlite3.Cursor
@@ -167,7 +176,7 @@ def is_inited_sql(
         return c.fetchone()
 
 
-def init_user_sql(
+async def init_user_sql(
         chat_id: str,
         conn: sqlite3.Connection,
         c: sqlite3.Cursor
@@ -177,7 +186,7 @@ def init_user_sql(
                   {"chat_id": chat_id, "message_id": None})
 
 
-def set_message_sql(
+async def set_message_sql(
         chat_id: str,
         message_id: int,
         conn: sqlite3.Connection,
@@ -188,7 +197,7 @@ def set_message_sql(
                   {"message_id": message_id, "chat_id": chat_id})
 
 
-def get_message_sql(
+async def get_message_sql(
         chat_id: str,
         conn: sqlite3.Connection,
         c: sqlite3.Cursor
@@ -199,17 +208,21 @@ def get_message_sql(
 
 
 # ---------------------------------------------Other funcs--------------------------------------------------------------
-def is_empty(to_check) -> bool:
+def is_empty(to_check: Any) -> bool:
     """Dict (map), list (array), tuple, string and None are supported"""
     if not to_check:
         return True
     return False
 
 
-def receive_token(s: rq.Session, chat_id: str) -> Optional[str]:
-    login_data = {
-        "login": get_analytics_login(chat_id=chat_id),
-        "password": get_analytics_password(chat_id=chat_id)
+# --------------------- Receivers
+async def receive_token(s: rq.Session, chat_id: str) -> Optional[str]:
+    login, password = await asyncio.gather(get_analytics_login(chat_id=chat_id),
+                                           get_analytics_password(chat_id=chat_id))
+
+    login_data: dict[str, Optional[str]] = {
+        "login": login,
+        "password": password
     }
     try:
         login_response: rq.Response = s.post(url=LOGIN_URL_LETOVO, data=login_data)
@@ -218,9 +231,9 @@ def receive_token(s: rq.Session, chat_id: str) -> Optional[str]:
         return None
 
 
-def receive_student_id(s: rq.Session, chat_id: str) -> Optional[str]:
-    me_headers = {
-        "Authorization": get_token(chat_id=chat_id)
+async def receive_student_id(s: rq.Session, chat_id: str) -> Optional[str]:
+    me_headers: dict[str, Optional[str]] = {
+        "Authorization": await get_token(chat_id=chat_id)
     }
     try:
         me_response: rq.Response = s.post("https://s-api.letovo.ru/api/me", headers=me_headers)
@@ -229,6 +242,202 @@ def receive_student_id(s: rq.Session, chat_id: str) -> Optional[str]:
         return None
 
 
+async def receive_schedule(s: rq.Session, chat_id: str) -> Optional[list[list[list[str]]]]:
+    student_id, token = asyncio.gather(get_student_id(chat_id=chat_id),
+                                       get_token(chat_id=chat_id))
+
+    schedule_url: str = f"https://s-api.letovo.ru/api/schedule/{student_id}/day/ics?schedule_date=" \
+                        f"{(today := str(datetime.datetime.now()).split()[0])}"
+    schedule_headers: dict[str, Optional[str]] = {
+        "Authorization": token,
+        "schedule_date": today
+    }
+    try:
+        schedule_response: rq.Response = s.get(url=schedule_url, headers=schedule_headers)
+        if schedule_response.status_code != 200:
+            return None
+    except rq.ConnectionError:
+        return None
+
+    info = []
+    ind: int = 0
+    day: int = -1
+    for ch, e in enumerate(list(Calendar(schedule_response.text).timeline)):
+        try:
+            desc: Any = e.description.split()
+        except IndexError:
+            desc: Any = []
+
+        if ind != 0 and date != (date := ".".join(reversed(str(e.begin).split("T")[0].split("-")))):
+            info.append([])
+            day += 1
+            ind = 0
+        elif ind == 0:
+            date: str = ".".join(reversed(str(e.begin).split("T")[0].split("-")))
+            info.append([])
+            day += 1
+
+        info[day].append([])
+        if (name := e.name.split()[0]) == "ММА":
+            info[day][ind].append("**ММА**")
+        elif name == "Плавание,":
+            info[day][ind].append("**Плавание**")
+        elif name == "Ассамблея,":
+            info[day][ind].append("**Ассамблея**")
+        else:
+            info[day][ind].append(f"**{e.name}**")
+        if not is_empty(desc):
+            info[day][ind].append(f"[ZOOM]({desc[-1]})")
+        info[day][ind].append(f'{e.begin.strftime("%A")}')
+        info[day][ind].append(f'{str(e.begin).split("T")[1].rsplit(":", 2)[0]}')
+        info[day][ind].append(f'{str(e.end).split("T")[1].rsplit(":", 2)[0]}')
+        info[day][ind].append(f"{e.location}")
+        info[day][ind].append(f'{date}')
+        ind += 1
+    return info
+
+
+async def parse_schedule() -> Optional[list[list[list[str]]]]:
+    with open("schedule.ics", "r") as f:
+        f = f.read()
+    info = []
+    ind = 0
+    day = -1
+    qqq = Calendar(str(f))
+    for ch, e in enumerate(list(qqq.timeline)):
+        try:
+            desc = e.description.split()
+        except IndexError:
+            desc = []
+
+        if ind != 0 and date != (date := ".".join(reversed(str(e.begin).split("T")[0].split("-")))):
+            info.append([])
+            day += 1
+            ind = 0
+        elif ind == 0:
+            date = ".".join(reversed(str(e.begin).split("T")[0].split("-")))
+            info.append([])
+            day += 1
+
+        info[day].append([])
+        if (name := e.name.split()[0]) == "ММА":
+            info[day][ind].append("**ММА**")
+        elif name == "Плавание,":
+            info[day][ind].append("**Плавание**")
+        elif name == "Ассамблея,":
+            info[day][ind].append("**Ассамблея**")
+        else:
+            info[day][ind].append(f"**{e.name}**")
+        if not is_empty(desc):
+            info[day][ind].append(f"[ZOOM]({desc[-1]})")
+        info[day][ind].append(f'{e.begin.strftime("%A")}')
+        info[day][ind].append(f'{str(e.begin).split("T")[1].rsplit(":", 2)[0]}')
+        info[day][ind].append(f'{str(e.end).split("T")[1].rsplit(":", 2)[0]}')
+        info[day][ind].append(f"{e.location}")
+        info[day][ind].append(f'{date}')
+        ind += 1
+    return info
+
+
+# async def receive_otp(chat_id: str) -> str:
+#     mail = IMAP4_SSL("outlook.office365.com")
+#     mail.login(get_mail_address(chat_id=chat_id), get_mail_password(chat_id=chat_id))
+#     mail.list()
+#     mail.select("inbox")
+#     res, data = mail.search(None, "ALL")
+#     res, data = mail.fetch(data[0].split()[-1], "(RFC822)")
+#     otp = message_from_string(data[0][1].decode("utf-8"))
+#     try:
+#         otp = otp.get_payload().split("<b>")[2].split("=")[0].split("<")[0]
+#     except AttributeError:
+#         print(Fg.Blue, otp, Fg.Reset)
+#     return otp
+
+
+# --------------------- Editors
+async def to_main_page(event: events.CallbackQuery.Event) -> None:
+    await event.edit("Choose an option below ↴",
+                     parse_mode="md",
+                     buttons=[[
+                         Button.inline("Schedule »", b"schedule_page")
+                     ], [
+                         Button.inline("Homework »", b"homework_page"),
+                     ], [
+                         Button.inline("Holidays", b"holidays"),
+                     ], [
+                         Button.inline("Marks", b"marks"),
+                     ]])
+
+
+async def to_schedule_page(event: events.CallbackQuery.Event) -> None:
+    await event.edit("Choose an option below ↴",
+                     parse_mode="md",
+                     buttons=[[
+                         Button.inline("Entire schedule", b"entire_schedule")
+                     ], [
+                         Button.inline("Today's schedule", b"todays_schedule"),
+                     ], [
+                         Button.inline("Certain day schedule »", b"certain_day_schedule"),
+                     ], [
+                         Button.inline("« Back", b"main_page")
+                     ]])
+
+
+async def to_homework_page(event: events.CallbackQuery.Event) -> None:
+    await event.edit("Choose an option below ↴",
+                     parse_mode="md",
+                     buttons=[[
+                         Button.inline("Entire homework", b"entire_homework")
+                     ], [
+                         Button.inline("Tomorrow's homework", b"tomorrows_homework"),
+                     ], [
+                         Button.inline("Certain day homework »", b"certain_day_homework"),
+                     ], [
+                         Button.inline("« Back", b"main_page")
+                     ]])
+
+
+async def to_certain_day_schedule_page(event: events.CallbackQuery.Event) -> None:
+    await event.edit("Choose a day below ↴",
+                     parse_mode="md",
+                     buttons=[[
+                         Button.inline("Monday", b"monday_schedule")
+                     ], [
+                         Button.inline("Tuesday", b"tuesday_schedule")
+                     ], [
+                         Button.inline("Wednesday", b"wednesday_schedule")
+                     ], [
+                         Button.inline("Thursday", b"thursday_schedule")
+                     ], [
+                         Button.inline("Friday", b"friday_schedule")
+                     ], [
+                         Button.inline("Saturday", b"saturday_schedule")
+                     ], [
+                         Button.inline("« Back", b"schedule_page")
+                     ]])
+
+
+async def to_certain_day_homework_page(event: events.CallbackQuery.Event) -> None:
+    await event.edit("Choose a day below ↴",
+                     parse_mode="md",
+                     buttons=[[
+                         Button.inline("Monday", b"monday_homework")
+                     ], [
+                         Button.inline("Tuesday", b"tuesday_homework")
+                     ], [
+                         Button.inline("Wednesday", b"wednesday_homework")
+                     ], [
+                         Button.inline("Thursday", b"thursday_homework")
+                     ], [
+                         Button.inline("Friday", b"friday_homework")
+                     ], [
+                         Button.inline("Saturday", b"saturday_homework")
+                     ], [
+                         Button.inline("« Back", b"homework_page")
+                     ]])
+
+
+# --------------------- Senders
 async def send_greeting(client: TelegramClient, sender) -> None:
     await client.send_message(entity=sender,
                               message=f'Greetings, **{fn if (fn := sender.first_name) else ""} {ln if (ln := sender.last_name) else ""}**!',
@@ -286,200 +495,9 @@ async def send_holidays(client: TelegramClient, sender) -> None:
                               parse_mode="md")
 
 
-async def to_main_page(event) -> None:
-    await event.edit("Choose an option below ↴",
-                     parse_mode="md",
-                     buttons=[[
-                         Button.inline("Schedule »", b"schedule_page")
-                     ], [
-                         Button.inline("Homework »", b"homework_page"),
-                     ], [
-                         Button.inline("Holidays", b"holidays"),
-                     ], [
-                         Button.inline("Marks", b"marks"),
-                     ]])
-
-
-async def to_schedule_page(event) -> None:
-    await event.edit("Choose an option below ↴",
-                     parse_mode="md",
-                     buttons=[[
-                         Button.inline("Entire schedule", b"entire_schedule")
-                     ], [
-                         Button.inline("Today's schedule", b"todays_schedule"),
-                     ], [
-                         Button.inline("Certain day schedule »", b"certain_day_schedule"),
-                     ], [
-                         Button.inline("« Back", b"main_page")
-                     ]])
-
-
-async def to_homework_page(event) -> None:
-    await event.edit("Choose an option below ↴",
-                     parse_mode="md",
-                     buttons=[[
-                         Button.inline("Entire homework", b"entire_homework")
-                     ], [
-                         Button.inline("Tomorrow's homework", b"tomorrows_homework"),
-                     ], [
-                         Button.inline("Certain day homework »", b"certain_day_homework"),
-                     ], [
-                         Button.inline("« Back", b"main_page")
-                     ]])
-
-
-async def to_certain_day_schedule_page(event) -> None:
-    await event.edit("Choose a day below ↴",
-                     parse_mode="md",
-                     buttons=[[
-                         Button.inline("Monday", b"monday_schedule")
-                     ], [
-                         Button.inline("Tuesday", b"tuesday_schedule")
-                     ], [
-                         Button.inline("Wednesday", b"wednesday_schedule")
-                     ], [
-                         Button.inline("Thursday", b"thursday_schedule")
-                     ], [
-                         Button.inline("Friday", b"friday_schedule")
-                     ], [
-                         Button.inline("Saturday", b"saturday_schedule")
-                     ], [
-                         Button.inline("« Back", b"schedule_page")
-                     ]])
-
-
-async def to_certain_day_homework_page(event) -> None:
-    await event.edit("Choose a day below ↴",
-                     parse_mode="md",
-                     buttons=[[
-                         Button.inline("Monday", b"monday_homework")
-                     ], [
-                         Button.inline("Tuesday", b"tuesday_homework")
-                     ], [
-                         Button.inline("Wednesday", b"wednesday_homework")
-                     ], [
-                         Button.inline("Thursday", b"thursday_homework")
-                     ], [
-                         Button.inline("Friday", b"friday_homework")
-                     ], [
-                         Button.inline("Saturday", b"saturday_homework")
-                     ], [
-                         Button.inline("« Back", b"homework_page")
-                     ]])
-
-
-def receive_schedule(s: rq.Session, chat_id: str) -> Optional[list[list[list[str]]]]:
-    schedule_url: str = f"https://s-api.letovo.ru/api/schedule/{get_student_id(chat_id)}/day/ics?schedule_date=" \
-                        f"{(today := str(datetime.datetime.now()).split()[0])}"
-    schedule_headers: dict[str, Optional[str]] = {
-        "Authorization": get_token(chat_id),
-        "schedule_date": today
-    }
-    try:
-        schedule_response: rq.Response = s.get(url=schedule_url, headers=schedule_headers)
-        if schedule_response.status_code != 200:
-            return None
-    except rq.ConnectionError:
-        return None
-
-    info = []
-    ind: int = 0
-    day: int = -1
-    for ch, e in enumerate(list(Calendar(schedule_response.text).timeline)):
-        try:
-            desc: Any = e.description.split()
-        except IndexError:
-            desc: Any = []
-
-        if ind != 0 and date != (date := ".".join(reversed(str(e.begin).split("T")[0].split("-")))):
-            info.append([])
-            day += 1
-            ind = 0
-        elif ind == 0:
-            date: str = ".".join(reversed(str(e.begin).split("T")[0].split("-")))
-            info.append([])
-            day += 1
-
-        info[day].append([])
-        if (name := e.name.split()[0]) == "ММА":
-            info[day][ind].append("**ММА**")
-        elif name == "Плавание,":
-            info[day][ind].append("**Плавание**")
-        elif name == "Ассамблея,":
-            info[day][ind].append("**Ассамблея**")
-        else:
-            info[day][ind].append(f"**{e.name}**")
-        if not is_empty(desc):
-            info[day][ind].append(f"[ZOOM]({desc[-1]})")
-        info[day][ind].append(f'{e.begin.strftime("%A")}')
-        info[day][ind].append(f'{str(e.begin).split("T")[1].rsplit(":", 2)[0]}')
-        info[day][ind].append(f'{str(e.end).split("T")[1].rsplit(":", 2)[0]}')
-        info[day][ind].append(f"{e.location}")
-        info[day][ind].append(f'{date}')
-        ind += 1
-    return info
-
-
-def parse_schedule() -> Optional[list[list[list[str]]]]:
-    with open("schedule.ics", "r") as f:
-        f = f.read()
-    info = []
-    ind = 0
-    day = -1
-    qqq = Calendar(str(f))
-    for ch, e in enumerate(list(qqq.timeline)):
-        try:
-            desc = e.description.split()
-        except IndexError:
-            desc = []
-
-        if ind != 0 and date != (date := ".".join(reversed(str(e.begin).split("T")[0].split("-")))):
-            info.append([])
-            day += 1
-            ind = 0
-        elif ind == 0:
-            date = ".".join(reversed(str(e.begin).split("T")[0].split("-")))
-            info.append([])
-            day += 1
-
-        info[day].append([])
-        if (name := e.name.split()[0]) == "ММА":
-            info[day][ind].append("**ММА**")
-        elif name == "Плавание,":
-            info[day][ind].append("**Плавание**")
-        elif name == "Ассамблея,":
-            info[day][ind].append("**Ассамблея**")
-        else:
-            info[day][ind].append(f"**{e.name}**")
-        if not is_empty(desc):
-            info[day][ind].append(f"[ZOOM]({desc[-1]})")
-        info[day][ind].append(f'{e.begin.strftime("%A")}')
-        info[day][ind].append(f'{str(e.begin).split("T")[1].rsplit(":", 2)[0]}')
-        info[day][ind].append(f'{str(e.end).split("T")[1].rsplit(":", 2)[0]}')
-        info[day][ind].append(f"{e.location}")
-        info[day][ind].append(f'{date}')
-        ind += 1
-    return info
-
-
-# def get_otp(chat_id: str) -> str:
-#     mail = IMAP4_SSL("outlook.office365.com")
-#     mail.login(get_mail_address(chat_id=chat_id), get_mail_password(chat_id=chat_id))
-#     mail.list()
-#     mail.select("inbox")
-#     res, data = mail.search(None, "ALL")
-#     res, data = mail.fetch(data[0].split()[-1], "(RFC822)")
-#     otp = message_from_string(data[0][1].decode("utf-8"))
-#     try:
-#         otp = otp.get_payload().split("<b>")[2].split("=")[0].split("<")[0]
-#     except AttributeError:
-#         print(Fg.Blue, otp, Fg.Reset)
-#     return otp
-
-
 async def send_certain_day_schedule(
         day: int,
-        event,
+        event: events.CallbackQuery.Event,
         client: TelegramClient,
         s: rq.Session,
         chat_id: str
@@ -499,8 +517,8 @@ async def send_certain_day_schedule(
         await event.answer("Congrats! It's Sunday, no lessons", alert=False)
         return
 
-    # if is_empty(schedule := receive_schedule(s, chat_id)):
-    if is_empty(schedule := parse_schedule()):
+    # if is_empty(schedule := await receive_schedule(s, chat_id)):
+    if is_empty(schedule := await parse_schedule()):
         await event.answer("No schedule found in analytics rn", alert=False)
         return
 
