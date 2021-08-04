@@ -13,6 +13,8 @@ import firebase_admin
 
 from telethon import Button, events, TelegramClient
 from ics import Calendar
+from concurrent.futures import as_completed
+from requests_futures.sessions import FuturesSession
 # from imaplib import IMAP4_SSL
 # from bs4 import BeautifulSoup
 from colourlib import Fg, Style
@@ -23,6 +25,7 @@ from firebase_admin import firestore, credentials
 
 # --------------------- Constants
 LOGIN_URL_LETOVO = "https://s-api.letovo.ru/api/login"
+MAIN_URL_LETOVO = "https://s.letovo.ru"
 LOGIN_URL_LOCAL = "https://letovo.cf/login"
 API_ID = 3486313
 API_HASH = "e2e87224f544a2103d75b07e34818563"
@@ -216,7 +219,7 @@ def is_empty(to_check: Any) -> bool:
 
 
 # --------------------- Receivers
-async def receive_token(s: rq.Session, chat_id: str) -> Optional[str]:
+async def receive_token(s: FuturesSession, chat_id: str) -> Optional[str]:
     login, password = await asyncio.gather(get_analytics_login(chat_id=chat_id),
                                            get_analytics_password(chat_id=chat_id))
 
@@ -225,24 +228,26 @@ async def receive_token(s: rq.Session, chat_id: str) -> Optional[str]:
         "password": password
     }
     try:
-        login_response: rq.Response = s.post(url=LOGIN_URL_LETOVO, data=login_data)
-        return f'{login_response.json()["data"]["token_type"]} {login_response.json()["data"]["token"]}'
+        login_future = s.post(url=LOGIN_URL_LETOVO, data=login_data)
+        for login_response in as_completed([login_future]):
+            return f'{login_response.result().json()["data"]["token_type"]} {login_response.result().json()["data"]["token"]}'
     except rq.ConnectionError:
         return None
 
 
-async def receive_student_id(s: rq.Session, chat_id: str) -> Optional[str]:
+async def receive_student_id(s: FuturesSession, chat_id: str) -> Optional[str]:
     me_headers: dict[str, Optional[str]] = {
         "Authorization": await get_token(chat_id=chat_id)
     }
     try:
-        me_response: rq.Response = s.post("https://s-api.letovo.ru/api/me", headers=me_headers)
-        return me_response.json()["data"]["user"]["student_id"]
+        me_future = s.post("https://s-api.letovo.ru/api/me", headers=me_headers)
+        for me_response in as_completed([me_future]):
+            return me_response.result().json()["data"]["user"]["student_id"]
     except rq.ConnectionError:
         return None
 
 
-async def receive_schedule(s: rq.Session, chat_id: str) -> Optional[list[list[list[str]]]]:
+async def receive_schedule(s: FuturesSession, chat_id: str) -> Optional[list[list[list[str]]]]:
     student_id, token = asyncio.gather(get_student_id(chat_id=chat_id),
                                        get_token(chat_id=chat_id))
 
@@ -253,8 +258,8 @@ async def receive_schedule(s: rq.Session, chat_id: str) -> Optional[list[list[li
         "schedule_date": today
     }
     try:
-        schedule_response: rq.Response = s.get(url=schedule_url, headers=schedule_headers)
-        if schedule_response.status_code != 200:
+        schedule_response = s.get(url=schedule_url, headers=schedule_headers)
+        if schedule_response.result().status_code != 200:
             return None
     except rq.ConnectionError:
         return None
@@ -262,7 +267,7 @@ async def receive_schedule(s: rq.Session, chat_id: str) -> Optional[list[list[li
     info = []
     ind: int = 0
     day: int = -1
-    for ch, e in enumerate(list(Calendar(schedule_response.text).timeline)):
+    for ch, e in enumerate(list(Calendar(schedule_response.result().text).timeline)):
         try:
             desc: Any = e.description.split()
         except IndexError:
@@ -354,7 +359,7 @@ async def parse_schedule() -> Optional[list[list[list[str]]]]:
 #     return otp
 
 
-# --------------------- Editors
+# --------------------- Event editors
 async def to_main_page(event: events.CallbackQuery.Event) -> None:
     await event.edit("Choose an option below ↴",
                      parse_mode="md",
@@ -453,7 +458,7 @@ async def send_init_message(client: TelegramClient, sender) -> None:
     await client.send_message(entity=sender,
                               message=f"I will help you access your schedule via Telegram.\n"
                                       "Initially, you should provide your login and password to"
-                                      " [Letovo Analytics](s.letovo.ru).\n  "
+                                      f" [Letovo Analytics]({MAIN_URL_LETOVO}).\n  "
                                       f'To do that click the button below\n'
                                       "__After logging into your account, click Start button again__",
                               parse_mode="md",
@@ -496,24 +501,23 @@ async def send_holidays(client: TelegramClient, sender) -> None:
 
 
 async def send_certain_day_schedule(
-        day: int,
+        specific_day: int,
         event: events.CallbackQuery.Event,
         client: TelegramClient,
-        s: rq.Session,
+        s: FuturesSession,
         chat_id: str
 ) -> None:
     """
-    send certain day from schedule
+    send specific day(s) from schedule
 
     :param event:
     :param client:
     :param s:
     :param chat_id:
-    :param day: day number (-1..5) or (-10) to send entire schedule
+    :param specific_day: day number (-1..5) or (-10) to send entire schedule
     """
-
     sender = await event.get_sender()
-    if day == -1:
+    if specific_day == -1:
         await event.answer("Congrats! It's Sunday, no lessons", alert=False)
         return
 
@@ -525,7 +529,7 @@ async def send_certain_day_schedule(
     try:
         await event.answer("", alert=False)
         for ind, day in enumerate(schedule):
-            if ind == day or day == -10:
+            if ind == specific_day or specific_day == -10:
                 for lesson in day:
                     await client.send_message(entity=sender,
                                               message="\n".join(lesson),
