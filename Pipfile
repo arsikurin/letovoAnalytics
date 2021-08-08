@@ -12,6 +12,7 @@ ics = "*"
 colourlib = "*"
 bs4 = "*"
 pyyaml = "*"
+aiohttp = "*"
 
 [dev-packages]
 

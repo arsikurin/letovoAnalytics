@@ -6,9 +6,10 @@ import sqlite3
 # import sys
 # import datetime
 # import time
-# import logging as log
+import logging as log
 
 from requests_futures.sessions import FuturesSession
+from pprint import pprint
 from datetime import date
 from telethon import TelegramClient, events, errors
 from essential import API_ID, API_HASH, BOT_TOKEN, init_user_sql, is_inited, is_inited_sql, \
@@ -21,9 +22,9 @@ from essential import API_ID, API_HASH, BOT_TOKEN, init_user_sql, is_inited, is_
 
 client = TelegramClient("letovoAnalytics", API_ID, API_HASH)
 
-with FuturesSession() as s:
-    with sqlite3.Connection("users.sql") as conn:
-        c = sqlite3.Cursor(conn)
+with FuturesSession() as session:
+    with sqlite3.Connection("users.sql") as connection:
+        cursor = sqlite3.Cursor(connection)
 
 
     @client.on(events.NewMessage(pattern=r"(?i).*start"))
@@ -36,16 +37,16 @@ with FuturesSession() as s:
         if not ii:
             await send_init_message(client=client, sender=sender)
 
-            if not await is_inited_sql(chat_id=chat_id, conn=conn, c=c):
-                await init_user_sql(chat_id=chat_id, conn=conn, c=c)
+            if not await is_inited_sql(chat_id=chat_id, conn=connection, c=cursor):
+                await init_user_sql(chat_id=chat_id, conn=connection, c=cursor)
             raise events.StopPropagation
 
         # await send_main_page(client=client, sender=sender)
         # await set_message_sql(chat_id=chat_id, message_id=event.message.id + 3, conn=conn, c=c)
         await asyncio.gather(send_main_page(client=client, sender=sender),
-                             update_data(chat_id=chat_id, token=await receive_token(s, chat_id)),
-                             set_message_sql(chat_id=chat_id, message_id=event.message.id + 3, conn=conn, c=c))
-        await update_data(chat_id=chat_id, student_id=await receive_student_id(s, chat_id)),
+                             update_data(chat_id=chat_id, token=await receive_token(session, chat_id)),
+                             set_message_sql(chat_id=chat_id, message_id=event.message.id + 3, conn=connection, c=cursor))
+        await update_data(chat_id=chat_id, student_id=await receive_student_id(session, chat_id)),
 
 
     @client.on(events.CallbackQuery(pattern=r"(?i).*schedule"))
@@ -53,28 +54,28 @@ with FuturesSession() as s:
         chat_id: str = str(event.original_update.user_id)
         if event.data == b"todays_schedule":
             await send_certain_day_schedule(specific_day=int(date.today().strftime("%w")) - 1,
-                                            event=event, client=client, s=s, chat_id=chat_id)
+                                            event=event, client=client, s=session, chat_id=chat_id)
 
         elif event.data == b"entire_schedule":
-            await send_certain_day_schedule(specific_day=-10, event=event, client=client, s=s, chat_id=chat_id)
+            await send_certain_day_schedule(specific_day=-10, event=event, client=client, s=session, chat_id=chat_id)
 
         elif event.data == b"monday_schedule":
-            await send_certain_day_schedule(specific_day=0, event=event, client=client, s=s, chat_id=chat_id)
+            await send_certain_day_schedule(specific_day=0, event=event, client=client, s=session, chat_id=chat_id)
 
         elif event.data == b"tuesday_schedule":
-            await send_certain_day_schedule(specific_day=1, event=event, client=client, s=s, chat_id=chat_id)
+            await send_certain_day_schedule(specific_day=1, event=event, client=client, s=session, chat_id=chat_id)
 
         elif event.data == b"wednesday_schedule":
-            await send_certain_day_schedule(specific_day=2, event=event, client=client, s=s, chat_id=chat_id)
+            await send_certain_day_schedule(specific_day=2, event=event, client=client, s=session, chat_id=chat_id)
 
         elif event.data == b"thursday_schedule":
-            await send_certain_day_schedule(specific_day=3, event=event, client=client, s=s, chat_id=chat_id)
+            await send_certain_day_schedule(specific_day=3, event=event, client=client, s=session, chat_id=chat_id)
 
         elif event.data == b"friday_schedule":
-            await send_certain_day_schedule(specific_day=4, event=event, client=client, s=s, chat_id=chat_id)
+            await send_certain_day_schedule(specific_day=4, event=event, client=client, s=session, chat_id=chat_id)
 
         elif event.data == b"saturday_schedule":
-            await send_certain_day_schedule(specific_day=5, event=event, client=client, s=s, chat_id=chat_id)
+            await send_certain_day_schedule(specific_day=5, event=event, client=client, s=session, chat_id=chat_id)
 
 
     @client.on(events.CallbackQuery(pattern=r"(?i).*homework"))
@@ -155,7 +156,7 @@ with FuturesSession() as s:
         chat_id: str = str(sender.id)
 
         if event.message.message.lower() == "clear previous":
-            _, msg = await asyncio.gather(event.delete(), get_message_sql(chat_id=chat_id, conn=conn, c=c))
+            _, msg = await asyncio.gather(event.delete(), get_message_sql(chat_id=chat_id, conn=connection, c=cursor))
             msg_ids: list[int] = [i for i in range(msg, event.message.id)]
 
             try:

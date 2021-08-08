@@ -22,7 +22,7 @@ from typing import Optional, Any
 # from email import message_from_string
 from firebase_admin import firestore, credentials
 
-
+#
 # --------------------- Constants
 LOGIN_URL_LETOVO = "https://s-api.letovo.ru/api/login"
 MAIN_URL_LETOVO = "https://s.letovo.ru"
@@ -31,35 +31,35 @@ API_ID = 3486313
 API_HASH = "e2e87224f544a2103d75b07e34818563"
 BOT_TOKEN = "1638159959:AAGTSWJV3FGcZLI98WWhKQuIKI1J4NGN_1s"
 
-
+#
 # --------------------- Firestore
-cred = credentials.Certificate("fbAdminConfig.json")
-firebase_admin.initialize_app(cred)
+firebase_admin.initialize_app(
+    credentials.Certificate("fbAdminConfig.json"))
 db = firestore.client()
 
-
+#
 # --------------------- Parsing
-# soup = BeautifulSoup(html, 'lxml')
+# soup = BeautifulSoup(html, "lxml")
 
 
+#
 # --------------------- Debug
-custom_DEBUG = False
+custom_DEBUG: bool = True
 start_time = time.perf_counter()
+# datetime.timedelta(seconds=time.perf_counter() - start_time)
 
-if custom_DEBUG == "all":
+if custom_DEBUG:
     log.basicConfig(
         format=f"{Fg.Green}{Style.Bold}%(asctime)s{Fg.Reset}{Style.Bold} %(message)s{Style.Reset}\n[%(name)s]\n",
         level=log.DEBUG)
-elif custom_DEBUG:
+else:
     log.basicConfig(
         format=f"{Fg.Green}{Style.Bold}%(asctime)s{Fg.Reset}{Style.Bold} %(message)s{Style.Reset}\n[%(name)s]\n",
         level=log.DEBUG)
     log.getLogger("urllib3.connectionpool").disabled = True
-
-
-def test(s):
-    q = s.get(url="http://127.0.0.1:8080/test")
-    print(q.result())
+    log.getLogger("asyncio").disabled = True
+    log.getLogger("telethon.network.mtprotosender").disabled = True
+    log.getLogger("telethon.extensions.messagepacker").disabled = True
 
 
 # ----------------------------------------------NoSQL funcs-------------------------------------------------------------
@@ -248,8 +248,8 @@ async def receive_student_id(s: FuturesSession, chat_id: str) -> Optional[str]:
 
 
 async def receive_schedule(s: FuturesSession, chat_id: str) -> Optional[list[list[list[str]]]]:
-    student_id, token = asyncio.gather(get_student_id(chat_id=chat_id),
-                                       get_token(chat_id=chat_id))
+    student_id, token = await asyncio.gather(get_student_id(chat_id=chat_id),
+                                             get_token(chat_id=chat_id))
 
     schedule_url: str = f"https://s-api.letovo.ru/api/schedule/{student_id}/day/ics?schedule_date=" \
                         f"{(today := str(datetime.datetime.now()).split()[0])}"
@@ -345,8 +345,10 @@ async def parse_schedule() -> Optional[list[list[list[str]]]]:
 
 
 # async def receive_otp(chat_id: str) -> str:
+#     email, password = await asyncio.gather(get_mail_address(chat_id=chat_id),
+#                                            get_mail_password(chat_id=chat_id))
 #     mail = IMAP4_SSL("outlook.office365.com")
-#     mail.login(get_mail_address(chat_id=chat_id), get_mail_password(chat_id=chat_id))
+#     mail.login(email, password)
 #     mail.list()
 #     mail.select("inbox")
 #     res, data = mail.search(None, "ALL")
@@ -521,8 +523,8 @@ async def send_certain_day_schedule(
         await event.answer("Congrats! It's Sunday, no lessons", alert=False)
         return
 
-    # if is_empty(schedule := await receive_schedule(s, chat_id)):
-    if is_empty(schedule := await parse_schedule()):
+    if is_empty(schedule := await receive_schedule(s, chat_id)):
+        # if is_empty(schedule := await parse_schedule()):
         await event.answer("No schedule found in analytics rn", alert=False)
         return
 
