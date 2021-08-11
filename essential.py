@@ -44,8 +44,8 @@ db = firestore.client()
 
 #
 # --------------------- Debug
-custom_DEBUG: bool = True
-start_time = time.perf_counter()
+custom_DEBUG: bool = False
+# start_time = time.perf_counter()
 # datetime.timedelta(seconds=time.perf_counter() - start_time)
 
 if custom_DEBUG:
@@ -60,6 +60,7 @@ else:
     log.getLogger("asyncio").disabled = True
     log.getLogger("telethon.network.mtprotosender").disabled = True
     log.getLogger("telethon.extensions.messagepacker").disabled = True
+    log.getLogger("telethon.client.uploads").disabled = True
 
 
 # ----------------------------------------------NoSQL funcs-------------------------------------------------------------
@@ -461,7 +462,7 @@ async def send_init_message(client: TelegramClient, sender) -> None:
                               message=f"I will help you access your schedule via Telegram.\n"
                                       "Initially, you should provide your login and password to"
                                       f" [Letovo Analytics]({MAIN_URL_LETOVO}).\n  "
-                                      f'To do that click the button below\n'
+                                      f'To do that click the button below\n\n'
                                       "__After logging into your account, click Start button again__",
                               parse_mode="md",
                               buttons=[
@@ -502,7 +503,7 @@ async def send_holidays(client: TelegramClient, sender) -> None:
                               parse_mode="md")
 
 
-async def send_certain_day_schedule(
+async def send_specific_day_schedule(
         specific_day: int,
         event: events.CallbackQuery.Event,
         client: TelegramClient,
@@ -541,3 +542,66 @@ async def send_certain_day_schedule(
         print(Fg.Red, err, Fg.Reset)
         await event.answer("[✘] Something went wrong!", alert=True)
         return
+
+
+async def send_specific_day_schedule_inline(
+        specific_day: int,
+        event: events.InlineQuery.Event,
+        s: FuturesSession,
+        chat_id: str
+) -> Optional[str]:
+    """
+    send specific day(s) from schedule
+
+    :param event:
+    :param s:
+    :param chat_id:
+    :param specific_day: day number (-1..5) or (-10) to send entire schedule
+    """
+    result = ""
+    if specific_day == 0:
+        day_name = "Monday"
+    elif specific_day == 1:
+        day_name = "Tuesday"
+    elif specific_day == 2:
+        day_name = "Wednesday"
+    elif specific_day == 3:
+        day_name = "Thursday"
+    elif specific_day == 4:
+        day_name = "Friday"
+    elif specific_day == 5:
+        day_name = "Saturday"
+    else:
+        return
+
+    if specific_day == -1:
+        await event.answer([
+            event.builder.article(title=f"{day_name} lessons",
+                                  text="Congrats! It's Sunday, no lessons")
+        ], switch_pm="Log in", switch_pm_param="inlineMode")
+        return
+
+    if is_empty(schedule := await receive_schedule(s, chat_id)):
+        # if is_empty(schedule := await parse_schedule()):
+        await event.answer([
+            event.builder.article(title=f"{day_name} lessons",
+                                  text="No schedule found in analytics rn")
+        ], switch_pm="Log in", switch_pm_param="inlineMode")
+        return
+
+    try:
+        for ind, day in enumerate(schedule):
+            if ind == specific_day or specific_day == -10:
+                for lesson in day:
+                    result += "\n".join(lesson)
+                    result += "\n\n"
+        await event.answer([
+            event.builder.article(title=f"{day_name} lessons", text=result)
+        ], switch_pm="Log in", switch_pm_param="inlineMode")
+
+    except Exception as err:
+        log.critical(f"{Fg.Red} {err} {Fg.Reset}")
+        await event.answer([
+            event.builder.article(title=f"{day_name} lessons",
+                                  text="[✘] Something went wrong!")
+        ], switch_pm="Log in", switch_pm_param="inlineMode")
