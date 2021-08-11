@@ -1,5 +1,6 @@
 # from functools import wraps
 
+# re.compile(fr"(?i).*{state_disc['name']}").match(msg_text or "") is not None
 
 def update_data(
         chat_id,

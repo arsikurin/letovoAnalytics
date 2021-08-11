@@ -6,13 +6,12 @@ name = "pypi"
 [packages]
 requests = "*"
 firebase-admin = "*"
-flask = "*"
 telethon = "*"
 ics = "*"
 colourlib = "*"
 bs4 = "*"
 pyyaml = "*"
-aiohttp = "*"
+cryptg = "*"
 
 [dev-packages]
 
