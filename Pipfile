@@ -5,6 +5,7 @@ name = "pypi"
 
 [packages]
 requests = "*"
+requests_futures = "*"
 firebase-admin = "*"
 telethon = "*"
 ics = "*"

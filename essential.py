@@ -1,6 +1,6 @@
 #!/usr/bin/python3.9
 
-# import os
+import os
 # import sys
 import asyncio
 import sqlite3
@@ -27,9 +27,12 @@ from firebase_admin import firestore, credentials
 LOGIN_URL_LETOVO = "https://s-api.letovo.ru/api/login"
 MAIN_URL_LETOVO = "https://s.letovo.ru"
 LOGIN_URL_LOCAL = "https://letovo.cf/login"
-API_ID = 3486313
-API_HASH = "e2e87224f544a2103d75b07e34818563"
-BOT_TOKEN = "1638159959:AAGTSWJV3FGcZLI98WWhKQuIKI1J4NGN_1s"
+# API_ID = 3486313
+# API_HASH = "e2e87224f544a2103d75b07e34818563"
+# BOT_TOKEN = "1638159959:AAGTSWJV3FGcZLI98WWhKQuIKI1J4NGN_1s"
+API_ID = os.environ["API_ID"]
+API_HASH = os.environ["API_HASH"]
+BOT_TOKEN = os.environ["BOT_TOKEN"]
 
 #
 # --------------------- Firestore
