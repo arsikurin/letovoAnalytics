@@ -27,9 +27,6 @@ from firebase_admin import firestore, credentials
 LOGIN_URL_LETOVO = "https://s-api.letovo.ru/api/login"
 MAIN_URL_LETOVO = "https://s.letovo.ru"
 LOGIN_URL_LOCAL = "https://letovo.cf/login"
-# API_ID = 3486313
-# API_HASH = "e2e87224f544a2103d75b07e34818563"
-# BOT_TOKEN = "1638159959:AAGTSWJV3FGcZLI98WWhKQuIKI1J4NGN_1s"
 API_ID = os.environ["API_ID"]
 API_HASH = os.environ["API_HASH"]
 BOT_TOKEN = os.environ["BOT_TOKEN"]
@@ -47,7 +44,7 @@ db = firestore.client()
 
 #
 # --------------------- Debug
-custom_DEBUG: bool = False
+custom_DEBUG: bool = True
 # start_time = time.perf_counter()
 # datetime.timedelta(seconds=time.perf_counter() - start_time)
 
@@ -388,7 +385,7 @@ async def to_schedule_page(event: events.CallbackQuery.Event) -> None:
                      ], [
                          Button.inline("Today's schedule", b"todays_schedule"),
                      ], [
-                         Button.inline("Certain day schedule »", b"certain_day_schedule"),
+                         Button.inline("specific day schedule »", b"specific_day_schedule"),
                      ], [
                          Button.inline("« Back", b"main_page")
                      ]])
@@ -402,13 +399,13 @@ async def to_homework_page(event: events.CallbackQuery.Event) -> None:
                      ], [
                          Button.inline("Tomorrow's homework", b"tomorrows_homework"),
                      ], [
-                         Button.inline("Certain day homework »", b"certain_day_homework"),
+                         Button.inline("specific day homework »", b"specific_day_homework"),
                      ], [
                          Button.inline("« Back", b"main_page")
                      ]])
 
 
-async def to_certain_day_schedule_page(event: events.CallbackQuery.Event) -> None:
+async def to_specific_day_schedule_page(event: events.CallbackQuery.Event) -> None:
     await event.edit("Choose a day below ↴",
                      parse_mode="md",
                      buttons=[[
@@ -428,7 +425,7 @@ async def to_certain_day_schedule_page(event: events.CallbackQuery.Event) -> Non
                      ]])
 
 
-async def to_certain_day_homework_page(event: events.CallbackQuery.Event) -> None:
+async def to_specific_day_homework_page(event: events.CallbackQuery.Event) -> None:
     await event.edit("Choose a day below ↴",
                      parse_mode="md",
                      buttons=[[
@@ -454,19 +451,20 @@ async def send_greeting(client: TelegramClient, sender) -> None:
                               message=f'Greetings, **{fn if (fn := sender.first_name) else ""} {ln if (ln := sender.last_name) else ""}**!',
                               parse_mode="md",
                               buttons=[[
-                                  Button.text("Start", resize=True, single_use=False)
+                                  Button.text("Menu", resize=True, single_use=False)
                               ], [
                                   Button.text("Clear previous", resize=True, single_use=False)
                               ]])
 
 
 async def send_init_message(client: TelegramClient, sender) -> None:
+    await asyncio.sleep(0.1)
     await client.send_message(entity=sender,
                               message=f"I will help you access your schedule via Telegram.\n"
                                       "Initially, you should provide your login and password to"
                                       f" [Letovo Analytics]({MAIN_URL_LETOVO}).\n  "
                                       f'To do that click the button below\n\n'
-                                      "__After logging into your account, click Start button again__",
+                                      "__After logging into your account, click Menu button__",
                               parse_mode="md",
                               buttons=[
                                   Button.url(text="Log in", url=f'{LOGIN_URL_LOCAL + "?chat_id=" + str(sender.id)}')
@@ -535,7 +533,7 @@ async def send_specific_day_schedule(
     try:
         await event.answer("", alert=False)
         for ind, day in enumerate(schedule):
-            if ind == specific_day or specific_day == -10:
+            if specific_day in (ind, -10):
                 for lesson in day:
                     await client.send_message(entity=sender,
                                               message="\n".join(lesson),
@@ -594,7 +592,7 @@ async def send_specific_day_schedule_inline(
 
     try:
         for ind, day in enumerate(schedule):
-            if ind == specific_day or specific_day == -10:
+            if specific_day in (ind, -10):
                 for lesson in day:
                     result += "\n".join(lesson)
                     result += "\n\n"

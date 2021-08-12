@@ -1,9 +1,0 @@
-Telethon==1.23.0
-requests==2.26.0
-PyYAML==5.4.1
-ics==0.7
-colourlib==0.5.3
-requests_futures==1.0.0
-firebase-admin==5.0.1
-bs4==0.0.1
-cryptg==0.2.post4
