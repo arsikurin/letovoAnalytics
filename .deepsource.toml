@@ -1,6 +1,10 @@
 version = 1
 
 [[analyzers]]
+name = "sql"
+enabled = true
+
+[[analyzers]]
 name = "python"
 enabled = true
 
@@ -10,7 +14,3 @@ enabled = true
 [[analyzers]]
 name = "test-coverage"
 enabled = true
-
-[[analyzers]]
-name = "javascript"
-enabled = false
