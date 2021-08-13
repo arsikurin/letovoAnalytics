@@ -34,7 +34,7 @@ BOT_TOKEN = os.environ["BOT_TOKEN"]
 #
 # --------------------- Firestore
 firebase_admin.initialize_app(
-    credentials.Certificate("fbAdminConfig.json"))
+    credentials.Certificate(yaml.load(os.environ["GOOGLE_KEY"], Loader=yaml.FullLoader)))
 db = firestore.client()
 
 #
