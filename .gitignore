@@ -1,8 +1,8 @@
 schedule.ics
-sandbox.py
 letovoAnalytics.session
 letovoAnalytics.session-journal
 /__pycache__
-essential_old.py
-api keys
+sandbox.py
+env_vars.py
 fbAdminConfig.json
+/static/email_template.html
