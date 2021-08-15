@@ -169,11 +169,11 @@
         },
         "firebase-admin": {
             "hashes": [
-                "sha256:4df619b1b202985514b9a666f62ecb4c20211e89db833bb51916b31b4bb3db68",
-                "sha256:c753b32e4db1dabb8be336af3fbbce783001fa62dbe6da67b4061611ffd5cd4f"
+                "sha256:08464fb65d166b2a9a3a5a42a06b68b16380d1095edfd8fa5f963f4a52e68439",
+                "sha256:7ef4e7c068cacff70597ab55fe12bcc21367d650bc063254f29f15e36a210d6e"
             ],
             "index": "pypi",
-            "version": "==5.0.1"
+            "version": "==5.0.2"
         },
         "google-api-core": {
             "extras": [
