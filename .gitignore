@@ -3,6 +3,7 @@ letovoAnalytics.session
 letovoAnalytics.session-journal
 /__pycache__
 sandbox.py
-env_vars.py
+debug.py
+essential2.py
 fbAdminConfig.json
 /static/email_template.html
