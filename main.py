@@ -3,19 +3,19 @@
 import re
 import asyncio
 import sqlite3
-# import datetime
+import datetime
 # import time
 # import logging as log
 
 from requests_futures.sessions import FuturesSession
-from datetime import date
+from functools import partial
 from telethon import TelegramClient, events, errors
 from essential import (
     API_ID,
     API_HASH,
     BOT_TOKEN,
-    Database,
-    Firebase,
+    Database,  # SQL db for clearing messages
+    Firebase,  # NoSQL db for the other data
     CallbackQuery as cbQuery,
     InlineQuery as iQuery,
 )
@@ -30,8 +30,8 @@ with FuturesSession() as session:
         cursor = sqlite3.Cursor(connection)
 
 
-    @client.on(events.NewMessage(pattern=r"(?i).*menu"))
-    async def menu(event: events.NewMessage.Event):
+    @client.on(events.NewMessage(pattern=r"(?i).*options"))
+    async def options(event: events.NewMessage.Event):
         sender = await event.get_sender()
         sender_id = str(sender.id)
         _, ii = await asyncio.gather(
@@ -70,96 +70,6 @@ with FuturesSession() as session:
             await Database.init_user(sender_id=sender_id, conn=connection, c=cursor)
         await Database.set_message(sender_id=sender_id, message_id=event.message.id + 3, conn=connection, c=cursor)
         raise events.StopPropagation
-
-
-    @client.on(events.CallbackQuery(pattern=r"(?i).*schedule"))
-    async def schedule(event: events.CallbackQuery.Event):
-        sender_id: str = str(event.original_update.user_id)
-        if event.data == b"todays_schedule":
-            await cbQuery.send_specific_day_schedule(
-                specific_day=int(date.today().strftime("%w")) - 1,
-                event=event, client=client, s=session, sender_id=sender_id
-            )
-            raise events.StopPropagation
-
-        elif event.data == b"entire_schedule":
-            await cbQuery.send_specific_day_schedule(specific_day=-10, event=event, client=client, s=session,
-                                                     sender_id=sender_id)
-            raise events.StopPropagation
-
-        elif event.data == b"monday_schedule":
-            await cbQuery.send_specific_day_schedule(specific_day=0, event=event, client=client, s=session,
-                                                     sender_id=sender_id)
-            raise events.StopPropagation
-
-        elif event.data == b"tuesday_schedule":
-            await cbQuery.send_specific_day_schedule(specific_day=1, event=event, client=client, s=session,
-                                                     sender_id=sender_id)
-            raise events.StopPropagation
-
-        elif event.data == b"wednesday_schedule":
-            await cbQuery.send_specific_day_schedule(specific_day=2, event=event, client=client, s=session,
-                                                     sender_id=sender_id)
-            raise events.StopPropagation
-
-        elif event.data == b"thursday_schedule":
-            await cbQuery.send_specific_day_schedule(specific_day=3, event=event, client=client, s=session,
-                                                     sender_id=sender_id)
-            raise events.StopPropagation
-
-        elif event.data == b"friday_schedule":
-            await cbQuery.send_specific_day_schedule(specific_day=4, event=event, client=client, s=session,
-                                                     sender_id=sender_id)
-            raise events.StopPropagation
-
-        elif event.data == b"saturday_schedule":
-            await cbQuery.send_specific_day_schedule(specific_day=5, event=event, client=client, s=session,
-                                                     sender_id=sender_id)
-            raise events.StopPropagation
-
-
-    @client.on(events.CallbackQuery(pattern=r"(?i).*homework"))
-    async def homework(event: events.CallbackQuery.Event):
-        sender_id: str = str(event.original_update.user_id)
-        if event.data == b"tomorrows_homework":
-            await event.answer("Under development", alert=False)
-            # await send_specific_day_homework(int(date.today().strftime("%w")) - 1, event, client, s, sender_id)
-            raise events.StopPropagation
-
-        elif event.data == b"entire_homework":
-            await event.answer("Under development", alert=False)
-            # await send_specific_day_homework(-10, event, client, s, sender_id)
-            raise events.StopPropagation
-
-        elif event.data == b"monday_homework":
-            await event.answer("Under development", alert=False)
-            # await send_specific_day_homework(0, event, client, s, sender_id)
-            raise events.StopPropagation
-
-        elif event.data == b"tuesday_homework":
-            await event.answer("Under development", alert=False)
-            # await send_specific_day_homework(1, event, client, s, sender_id)
-            raise events.StopPropagation
-
-        elif event.data == b"wednesday_homework":
-            await event.answer("Under development", alert=False)
-            # await send_specific_day_homework(2, event, client, s, sender_id)
-            raise events.StopPropagation
-
-        elif event.data == b"thursday_homework":
-            await event.answer("Under development", alert=False)
-            # await send_specific_day_homework(3, event, client, s, sender_id)
-            raise events.StopPropagation
-
-        elif event.data == b"friday_homework":
-            await event.answer("Under development", alert=False)
-            # await send_specific_day_homework(4, event, client, s, sender_id)
-            raise events.StopPropagation
-
-        elif event.data == b"saturday_homework":
-            await event.answer("Under development", alert=False)
-            # await send_specific_day_homework(5, event, client, s, sender_id)
-            raise events.StopPropagation
 
 
     @client.on(events.CallbackQuery(data=b"main_page"))
@@ -207,6 +117,68 @@ with FuturesSession() as session:
         raise events.StopPropagation
 
 
+    @client.on(events.CallbackQuery(pattern=r"(?i).*schedule"))
+    async def schedule(event: events.CallbackQuery.Event):
+        sender_id: str = str(event.original_update.user_id)
+        send_specific_day_schedule = partial(
+            cbQuery.send_specific_day_schedule,
+            event=event, client=client, s=session, sender_id=sender_id
+        )
+
+        if event.data == b"todays_schedule":
+            await send_specific_day_schedule(specific_day=int(int(datetime.datetime.now().strftime("%w"))) - 1)
+
+        elif event.data == b"entire_schedule":
+            await send_specific_day_schedule(specific_day=-10)
+
+        elif event.data == b"monday_schedule":
+            await send_specific_day_schedule(specific_day=0)
+
+        elif event.data == b"tuesday_schedule":
+            await send_specific_day_schedule(specific_day=1)
+
+        elif event.data == b"wednesday_schedule":
+            await send_specific_day_schedule(specific_day=2)
+
+        elif event.data == b"thursday_schedule":
+            await send_specific_day_schedule(specific_day=3)
+
+        elif event.data == b"friday_schedule":
+            await send_specific_day_schedule(specific_day=4)
+
+        elif event.data == b"saturday_schedule":
+            await send_specific_day_schedule(specific_day=5)
+        raise events.StopPropagation
+
+
+    @client.on(events.CallbackQuery(pattern=r"(?i).*homework"))
+    async def homework(event: events.CallbackQuery.Event):
+        if event.data == b"tomorrows_homework":
+            await event.answer("Under development", alert=False)
+
+        elif event.data == b"entire_homework":
+            await event.answer("Under development", alert=False)
+
+        elif event.data == b"monday_homework":
+            await event.answer("Under development", alert=False)
+
+        elif event.data == b"tuesday_homework":
+            await event.answer("Under development", alert=False)
+
+        elif event.data == b"wednesday_homework":
+            await event.answer("Under development", alert=False)
+
+        elif event.data == b"thursday_homework":
+            await event.answer("Under development", alert=False)
+
+        elif event.data == b"friday_homework":
+            await event.answer("Under development", alert=False)
+
+        elif event.data == b"saturday_homework":
+            await event.answer("Under development", alert=False)
+        raise events.StopPropagation
+
+
     @client.on(events.NewMessage())
     async def delete(event: events.NewMessage.Event):
         sender = await event.get_sender()
@@ -232,49 +204,49 @@ with FuturesSession() as session:
     async def handle_inline_query(event: events.InlineQuery.Event):
         sender = await event.get_sender()
         sender_id = str(sender.id)
-        builder = event.builder
 
         if not await Firebase.is_inited(sender_id=sender_id):
             await event.answer(switch_pm="Log in", switch_pm_param="inlineMode")
             raise events.StopPropagation
 
+        send_specific_day_schedule = partial(
+            iQuery.send_specific_day_schedule,
+            event=event, s=session, sender_id=sender_id
+        )
+
         if re.match(r"ne", f"{event.query.query}"):
             # TODO next day inline query
-            await iQuery.send_specific_day_schedule_inline(specific_day=0, s=session, event=event, sender_id=sender_id)
+            await send_specific_day_schedule(specific_day=0)
             # await event.answer([
             #     builder.article(title="Next lesson", text=text if text else "No schedule found in analytics rn")
             # ], switch_pm="Log in", switch_pm_param="inlineMode")
 
         elif re.match(r"to", f"{event.query.query}"):
-            await iQuery.send_specific_day_schedule_inline(
-                specific_day=int(date.today().strftime("%w")) - 1,
-                s=session, event=event, sender_id=sender_id
-            )
+            await send_specific_day_schedule(specific_day=int(datetime.datetime.now().strftime("%w")) - 1)
 
         elif re.match(r"mo", f"{event.query.query}"):
-            await iQuery.send_specific_day_schedule_inline(specific_day=0, s=session, event=event, sender_id=sender_id)
+            await send_specific_day_schedule(specific_day=0)
 
         elif re.match(r"tu", f"{event.query.query}"):
-            await iQuery.send_specific_day_schedule_inline(specific_day=1, s=session, event=event, sender_id=sender_id)
+            await send_specific_day_schedule(specific_day=1)
 
         elif re.match(r"we", f"{event.query.query}"):
-            await iQuery.send_specific_day_schedule_inline(specific_day=2, s=session, event=event, sender_id=sender_id)
+            await send_specific_day_schedule(specific_day=2)
 
         elif re.match(r"th", f"{event.query.query}"):
-            await iQuery.send_specific_day_schedule_inline(specific_day=3, s=session, event=event, sender_id=sender_id)
+            await send_specific_day_schedule(specific_day=3)
 
         elif re.match(r"fr", f"{event.query.query}"):
-            await iQuery.send_specific_day_schedule_inline(specific_day=4, s=session, event=event, sender_id=sender_id)
+            await send_specific_day_schedule(specific_day=4)
 
         elif re.match(r"sa", f"{event.query.query}"):
-            await iQuery.send_specific_day_schedule_inline(specific_day=5, s=session, event=event, sender_id=sender_id)
+            await send_specific_day_schedule(specific_day=5)
 
         elif re.match(r"en", f"{event.query.query}"):
-            await iQuery.send_specific_day_schedule_inline(specific_day=-10, s=session, event=event,
-                                                           sender_id=sender_id)
+            await send_specific_day_schedule(specific_day=-10)
 
         else:
-            await iQuery.to_main_page_inline(event=event)
+            await iQuery.to_main_page(event=event)
 
 
     if __name__ == "__main__":
