@@ -7,6 +7,7 @@
     <content url="file://$MODULE_DIR$">
       <excludeFolder url="file://$MODULE_DIR$/sandbox" />
       <excludeFolder url="file://$MODULE_DIR$/.idea/dataSources" />
+      <excludeFolder url="file://$MODULE_DIR$/.idea/ZeppelinRemoteNotebooks" />
     </content>
     <orderEntry type="jdk" jdkName="Pipenv (letovoAnalytics)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />

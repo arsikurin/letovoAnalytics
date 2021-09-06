@@ -27,19 +27,19 @@ from google.cloud.firestore_v1.document import DocumentReference, DocumentSnapsh
 LOGIN_URL_LETOVO = "https://s-api.letovo.ru/api/login"
 MAIN_URL_LETOVO = "https://s.letovo.ru"
 LOGIN_URL_LOCAL = "https://letovo.cf/login"
-API_ID = os.environ.get("API_ID")
-API_HASH = os.environ.get("API_HASH")
-BOT_TOKEN = os.environ.get("BOT_TOKEN")
+API_ID = os.environ["API_ID"]
+API_HASH = os.environ["API_HASH"]
+BOT_TOKEN = os.environ["BOT_TOKEN"]
 
 #
 # --------------------- Firestore
 firebase_admin.initialize_app(
-    credentials.Certificate(yaml.full_load(os.environ.get("GOOGLE_KEY"))))
+    credentials.Certificate(yaml.full_load(os.environ["GOOGLE_KEY"])))
 db = firestore.client()
 
 #
 # --------------------- Parsing
-# TODO scrapy(w/ or w/o BF), selenium,
+# TODO scrapy(w/ or w/o BF), selenium
 # soup = BeautifulSoup(html, "lxml")
 
 
@@ -59,11 +59,22 @@ else:
         format=f"{Fg.Green}{Style.Bold}%(asctime)s{Fg.Reset}{Style.Bold} %(message)s{Style.Reset}\n[%(name)s]\n",
         level=log.DEBUG
     )
-log.getLogger("urllib3.connectionpool").disabled = True
-log.getLogger("asyncio").disabled = True
-log.getLogger("telethon.network.mtprotosender").disabled = True
-log.getLogger("telethon.extensions.messagepacker").disabled = True
-log.getLogger("telethon.client.uploads").disabled = True
+    log.getLogger("urllib3.connectionpool").disabled = True
+    log.getLogger("asyncio").disabled = True
+    log.getLogger("telethon.network.mtprotosender").disabled = True
+    log.getLogger("telethon.extensions.messagepacker").disabled = True
+    log.getLogger("telethon.client.uploads").disabled = True
+
+
+# class CustomError(Exception):
+#     """
+#     Occurs when another exclusive conversation is opened in the same chat.
+#     """
+#
+#     def __init__(self):
+#         super().__init__(
+#             "variable referenced before assignment"
+#         )
 
 
 class FirebaseRest:
@@ -273,15 +284,15 @@ class Web:
             return None
 
     @classmethod
-    async def receive_schedule(cls, s: FuturesSession, sender_id: str) -> Optional[list[list[list[str]]]]:
+    async def receive_schedule(cls, s: FuturesSession, sender_id: str):
         student_id, token = await asyncio.gather(
             Firebase.get_student_id(sender_id=sender_id),
             Firebase.get_token(sender_id=sender_id)
         )
 
         schedule_url: str = (
-            f"https://s-api.letovo.ru/api/schedule/{student_id}/day/ics?schedule_date="
-            f"{(today := str(datetime.datetime.now()).split()[0])}"
+            f"https://s-api.letovo.ru/api/schedule/{student_id}/week/ics?schedule_date="
+            f"{(today := str(datetime.datetime.now().date()))}"
         )
         schedule_headers: dict[str, Optional[str]] = {
             "Authorization": token,
@@ -299,9 +310,9 @@ class Web:
         day: int = -1
         for ch, e in enumerate(list(Calendar(schedule_future.result().text).timeline)):
             try:
-                desc: Any = e.description.split()
+                desc: Any = e.description
             except IndexError:
-                desc: Any = []
+                desc: str = ""
 
             if ind != 0 and date != (date := ".".join(reversed(str(e.begin).split("T")[0].split("-")))):
                 info.append([])
@@ -317,17 +328,17 @@ class Web:
                 info[day][ind].append("**ММА**")
             elif name == "Плавание,":
                 info[day][ind].append("**Плавание**")
-            elif name == "Ассамблея,":
-                info[day][ind].append("**Ассамблея**")
             else:
-                info[day][ind].append(f"**{e.name}**")
-            if not desc:
-                info[day][ind].append(f"[ZOOM]({desc[-1]})")
-            info[day][ind].append(f'{e.begin.strftime("%A")}')
-            info[day][ind].append(f'{str(e.begin).split("T")[1].rsplit(":", 2)[0]}')
-            info[day][ind].append(f'{str(e.end).split("T")[1].rsplit(":", 2)[0]}')
-            info[day][ind].append(f"{e.location}")
-            info[day][ind].append(f'{date}')
+                lesson = e.name.split("(")[0].split()
+                info[day][ind].append(f'{" ".join(lesson[:2])} **{" ".join(lesson[2:])}**')
+            if desc:
+                if (zoom_url := desc.split("Zoom url:")[-1].strip()) != "no link":
+                    info[day][ind].append(f"[ZOOM]({zoom_url})")
+                info[day][ind].append(f'{desc.split()[1]} __(Classroom)__')
+            info[day][ind].append(
+                f'{str(e.begin).split("T")[1].rsplit(":", 2)[0]} — {str(e.end).split("T")[1].rsplit(":", 2)[0]}'
+            )
+            info[day][ind].append(f'{e.begin.strftime("%A")}, {date}')
             ind += 1
         return info
 
@@ -350,48 +361,6 @@ class Web:
     #     except AttributeError:
     #         print(Fg.Blue, otp, Fg.Reset)
     #     return otp
-
-
-async def parse_schedule() -> Optional[list[list[list[str]]]]:
-    with open("schedule.ics", "r") as f:
-        f = f.read()
-    info = []
-    ind = 0
-    day = -1
-    qqq = Calendar(str(f))
-    for ch, e in enumerate(list(qqq.timeline)):
-        try:
-            desc = e.description.split()
-        except IndexError:
-            desc = []
-
-        if ind != 0 and date != (date := ".".join(reversed(str(e.begin).split("T")[0].split("-")))):
-            info.append([])
-            day += 1
-            ind = 0
-        elif ind == 0:
-            date = ".".join(reversed(str(e.begin).split("T")[0].split("-")))
-            info.append([])
-            day += 1
-
-        info[day].append([])
-        if (name := e.name.split()[0]) == "ММА":
-            info[day][ind].append("**ММА**")
-        elif name == "Плавание,":
-            info[day][ind].append("**Плавание**")
-        elif name == "Ассамблея,":
-            info[day][ind].append("**Ассамблея**")
-        else:
-            info[day][ind].append(f"**{e.name}**")
-        if not desc:
-            info[day][ind].append(f"[ZOOM]({desc[-1]})")
-        info[day][ind].append(f'{e.begin.strftime("%A")}')
-        info[day][ind].append(f'{str(e.begin).split("T")[1].rsplit(":", 2)[0]}')
-        info[day][ind].append(f'{str(e.end).split("T")[1].rsplit(":", 2)[0]}')
-        info[day][ind].append(f"{e.location}")
-        info[day][ind].append(f'{date}')
-        ind += 1
-    return info
 
 
 class CallbackQueryEventEditors:
@@ -503,11 +472,11 @@ class CallbackQuerySenders:
     async def send_greeting(cls, client: TelegramClient, sender) -> None:
         await client.send_message(
             entity=sender,
-            message=f'Greetings, **{fn if (fn := sender.first_name) else ""} {ln if (ln := sender.last_name) else ""}**!',
+            message=f'Greetings, **{f if (f := sender.first_name) else ""} {l if (l := sender.last_name) else ""}**!',
             parse_mode="md",
             buttons=[
                 [
-                    Button.text("Menu", resize=True, single_use=False)
+                    Button.text("Options", resize=True, single_use=False)
                 ], [
                     Button.text("Clear previous", resize=True, single_use=False)
                 ]
@@ -520,13 +489,13 @@ class CallbackQuerySenders:
         await client.send_message(
             entity=sender,
             message=f"I will help you access your schedule via Telegram.\n"
-                    "Initially, you should provide your login and password to"
+                    "Initially, you should provide your **login** and **password** to"
                     f" [Letovo Analytics]({MAIN_URL_LETOVO}).\n  "
-                    f'To do that click the button below\n\n'
-                    "__After logging into your account, click Menu button__",
+                    f'To do that click the **Log In** button below\n\n'
+                    "__After logging into your account, click Options button__",
             parse_mode="md",
             buttons=[
-                Button.url(text="Log in", url=f'{LOGIN_URL_LOCAL + "?chat_id=" + str(sender.id)}')
+                Button.url(text="Click to log in", url=f'{LOGIN_URL_LOCAL}?chat_id={str(sender.id)}')
             ]
         )
 
@@ -553,25 +522,25 @@ class CallbackQuerySenders:
     async def send_holidays(cls, client: TelegramClient, sender) -> None:
         await client.send_message(
             entity=sender,
-            message="__after__ **I unit**\n31.10.2021 — 07.11.2021",
+            message="__after__ **unit I**\n31.10.2021 — 07.11.2021",
             parse_mode="md"
         )
 
         await client.send_message(
             entity=sender,
-            message="__after__ **II unit**\n26.12.2021 — 09.01.2022",
+            message="__after__ **unit II**\n26.12.2021 — 09.01.2022",
             parse_mode="md"
         )
 
         await client.send_message(
             entity=sender,
-            message="__after__ **III unit**\n13.03.2022 — 20.03.2022",
+            message="__after__ **unit III**\n13.03.2022 — 20.03.2022",
             parse_mode="md"
         )
 
         await client.send_message(
             entity=sender,
-            message="__after__ **IV unit**\n22.05.2022 — 31.08.2022",
+            message="__after__ **unit IV**\n22.05.2022 — 31.08.2022",
             parse_mode="md"
         )
 
@@ -598,8 +567,11 @@ class CallbackQuerySenders:
             await event.answer("Congrats! It's Sunday, no lessons", alert=False)
             return
 
-        if not (schedule := await Web.receive_schedule(s, sender_id)):
-            # if not (schedule := await parse_schedule()):
+        if (schedule := await Web.receive_schedule(s, sender_id)) == NameError:
+            await event.answer("[✘] Something went wrong!!!", alert=True)
+            return
+
+        if not schedule:
             await event.answer("No schedule found in analytics rn", alert=False)
             return
 
@@ -622,7 +594,7 @@ class CallbackQuerySenders:
 
 class InlineQueryEventEditors:
     @classmethod
-    async def to_main_page_inline(cls, event: events.InlineQuery.Event) -> None:
+    async def to_main_page(cls, event: events.InlineQuery.Event) -> None:
         """display main page in inline query"""
 
         await event.answer(
@@ -653,7 +625,7 @@ class InlineQueryEventEditors:
 
 class InlineQuerySenders:
     @classmethod
-    async def send_specific_day_schedule_inline(
+    async def send_specific_day_schedule(
             cls,
             specific_day: int,
             event: events.InlineQuery.Event,
@@ -699,6 +671,13 @@ class InlineQuerySenders:
                 ], switch_pm="Log in", switch_pm_param="inlineMode"
             )
             return
+
+        # if schedule == NameError:
+        #     await event.answer(
+        #         results=[
+        #             event.builder.article(title=f"{day_name} lessons", text="[✘] Something went wrong!")
+        #         ], switch_pm="Log in", switch_pm_param="inlineMode"
+        #     )
 
         try:
             for ind, day in enumerate(schedule):
