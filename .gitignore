@@ -4,7 +4,10 @@ letovoAnalytics.session-journal
 /__pycache__
 sandbox.py
 debug.py
-essential2.py
 fbAdminConfig.json
-/static/email_template.html
+/templates/email_template.html
 scheduleNew.ics
+/templates/login.html
+/templates/index.html
+/static/images/icons/home.svg
+/static/images/icons/login.svg

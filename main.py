@@ -2,7 +2,7 @@
 
 import re
 import asyncio
-import sqlite3
+import psycopg2
 import datetime
 # import time
 # import logging as log
@@ -11,6 +11,11 @@ from requests_futures.sessions import FuturesSession
 from functools import partial
 from telethon import TelegramClient, events, errors
 from essential import (
+    HOST_SQL,
+    PORT_SQL,
+    USER_SQL,
+    DATABASE_SQL,
+    PASSWORD_SQL,
     API_ID,
     API_HASH,
     BOT_TOKEN,
@@ -26,8 +31,10 @@ from essential import (
 client = TelegramClient("letovoAnalytics", API_ID, API_HASH)
 
 with FuturesSession() as session:
-    with sqlite3.Connection("users.sql") as connection:
-        cursor = sqlite3.Cursor(connection)
+    with psycopg2.connect(
+            host=HOST_SQL, port=PORT_SQL, user=USER_SQL, database=DATABASE_SQL, password=PASSWORD_SQL, sslmode="require"
+    ) as connection:
+        cursor = connection.cursor()
 
 
     @client.on(events.NewMessage(pattern=r"(?i).*options"))

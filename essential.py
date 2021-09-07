@@ -3,7 +3,6 @@
 import os
 import yaml
 import asyncio
-import sqlite3
 import datetime
 import firebase_admin
 import requests as rq
@@ -20,6 +19,7 @@ from firebase_admin import firestore, credentials
 from concurrent.futures import as_completed, Future
 from requests_futures.sessions import FuturesSession
 from telethon import Button, events, TelegramClient, types
+from psycopg2._psycopg import connection, cursor
 from google.cloud.firestore_v1.document import DocumentReference, DocumentSnapshot
 
 #
@@ -27,9 +27,15 @@ from google.cloud.firestore_v1.document import DocumentReference, DocumentSnapsh
 LOGIN_URL_LETOVO = "https://s-api.letovo.ru/api/login"
 MAIN_URL_LETOVO = "https://s.letovo.ru"
 LOGIN_URL_LOCAL = "https://letovo.cf/login"
+API_KEY = os.environ["API_KEY"]
 API_ID = os.environ["API_ID"]
 API_HASH = os.environ["API_HASH"]
 BOT_TOKEN = os.environ["BOT_TOKEN"]
+HOST_SQL = os.environ["HOST_SQL"]
+PORT_SQL = "5432"
+USER_SQL = os.environ["USER_SQL"]
+DATABASE_SQL = os.environ["DATABASE_SQL"]
+PASSWORD_SQL = os.environ["PASSWORD_SQL"]
 
 #
 # --------------------- Firestore
@@ -136,6 +142,10 @@ class FirebaseSetters:
 
 class FirebaseGetters:
     @classmethod
+    async def get_users(cls) -> list:
+        return [doc.id for doc in db.collection(u"users").stream()]
+
+    @classmethod
     async def get_student_id(cls, sender_id: str) -> Optional[int]:
         doc: DocumentSnapshot = db.collection(u"users").document(sender_id).get()
         try:
@@ -195,13 +205,13 @@ class DatabaseRest:
     async def is_inited(
             cls,
             sender_id: str,
-            conn: sqlite3.Connection,
-            c: sqlite3.Cursor
+            conn: connection,
+            c: cursor
     ) -> str:
         with conn:
             c.execute(
-                "SELECT sender_id FROM messages WHERE sender_id = :sender_id",
-                {"sender_id": sender_id}
+                "SELECT sender_id FROM messages WHERE sender_id = %s",
+                (sender_id,)
             )
             return c.fetchone()
 
@@ -209,14 +219,27 @@ class DatabaseRest:
     async def init_user(
             cls,
             sender_id: str,
-            conn: sqlite3.Connection,
-            c: sqlite3.Cursor
+            conn: connection,
+            c: cursor
     ) -> None:
         with conn:
             c.execute(
-                """INSERT INTO messages VALUES (:sender_id, :message_id)""",
-                {"sender_id": sender_id, "message_id": None}
+                f"INSERT INTO messages (sender_id, message_id) VALUES (%s, %s)",
+                (sender_id, None)
             )
+
+    @classmethod
+    def crate_table(
+            cls,
+            conn: connection,
+            c: cursor
+    ):
+        with conn:
+            c.execute("""
+            create table messages (
+                sender_id VARCHAR(255) primary key,
+                message_id INTEGER
+            );""")
 
 
 class DatabaseSetters:
@@ -225,13 +248,13 @@ class DatabaseSetters:
             cls,
             sender_id: str,
             message_id: int,
-            conn: sqlite3.Connection,
-            c: sqlite3.Cursor
+            conn: connection,
+            c: cursor
     ) -> None:
         with conn:
             c.execute(
-                "UPDATE messages SET message_id = :message_id WHERE sender_id = :sender_id",
-                {"message_id": message_id, "sender_id": sender_id}
+                "UPDATE messages SET message_id = %s WHERE sender_id = %s",
+                (message_id, sender_id)
             )
 
 
@@ -240,13 +263,13 @@ class DatabaseGetters:
     async def get_message(
             cls,
             sender_id: str,
-            conn: sqlite3.Connection,
-            c: sqlite3.Cursor
+            conn: connection,
+            c: cursor
     ) -> int:
         with conn:
             c.execute(
-                "SELECT message_id FROM messages WHERE sender_id = :sender_id",
-                {"sender_id": sender_id}
+                "SELECT message_id FROM messages WHERE sender_id = %s",
+                (sender_id,)
             )
             return c.fetchone()[0]
 
@@ -258,7 +281,23 @@ class Web:
             Firebase.get_analytics_login(sender_id=sender_id),
             Firebase.get_analytics_password(sender_id=sender_id)
         )
+        if not login:
+            return
 
+        login_data: dict[str, Optional[str]] = {
+            "login": login,
+            "password": password
+        }
+        try:
+            login_future: Future = s.post(url=LOGIN_URL_LETOVO, data=login_data)
+            for login_futured in as_completed([login_future]):
+                login_response = login_futured.result()
+                return f'{login_response.json()["data"]["token_type"]} {login_response.json()["data"]["token"]}'
+        except rq.ConnectionError:
+            return None
+
+    @classmethod
+    async def receive_token_a(cls, s: FuturesSession, login: str, password: str) -> Optional[str]:
         login_data: dict[str, Optional[str]] = {
             "login": login,
             "password": password
@@ -278,6 +317,18 @@ class Web:
         }
         try:
             me_future: Future = s.post("https://s-api.letovo.ru/api/me", headers=me_headers)
+            for me_futured in as_completed([me_future]):
+                return me_futured.result().json()["data"]["user"]["student_id"]
+        except rq.ConnectionError:
+            return None
+
+    @classmethod
+    async def receive_student_id_a(cls, s: FuturesSession, token: str) -> Optional[str]:
+        me_headers: dict[str, Optional[str]] = {
+            "Authorization": token
+        }
+        try:
+            me_future = s.post("https://s-api.letovo.ru/api/me", headers=me_headers)
             for me_futured in as_completed([me_future]):
                 return me_futured.result().json()["data"]["user"]["student_id"]
         except rq.ConnectionError:
