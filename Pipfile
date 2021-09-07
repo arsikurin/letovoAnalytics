@@ -13,6 +13,12 @@ colourlib = "*"
 bs4 = "*"
 pyyaml = "*"
 cryptg = "*"
+psycopg2-binary = "*"
+jinja2 = "*"
+fastapi = "*"
+aiofiles = "*"
+uvicorn = "*"
+python-multipart = "*"
 
 [dev-packages]
 
