@@ -26,6 +26,7 @@ from google.cloud.firestore_v1.document import DocumentReference, DocumentSnapsh
 # --------------------- Constants
 LOGIN_URL_LETOVO = "https://s-api.letovo.ru/api/login"
 MAIN_URL_LETOVO = "https://s.letovo.ru"
+MAIN_URL_API = "https://letovo-analytics.herokuapp.com/"
 LOGIN_URL_LOCAL = "https://letovo.cf/login"
 API_KEY = os.environ["API_KEY"]
 API_ID = os.environ["API_ID"]
