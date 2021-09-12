@@ -25,9 +25,6 @@ from essential import (
     InlineQuery as iQuery,
 )
 
-"https://s-api.letovo.ru/api/students/54405"
-"https://s-api.letovo.ru/api/studentsimg/54405"
-
 client = TelegramClient("letovoAnalytics", API_ID, API_HASH)
 
 with FuturesSession() as session:
