@@ -48,7 +48,8 @@ db = firestore.client()
 # --------------------- Parsing
 # TODO scrapy(w/ or w/o BF), selenium
 # soup = BeautifulSoup(html, "lxml")
-
+# "https://s-api.letovo.ru/api/students/54405"
+# "https://s-api.letovo.ru/api/studentsimg/54405"
 
 #
 # --------------------- Debug
