@@ -2,15 +2,12 @@
 
 import requests as rq
 import logging as log
-# import smtplib
 
 from requests_futures.sessions import FuturesSession
-# from email.mime.text import MIMEText
-# from email.mime.multipart import MIMEMultipart
 from firebase_admin._auth_utils import EmailAlreadyExistsError
 from threading import Thread
 from firebase_admin import auth
-from fastapi import FastAPI, Request, status
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -37,6 +34,9 @@ def send_email(email):
 
 
 # def send_email(analytics_login):
+# import smtplib
+# from email.mime.text import MIMEText
+# from email.mime.multipart import MIMEMultipart
 #     with smtplib.SMTP("smtp.gmail.com: 587") as server:
 #         msg = MIMEMultipart()
 #         password = PASSWORD
@@ -165,7 +165,7 @@ async def login_api(request: Request):
         analytics_password = request_data.get("password")
         sender_id = request_data.get("chat_id")
     except KeyError:
-        return status.HTTP_422_UNPROCESSABLE_ENTITY
+        raise HTTPException(status_code=422)
 
     login_data = {
         "login": analytics_login,
@@ -173,9 +173,9 @@ async def login_api(request: Request):
     }
     try:
         if not rq.post(url=LOGIN_URL_LETOVO, data=login_data).status_code == 200:
-            return status.HTTP_401_UNAUTHORIZED
+            raise HTTPException(status_code=401)
     except rq.ConnectionError:
-        return status.HTTP_400_BAD_REQUEST  # ConnectionError
+        raise HTTPException(status_code=400, detail="s.letovo.ru might be down")  # ConnectionError
     try:
         with FuturesSession() as session:
             token = await Web.receive_token_a(s=session, login=analytics_login, password=analytics_password)
@@ -192,4 +192,4 @@ async def login_api(request: Request):
             return RedirectResponse("https://letovo.cf", status_code=302)
     except Exception as err:
         log.debug(err)
-        return status.HTTP_400_BAD_REQUEST
+        raise HTTPException(status_code=400)
