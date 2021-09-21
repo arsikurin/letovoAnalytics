@@ -21,17 +21,19 @@ from essential import (
     BOT_TOKEN,
     Database,  # SQL db for clearing messages
     Firebase,  # NoSQL db for the other data
-    CallbackQuery as cbQuery,
-    InlineQuery as iQuery,
+    CallbackQuery,
+    InlineQuery
 )
-
-client = TelegramClient("letovoAnalytics", API_ID, API_HASH)
 
 with FuturesSession() as session:
     with psycopg2.connect(
             host=HOST_SQL, port=PORT_SQL, user=USER_SQL, database=DATABASE_SQL, password=PASSWORD_SQL, sslmode="require"
     ) as connection:
         cursor = connection.cursor()
+    client = TelegramClient("letovoAnalytics", API_ID, API_HASH)
+    cbQuery = CallbackQuery(c=client)
+    iQuery = InlineQuery()
+    db = Database(conn=connection, c=cursor)
 
 
     @client.on(events.NewMessage(pattern=r"(?i).*options"))
@@ -39,23 +41,23 @@ with FuturesSession() as session:
         sender = await event.get_sender()
         sender_id = str(sender.id)
         _, ii = await asyncio.gather(
-            cbQuery.send_greeting(client=client, sender=sender),
+            cbQuery.send_greeting(sender=sender),
             Firebase.is_inited(sender_id=sender_id)
         )
 
         if not ii:
-            await cbQuery.send_init_message(client=client, sender=sender)
+            await cbQuery.send_init_message(sender=sender)
 
-            if not await Database.is_inited(sender_id=sender_id, conn=connection, c=cursor):
-                await Database.init_user(sender_id=sender_id, conn=connection, c=cursor)
+            if not await db.is_inited(sender_id=sender_id):
+                await db.init_user(sender_id=sender_id)
             raise events.StopPropagation
 
-        if not await Database.is_inited(sender_id=sender_id, conn=connection, c=cursor):
-            await Database.init_user(sender_id=sender_id, conn=connection, c=cursor)
+        if not await db.is_inited(sender_id=sender_id):
+            await db.init_user(sender_id=sender_id)
 
         await asyncio.gather(
-            cbQuery.send_main_page(client=client, sender=sender),
-            Database.set_message(sender_id=sender_id, message_id=event.message.id + 3, conn=connection, c=cursor)
+            cbQuery.send_main_page(sender=sender),
+            db.set_message(sender_id=sender_id, message_id=event.message.id + 3)
         )
         raise events.StopPropagation
 
@@ -65,14 +67,14 @@ with FuturesSession() as session:
         sender = await event.get_sender()
         sender_id = str(sender.id)
         await asyncio.gather(
-            cbQuery.send_greeting(client=client, sender=sender),
-            cbQuery.send_init_message(client=client, sender=sender),
+            cbQuery.send_greeting(sender=sender),
+            cbQuery.send_init_message(sender=sender),
             Firebase.update_data(sender_id=sender_id, lang=sender.lang_code)
         )
 
-        if not await Database.is_inited(sender_id=sender_id, conn=connection, c=cursor):
-            await Database.init_user(sender_id=sender_id, conn=connection, c=cursor)
-        await Database.set_message(sender_id=sender_id, message_id=event.message.id + 3, conn=connection, c=cursor)
+        if not await db.is_inited(sender_id=sender_id):
+            await db.init_user(sender_id=sender_id)
+        await db.set_message(sender_id=sender_id, message_id=event.message.id + 3)
         raise events.StopPropagation
 
 
@@ -110,7 +112,7 @@ with FuturesSession() as session:
     async def holidays(event: events.CallbackQuery.Event):
         await asyncio.gather(
             event.answer(),
-            cbQuery.send_holidays(client=client, sender=await event.get_sender())
+            cbQuery.send_holidays(sender=await event.get_sender())
         )
         raise events.StopPropagation
 
@@ -126,7 +128,7 @@ with FuturesSession() as session:
         sender_id: str = str(event.original_update.user_id)
         send_specific_day_schedule = partial(
             cbQuery.send_specific_day_schedule,
-            event=event, client=client, s=session, sender_id=sender_id
+            event=event, s=session, sender_id=sender_id
         )
 
         if event.data == b"todays_schedule":
@@ -183,6 +185,17 @@ with FuturesSession() as session:
         raise events.StopPropagation
 
 
+    @client.on(events.NewMessage(pattern=r"(?i).*about"))
+    async def about(event: events.NewMessage.Event):
+        sender = await event.get_sender()
+        sender_id = str(sender.id)
+        await asyncio.gather(
+            cbQuery.send_greeting(sender=sender),
+            # cbQuery.send_init_message(sender=sender),
+        )
+        raise events.StopPropagation
+
+
     @client.on(events.NewMessage())
     async def delete(event: events.NewMessage.Event):
         sender = await event.get_sender()
@@ -191,7 +204,7 @@ with FuturesSession() as session:
         if re.fullmatch(r"(?i).*clear previous", f"{event.message.message}"):
             _, msg = await asyncio.gather(
                 event.delete(),
-                Database.get_message(sender_id=sender_id, conn=connection, c=cursor)
+                db.get_message(sender_id=sender_id)
             )
             msg_ids: list[int] = [i for i in range(msg, event.message.id)]
 
