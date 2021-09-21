@@ -22,7 +22,8 @@ from essential import (
     Database,  # SQL db for clearing messages
     Firebase,  # NoSQL db for the other data
     CallbackQuery,
-    InlineQuery
+    InlineQuery,
+    Weekdays
 )
 
 with FuturesSession() as session:
@@ -125,10 +126,9 @@ with FuturesSession() as session:
 
     @client.on(events.CallbackQuery(pattern=r"(?i).*schedule"))
     async def schedule(event: events.CallbackQuery.Event):
-        sender_id: str = str(event.original_update.user_id)
         send_specific_day_schedule = partial(
             cbQuery.send_specific_day_schedule,
-            event=event, s=session, sender_id=sender_id
+            event=event, s=session
         )
 
         if event.data == b"todays_schedule":
@@ -138,57 +138,68 @@ with FuturesSession() as session:
             await send_specific_day_schedule(specific_day=-10)
 
         elif event.data == b"monday_schedule":
-            await send_specific_day_schedule(specific_day=0)
+            await send_specific_day_schedule(specific_day=Weekdays.Monday.value - 1)
 
         elif event.data == b"tuesday_schedule":
-            await send_specific_day_schedule(specific_day=1)
+            await send_specific_day_schedule(specific_day=Weekdays.Tuesday.value - 1)
 
         elif event.data == b"wednesday_schedule":
-            await send_specific_day_schedule(specific_day=2)
+            await send_specific_day_schedule(specific_day=Weekdays.Wednesday.value - 1)
 
         elif event.data == b"thursday_schedule":
-            await send_specific_day_schedule(specific_day=3)
+            await send_specific_day_schedule(specific_day=Weekdays.Thursday.value - 1)
 
         elif event.data == b"friday_schedule":
-            await send_specific_day_schedule(specific_day=4)
+            await send_specific_day_schedule(specific_day=Weekdays.Friday.value - 1)
 
         elif event.data == b"saturday_schedule":
-            await send_specific_day_schedule(specific_day=5)
+            await send_specific_day_schedule(specific_day=Weekdays.Saturday.value - 1)
         raise events.StopPropagation
 
 
     @client.on(events.CallbackQuery(pattern=r"(?i).*homework"))
     async def homework(event: events.CallbackQuery.Event):
+        send_specific_day_homework = partial(
+            cbQuery.send_specific_day_homework,
+            event=event, s=session
+        )
         if event.data == b"tomorrows_homework":
-            await event.answer("Under development", alert=False)
+            await send_specific_day_homework(specific_day=int(int(datetime.datetime.now().strftime("%w"))) + 1)
+            await event.answer("In beta", alert=False)
 
         elif event.data == b"entire_homework":
-            await event.answer("Under development", alert=False)
+            await send_specific_day_homework(specific_day=-10)
+            await event.answer("In beta", alert=False)
 
         elif event.data == b"monday_homework":
-            await event.answer("Under development", alert=False)
+            await send_specific_day_homework(specific_day=Weekdays.Monday.value)
+            await event.answer("In beta", alert=False)
 
         elif event.data == b"tuesday_homework":
-            await event.answer("Under development", alert=False)
+            await send_specific_day_homework(specific_day=Weekdays.Tuesday.value)
+            await event.answer("In beta", alert=False)
 
         elif event.data == b"wednesday_homework":
-            await event.answer("Under development", alert=False)
+            await send_specific_day_homework(specific_day=Weekdays.Wednesday.value)
+            await event.answer("In beta", alert=False)
 
         elif event.data == b"thursday_homework":
-            await event.answer("Under development", alert=False)
+            await send_specific_day_homework(specific_day=Weekdays.Thursday.value)
+            await event.answer("In beta", alert=False)
 
         elif event.data == b"friday_homework":
-            await event.answer("Under development", alert=False)
+            await send_specific_day_homework(specific_day=Weekdays.Friday.value)
+            await event.answer("In beta", alert=False)
 
         elif event.data == b"saturday_homework":
-            await event.answer("Under development", alert=False)
+            await send_specific_day_homework(specific_day=Weekdays.Saturday.value)
+            await event.answer("In beta", alert=False)
         raise events.StopPropagation
 
 
     @client.on(events.NewMessage(pattern=r"(?i).*about"))
     async def about(event: events.NewMessage.Event):
         sender = await event.get_sender()
-        sender_id = str(sender.id)
         await asyncio.gather(
             cbQuery.send_greeting(sender=sender),
             # cbQuery.send_init_message(sender=sender),

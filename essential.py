@@ -102,12 +102,12 @@ class NothingFoundError(Exception):
 
 
 class Weekdays(Enum):
-    MONDAY = "Monday"
-    TUESDAY = "Tuesday"
-    WEDNESDAY = "Wednesday"
-    THURSDAY = "Thursday"
-    FRIDAY = "Friday"
-    SATURDAY = "Saturday"
+    Monday = 1
+    Tuesday = 2
+    Wednesday = 3
+    Thursday = 4
+    Friday = 5
+    Saturday = 6
 
 
 class FirebaseSetters:
@@ -272,7 +272,7 @@ class CallbackQueryEventEditors:
                 ], [
                     Button.inline("Tomorrow's homework", b"tomorrows_homework"),
                 ], [
-                    Button.inline("specific day homework »", b"specific_day_homework"),
+                    Button.inline("Specific day homework »", b"specific_day_homework"),
                 ], [
                     Button.inline("« Back", b"main_page")
                 ]
@@ -409,14 +409,12 @@ class CallbackQuerySenders:
             specific_day: int,
             event: events.CallbackQuery.Event,
             s: FuturesSession,
-            sender_id: str
     ) -> None:
         """
-        send specific day(s) from schedule
+        send schedule for specific day(s)
 
         :param event: a return object of CallbackQuery
         :param s: requests_futures session
-        :param sender_id: user's telegram id
         :param specific_day: day number (-1..5) or (-10) to send entire schedule
         """
         sender = await event.get_sender()
@@ -424,7 +422,7 @@ class CallbackQuerySenders:
             await event.answer("Congrats! It's Sunday, no lessons", alert=False)
             return
 
-        if (schedule := await Web.receive_schedule(s, sender_id)) == NameError:
+        if (schedule := await Web.receive_schedule(s, str(sender.id))) == NameError:
             await event.answer("[✘] Something went wrong!!!", alert=True)
             return
 
@@ -447,6 +445,61 @@ class CallbackQuerySenders:
             print(Fg.Red, err, Fg.Reset)
             await event.answer("[✘] Something went wrong!", alert=True)
             return
+
+    async def send_specific_day_homework(self, s: FuturesSession, event: events.CallbackQuery.Event, specific_day: int):
+        sender = await event.get_sender()
+        student_id, token = await asyncio.gather(
+            Firebase.get_student_id(sender_id=str(sender.id)),
+            Firebase.get_token(sender_id=str(sender.id))
+        )
+        homework_url: str = (
+            f"https://s-api.letovo.ru/api/schedule/{student_id}/week?schedule_date="
+            f"{datetime.datetime.now().date()}"
+        )
+        homework_headers: dict[str, Optional[str]] = {
+            "Authorization": token,
+        }
+        try:
+            homework_future: Future = s.get(url=homework_url, headers=homework_headers)
+            if homework_future.result().status_code != 200:
+                return None
+        except rq.ConnectionError:
+            return None
+
+        for day in homework_future.result().json()["data"]:
+            if len(day["schedules"]) > 0:
+                ch = False
+                if int(day["period_num_day"]) == specific_day or specific_day == -10:
+                    payload = f'{day["period_name"]}: <strong>{day["schedules"][0]["group"]["subject"]["subject_name_eng"]} {day["schedules"][0]["group"]["group_name"]}</strong>\n' + \
+                              f'{Weekdays(int(day["period_num_day"])).name}, {day["date"]}\n'
+
+                    if day["schedules"][0]["lessons"][0]["lesson_hw"]:
+                        payload += f'{day["schedules"][0]["lessons"][0]["lesson_hw"]}\n'
+                    else:
+                        payload += "<em>No homework</em>\n"
+
+                    if day["schedules"][0]["lessons"][0]["lesson_url"]:
+                        ch = True
+                        payload += f'<a href="{day["schedules"][0]["lessons"][0]["lesson_url"]}">Attached link</a>\n'
+
+                    if day["schedules"][0]["lessons"][0]["lesson_hw_url"]:
+                        ch = True
+                        payload += f'<a href="{day["schedules"][0]["lessons"][0]["lesson_hw_url"]}">Attached hw link</a>\n'
+
+                    if not ch:
+                        payload += "<em>No links attached</em>\n"
+
+                    if day["schedules"][0]["lessons"][0]["lesson_thema"]:
+                        payload += f'{day["schedules"][0]["lessons"][0]["lesson_thema"]}\n'
+                    else:
+                        payload += "<em>No topic</em>\n"
+
+                    await self.client.send_message(
+                        entity=sender,
+                        message=payload,
+                        parse_mode="html",
+                        silent=True
+                    )
 
 
 class InlineQueryEventEditors:
