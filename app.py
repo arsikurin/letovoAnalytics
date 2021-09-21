@@ -33,20 +33,21 @@ def send_email(email):
     return request_object.json()
 
 
-# def send_email(analytics_login):
-# import smtplib
-# from email.mime.text import MIMEText
-# from email.mime.multipart import MIMEMultipart
-#     with smtplib.SMTP("smtp.gmail.com: 587") as server:
-#         msg = MIMEMultipart()
-#         password = PASSWORD
-#         msg["From"] = "noreply.arseny@gmail.com"
-#         msg["To"] = f"{analytics_login}@student.letovo.ru"
-#         msg["Subject"] = "Letovo Analytics Bot"
-#         msg.attach(MIMEText(f"Successfully logged as {analytics_login} to letovo.cf", "plain"))
-#         server.starttls()
-#         server.login(msg["From"], password)
-#         server.sendmail(msg["From"], msg["To"], msg.as_string())
+"""def send_email(analytics_login):
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+    with smtplib.SMTP("smtp.gmail.com: 587") as server:
+        msg = MIMEMultipart()
+        password = PASSWORD
+        msg["From"] = "noreply.arseny@gmail.com"
+        msg["To"] = f"{analytics_login}@student.letovo.ru"
+        msg["Subject"] = "Letovo Analytics Bot"
+        msg.attach(MIMEText(f"Successfully logged as {analytics_login}", "plain"))
+        server.starttls()
+        server.login(msg["From"], password)
+        server.sendmail(msg["From"], msg["To"], msg.as_string())"""
+
 
 @app.exception_handler(500)
 def unprocessable_entity(request: Request, error):
@@ -189,7 +190,7 @@ async def login_api(request: Request):
                 pass
             thread = Thread(target=send_email, daemon=True, args=(f"{analytics_login}@student.letovo.ru",))
             thread.start()
-            return RedirectResponse("https://letovo.cf", status_code=302)
+            return RedirectResponse("https://letovo-analytics.web.app/", status_code=302)
     except Exception as err:
         log.debug(err)
         raise HTTPException(status_code=400)
