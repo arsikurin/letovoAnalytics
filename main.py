@@ -7,9 +7,9 @@ import datetime
 # import time
 # import logging as log
 
-from requests_futures.sessions import FuturesSession
 from functools import partial
 from telethon import TelegramClient, events, errors
+from requests_futures.sessions import FuturesSession
 from essential import (
     HOST_SQL,
     PORT_SQL,
@@ -65,6 +65,9 @@ with FuturesSession() as session:
 
     @client.on(events.NewMessage(pattern=r"(?i).*start"))
     async def start(event: events.NewMessage.Event):
+        if len(event.message.message.split()) == 2:
+            auth_hash = event.message.message.split()[1]
+            print(auth_hash)  # TODO auth
         sender = await event.get_sender()
         sender_id = str(sender.id)
         await asyncio.gather(
@@ -132,10 +135,10 @@ with FuturesSession() as session:
         )
 
         if event.data == b"todays_schedule":
-            await send_specific_day_schedule(specific_day=int(int(datetime.datetime.now().strftime("%w"))) - 1)
+            await send_specific_day_schedule(specific_day=int(datetime.datetime.now().strftime("%w")) - 1)
 
         elif event.data == b"entire_schedule":
-            await send_specific_day_schedule(specific_day=-10)
+            await send_specific_day_schedule(specific_day=Weekdays.ALL.value)
 
         elif event.data == b"monday_schedule":
             await send_specific_day_schedule(specific_day=Weekdays.Monday.value - 1)
@@ -164,58 +167,55 @@ with FuturesSession() as session:
             event=event, s=session
         )
         if event.data == b"tomorrows_homework":
-            await send_specific_day_homework(specific_day=int(int(datetime.datetime.now().strftime("%w"))) + 1)
-            await event.answer("In beta", alert=False)
+            await send_specific_day_homework(specific_day=int(datetime.datetime.now().strftime("%w")) + 1)
 
         elif event.data == b"entire_homework":
-            await send_specific_day_homework(specific_day=-10)
-            await event.answer("In beta", alert=False)
+            await send_specific_day_homework(specific_day=Weekdays.ALL.value)
 
         elif event.data == b"monday_homework":
             await send_specific_day_homework(specific_day=Weekdays.Monday.value)
-            await event.answer("In beta", alert=False)
 
         elif event.data == b"tuesday_homework":
             await send_specific_day_homework(specific_day=Weekdays.Tuesday.value)
-            await event.answer("In beta", alert=False)
 
         elif event.data == b"wednesday_homework":
             await send_specific_day_homework(specific_day=Weekdays.Wednesday.value)
-            await event.answer("In beta", alert=False)
 
         elif event.data == b"thursday_homework":
             await send_specific_day_homework(specific_day=Weekdays.Thursday.value)
-            await event.answer("In beta", alert=False)
 
         elif event.data == b"friday_homework":
             await send_specific_day_homework(specific_day=Weekdays.Friday.value)
-            await event.answer("In beta", alert=False)
 
         elif event.data == b"saturday_homework":
             await send_specific_day_homework(specific_day=Weekdays.Saturday.value)
-            await event.answer("In beta", alert=False)
         raise events.StopPropagation
 
 
     @client.on(events.NewMessage(pattern=r"(?i).*about"))
     async def about(event: events.NewMessage.Event):
         sender = await event.get_sender()
+        sender_id = str(sender.id)
+        if not await db.is_inited(sender_id=sender_id):
+            await db.init_user(sender_id=sender_id)
+
         await asyncio.gather(
             cbQuery.send_greeting(sender=sender),
-            # cbQuery.send_init_message(sender=sender),
+            db.set_message(sender_id=sender_id, message_id=event.message.id + 3),
+            cbQuery.send_about_message(sender=sender)
         )
+
         raise events.StopPropagation
 
 
     @client.on(events.NewMessage())
     async def delete(event: events.NewMessage.Event):
         sender = await event.get_sender()
-        sender_id: str = str(sender.id)
 
         if re.fullmatch(r"(?i).*clear previous", f"{event.message.message}"):
             _, msg = await asyncio.gather(
                 event.delete(),
-                db.get_message(sender_id=sender_id)
+                db.get_message(sender_id=str(sender.id))
             )
             msg_ids: list[int] = [i for i in range(msg, event.message.id)]
 
@@ -244,7 +244,7 @@ with FuturesSession() as session:
 
         if re.match(r"ne", f"{event.query.query}"):
             # TODO next day inline query
-            await send_specific_day_schedule(specific_day=0)
+            await send_specific_day_schedule(specific_day=int(datetime.datetime.now().strftime("%w")) - 1)
             # await event.answer([
             #     builder.article(title="Next lesson", text=text if text else "No schedule found in analytics rn")
             # ], switch_pm="Log in", switch_pm_param="inlineMode")
@@ -253,25 +253,25 @@ with FuturesSession() as session:
             await send_specific_day_schedule(specific_day=int(datetime.datetime.now().strftime("%w")) - 1)
 
         elif re.match(r"mo", f"{event.query.query}"):
-            await send_specific_day_schedule(specific_day=0)
+            await send_specific_day_schedule(specific_day=Weekdays.Monday.value - 1)
 
         elif re.match(r"tu", f"{event.query.query}"):
-            await send_specific_day_schedule(specific_day=1)
+            await send_specific_day_schedule(specific_day=Weekdays.Tuesday.value - 1)
 
         elif re.match(r"we", f"{event.query.query}"):
-            await send_specific_day_schedule(specific_day=2)
+            await send_specific_day_schedule(specific_day=Weekdays.Wednesday.value - 1)
 
         elif re.match(r"th", f"{event.query.query}"):
-            await send_specific_day_schedule(specific_day=3)
+            await send_specific_day_schedule(specific_day=Weekdays.Thursday.value - 1)
 
         elif re.match(r"fr", f"{event.query.query}"):
-            await send_specific_day_schedule(specific_day=4)
+            await send_specific_day_schedule(specific_day=Weekdays.Friday.value - 1)
 
         elif re.match(r"sa", f"{event.query.query}"):
-            await send_specific_day_schedule(specific_day=5)
+            await send_specific_day_schedule(specific_day=Weekdays.Saturday.value - 1)
 
         elif re.match(r"en", f"{event.query.query}"):
-            await send_specific_day_schedule(specific_day=-10)
+            await send_specific_day_schedule(specific_day=Weekdays.ALL.value)
 
         else:
             await iQuery.to_main_page(event=event)
