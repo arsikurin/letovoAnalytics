@@ -3,14 +3,14 @@
 import requests as rq
 import logging as log
 
-from requests_futures.sessions import FuturesSession
-from firebase_admin._auth_utils import EmailAlreadyExistsError
 from threading import Thread
 from firebase_admin import auth
-from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from fastapi import FastAPI, Request, HTTPException
+from requests_futures.sessions import FuturesSession
+from fastapi.responses import HTMLResponse, RedirectResponse
+from firebase_admin._auth_utils import EmailAlreadyExistsError
 from essential import (
     LOGIN_URL_LETOVO,
     API_KEY,
@@ -31,22 +31,6 @@ def send_email(email):
     data = f'{{"requestType": "PASSWORD_RESET", "email": "{email}"}}'
     request_object = rq.post(api_url, headers=headers, data=data)
     return request_object.json()
-
-
-"""def send_email(analytics_login):
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-    with smtplib.SMTP("smtp.gmail.com: 587") as server:
-        msg = MIMEMultipart()
-        password = PASSWORD
-        msg["From"] = "noreply.arseny@gmail.com"
-        msg["To"] = f"{analytics_login}@student.letovo.ru"
-        msg["Subject"] = "Letovo Analytics Bot"
-        msg.attach(MIMEText(f"Successfully logged as {analytics_login}", "plain"))
-        server.starttls()
-        server.login(msg["From"], password)
-        server.sendmail(msg["From"], msg["To"], msg.as_string())"""
 
 
 @app.exception_handler(500)
@@ -176,12 +160,15 @@ async def login_api(request: Request):
         if not rq.post(url=LOGIN_URL_LETOVO, data=login_data).status_code == 200:
             raise HTTPException(status_code=401)
     except rq.ConnectionError:
-        raise HTTPException(status_code=400, detail="s.letovo.ru might be down")  # ConnectionError
+        raise HTTPException(status_code=400, detail="s.letovo.ru might be down")
     try:
         with FuturesSession() as session:
-            token = await Web.receive_token_a(s=session, login=analytics_login, password=analytics_password)
+            token = await Web.receive_token(s=session, login=analytics_login, password=analytics_password)
+            if token == rq.ConnectionError:
+                raise HTTPException(status_code=503)
+
             await Firebase.update_data(
-                token=token, student_id=await Web.receive_student_id_a(s=session, token=token),
+                token=token, student_id=await Web.receive_student_id(s=session, token=token),
                 analytics_login=analytics_login, analytics_password=analytics_password, sender_id=sender_id, lang="en"
             )
             try:

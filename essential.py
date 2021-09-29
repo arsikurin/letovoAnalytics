@@ -9,13 +9,10 @@ import requests as rq
 import logging as log
 
 # from debug import *
-from enum import Enum  # , auto
+from enum import Enum
 from ics import Calendar
-# from imaplib import IMAP4_SSL
-# from bs4 import BeautifulSoup
 from colourlib import Fg, Style
 from typing import Optional, Any
-# from email import message_from_string
 from firebase_admin import firestore, credentials
 from concurrent.futures import as_completed, Future
 from requests_futures.sessions import FuturesSession
@@ -46,24 +43,17 @@ firedb = firestore.client()
 
 #
 # --------------------- Parsing
-# TODO scrapy(w/ or w/o BF), selenium, apis listed below
-# soup = BeautifulSoup(html, "lxml")
-# f"https://s-api.letovo.ru/api/students/{student_id}"
-# f"https://s-api.letovo.ru/api/studentsimg/{student_id}"
-# f"https://s-api.letovo.ru/api/schoolprogress/{student_id}/widget?period_num=1"
+# TODO marks
 # f"https://s-api.letovo.ru/api/schoolprogress/{student_id}?period_num=1"
-# f"https://s-api.letovo.ru/api/schedulelesson/477229/5876484/{student_id}?schedule_date={date}"
-# f"https://s-api.letovo.ru/api/schedule/{student_id}/widget"
-# SCHEDULE PLAN & HW f"https://s-api.letovo.ru/api/schedule/{student_id}/day?schedule_date={date}"
-# f"https://s-api.letovo.ru/api/schedule/{student_id}/week/ics?schedule_date="
+
 
 #
 # --------------------- Debug
-custom_DEBUG: bool = True
+DEBUG: bool = True
 # start_time = time.perf_counter()
 # datetime.timedelta(seconds=time.perf_counter() - start_time)
 
-if custom_DEBUG:
+if DEBUG:
     log.basicConfig(
         format=f"{Fg.Green}{Style.Bold}%(asctime)s{Fg.Reset}{Style.Bold} %(message)s{Style.Reset}\n[%(name)s]\n",
         level=log.DEBUG
@@ -108,6 +98,7 @@ class Weekdays(Enum):
     Thursday = 4
     Friday = 5
     Saturday = 6
+    ALL = -10
 
 
 class FirebaseSetters:
@@ -124,7 +115,7 @@ class FirebaseSetters:
     ) -> None:
         """
         Fill out at least one param in every map!!!
-        Otherwise all data in map will be erased
+        Otherwise all data will be erased there
         """
         space: str = ""
         st: str = f'"student_id": {student_id!r},'
@@ -176,7 +167,7 @@ class FirebaseGetters:
             if doc.exists:
                 return doc.to_dict()["data"]["student_id"]
         except KeyError:
-            return None
+            return NothingFoundError
 
     @staticmethod
     async def get_token(sender_id: str):
@@ -185,7 +176,7 @@ class FirebaseGetters:
             if doc.exists:
                 return doc.to_dict()["data"]["token"]
         except KeyError:
-            return None
+            return NothingFoundError
 
     @staticmethod
     async def get_analytics_password(sender_id: str):
@@ -194,7 +185,7 @@ class FirebaseGetters:
             if doc.exists:
                 return doc.to_dict()["data"]["analytics_password"]
         except KeyError:
-            return None
+            return NothingFoundError
 
     @staticmethod
     async def get_analytics_login(sender_id: str):
@@ -203,30 +194,16 @@ class FirebaseGetters:
             if doc.exists:
                 return doc.to_dict()["data"]["analytics_login"]
         except KeyError:
-            return None
-
-    @staticmethod
-    async def get_mail_address(sender_id: str):
-        doc: DocumentSnapshot = firedb.collection(u"users").document(sender_id).get()
-        try:
-            if doc.exists:
-                return doc.to_dict()["data"]["mail_address"]
-        except KeyError:
-            return None
-
-    @staticmethod
-    async def get_mail_password(sender_id: str):
-        doc: DocumentSnapshot = firedb.collection(u"users").document(sender_id).get()
-        try:
-            if doc.exists:
-                return doc.to_dict()["data"]["mail_password"]
-        except KeyError:
-            return None
+            return NothingFoundError
 
 
 class CallbackQueryEventEditors:
+    """
+    Class for working with callback query events
+    """
+
     @staticmethod
-    async def to_main_page(event: events.CallbackQuery.Event) -> None:
+    async def to_main_page(event: events.CallbackQuery.Event):
         await event.edit(
             "Choose an option below ↴",
             parse_mode="md",
@@ -244,7 +221,7 @@ class CallbackQueryEventEditors:
         )
 
     @staticmethod
-    async def to_schedule_page(event: events.CallbackQuery.Event) -> None:
+    async def to_schedule_page(event: events.CallbackQuery.Event):
         await event.edit(
             "Choose an option below ↴",
             parse_mode="md",
@@ -252,9 +229,9 @@ class CallbackQueryEventEditors:
                 [
                     Button.inline("Entire schedule", b"entire_schedule")
                 ], [
-                    Button.inline("Today's schedule", b"todays_schedule"),
+                    Button.inline("For Today", b"todays_schedule"),
                 ], [
-                    Button.inline("specific day schedule »", b"specific_day_schedule"),
+                    Button.inline("Specific day »", b"specific_day_schedule"),
                 ], [
                     Button.inline("« Back", b"main_page")
                 ]
@@ -262,7 +239,7 @@ class CallbackQueryEventEditors:
         )
 
     @staticmethod
-    async def to_homework_page(event: events.CallbackQuery.Event) -> None:
+    async def to_homework_page(event: events.CallbackQuery.Event):
         await event.edit(
             "Choose an option below ↴",
             parse_mode="md",
@@ -270,9 +247,9 @@ class CallbackQueryEventEditors:
                 [
                     Button.inline("Entire homework", b"entire_homework")
                 ], [
-                    Button.inline("Tomorrow's homework", b"tomorrows_homework"),
+                    Button.inline("For Tomorrow", b"tomorrows_homework"),
                 ], [
-                    Button.inline("Specific day homework »", b"specific_day_homework"),
+                    Button.inline("Specific day »", b"specific_day_homework"),
                 ], [
                     Button.inline("« Back", b"main_page")
                 ]
@@ -280,7 +257,7 @@ class CallbackQueryEventEditors:
         )
 
     @staticmethod
-    async def to_specific_day_schedule_page(event: events.CallbackQuery.Event) -> None:
+    async def to_specific_day_schedule_page(event: events.CallbackQuery.Event):
         await event.edit(
             "Choose a day below ↴",
             parse_mode="md",
@@ -304,7 +281,7 @@ class CallbackQueryEventEditors:
         )
 
     @staticmethod
-    async def to_specific_day_homework_page(event: events.CallbackQuery.Event) -> None:
+    async def to_specific_day_homework_page(event: events.CallbackQuery.Event):
         await event.edit(
             "Choose a day below ↴",
             parse_mode="md",
@@ -332,7 +309,7 @@ class CallbackQuerySenders:
     def __init__(self, c):
         self.client = c
 
-    async def send_greeting(self, sender) -> None:
+    async def send_greeting(self, sender):
         await self.client.send_message(
             entity=sender,
             message=f'Greetings, **{f if (f := sender.first_name) else ""} {l if (l := sender.last_name) else ""}**!',
@@ -346,7 +323,7 @@ class CallbackQuerySenders:
             ]
         )
 
-    async def send_init_message(self, sender) -> None:
+    async def send_init_message(self, sender):
         await asyncio.sleep(0.1)
         await self.client.send_message(
             entity=sender,
@@ -361,7 +338,18 @@ class CallbackQuerySenders:
             ]
         )
 
-    async def send_main_page(self, sender) -> None:
+    async def send_about_message(self, sender):
+        await asyncio.sleep(0.1)
+        await self.client.send_message(
+            entity=sender,
+            message=f"**Arseny Kurin**\n\n"
+                    "• 2024kurin.av@student.letovo.ru\n"
+                    "• [Github](https://github.com/arsikurin)\n"
+                    "• [Telegram](https://t.me/arsikurin)\n",
+            parse_mode="md"
+        )
+
+    async def send_main_page(self, sender):
         await self.client.send_message(
             entity=sender,
             message="Choose an option below ↴",
@@ -379,7 +367,7 @@ class CallbackQuerySenders:
             ]
         )
 
-    async def send_holidays(self, sender) -> None:
+    async def send_holidays(self, sender):
         await self.client.send_message(
             entity=sender,
             message="__after__ **unit I**\n31.10.2021 — 07.11.2021",
@@ -405,11 +393,8 @@ class CallbackQuerySenders:
         )
 
     async def send_specific_day_schedule(
-            self,
-            specific_day: int,
-            event: events.CallbackQuery.Event,
-            s: FuturesSession,
-    ) -> None:
+            self, s: FuturesSession, event: events.CallbackQuery.Event, specific_day: int
+    ):
         """
         send schedule for specific day(s)
 
@@ -417,13 +402,14 @@ class CallbackQuerySenders:
         :param s: requests_futures session
         :param specific_day: day number (-1..5) or (-10) to send entire schedule
         """
+        # TODO rewrite
         sender = await event.get_sender()
         if specific_day == -1:
             await event.answer("Congrats! It's Sunday, no lessons", alert=False)
             return
 
-        if (schedule := await Web.receive_schedule(s, str(sender.id))) == NameError:
-            await event.answer("[✘] Something went wrong!!!", alert=True)
+        if (schedule := await Web.receive_schedule(s, str(sender.id))) == rq.ConnectionError:
+            await event.answer("[✘] Cannot establish connection to s.letovo.ru", alert=True)
             return
 
         if not schedule:
@@ -446,30 +432,38 @@ class CallbackQuerySenders:
             await event.answer("[✘] Something went wrong!", alert=True)
             return
 
-    async def send_specific_day_homework(self, s: FuturesSession, event: events.CallbackQuery.Event, specific_day: int):
+    async def send_specific_day_homework(
+            self, s: FuturesSession, event: events.CallbackQuery.Event, specific_day: int
+    ):
         sender = await event.get_sender()
         student_id, token = await asyncio.gather(
             Firebase.get_student_id(sender_id=str(sender.id)),
             Firebase.get_token(sender_id=str(sender.id))
         )
-        homework_url: str = (
+        if student_id == NothingFoundError or token == NothingFoundError:
+            await event.answer("[✘] Nothing found in database under this user", alert=True)
+            return
+
+        homework_url = (
             f"https://s-api.letovo.ru/api/schedule/{student_id}/week?schedule_date="
             f"{datetime.datetime.now().date()}"
         )
-        homework_headers: dict[str, Optional[str]] = {
+        homework_headers = {
             "Authorization": token,
         }
         try:
             homework_future: Future = s.get(url=homework_url, headers=homework_headers)
             if homework_future.result().status_code != 200:
-                return None
+                await event.answer("[✘] Cannot get data from s.letovo.ru", alert=True)
+                return
         except rq.ConnectionError:
-            return None
+            await event.answer("[✘] Cannot establish connection to s.letovo.ru", alert=True)
+            return
 
         for day in homework_future.result().json()["data"]:
             if len(day["schedules"]) > 0:
                 ch = False
-                if int(day["period_num_day"]) == specific_day or specific_day == -10:
+                if specific_day in (int(day["period_num_day"]), -10):
                     payload = f'{day["period_name"]}: <strong>{day["schedules"][0]["group"]["subject"]["subject_name_eng"]} {day["schedules"][0]["group"]["group_name"]}</strong>\n' + \
                               f'{Weekdays(int(day["period_num_day"])).name}, {day["date"]}\n'
 
@@ -503,9 +497,15 @@ class CallbackQuerySenders:
 
 
 class InlineQueryEventEditors:
+    """
+    Class for working with inline query events
+    """
+
     @staticmethod
-    async def to_main_page(event: events.InlineQuery.Event) -> None:
-        """display main page in inline query"""
+    async def to_main_page(event: events.InlineQuery.Event):
+        """
+        display main page in inline query
+        """
 
         await event.answer(
             results=[
@@ -550,6 +550,7 @@ class InlineQuerySenders:
         :param sender_id: user's telegram id
         :param specific_day: day number (-1..5) or (-10) to send entire schedule
         """
+        # TODO rewrite
         result = ""
         if specific_day == 0:
             day_name = "Monday"
@@ -574,20 +575,27 @@ class InlineQuerySenders:
             )
             return
 
-        if not (schedule := await Web.receive_schedule(s, sender_id)):
+        if (schedule := await Web.receive_schedule(s, sender_id)) == rq.ConnectionError:
             await event.answer(
                 results=[
-                    event.builder.article(title=f"{day_name} lessons", text="No schedule found in analytics rn")
+                    event.builder.article(
+                        title=f"{day_name} lessons",
+                        text="[✘] Cannot establish connection to s.letovo.ru"
+                    )
                 ], switch_pm="Log in", switch_pm_param="inlineMode"
             )
             return
 
-        # if schedule == NameError:
-        #     await event.answer(
-        #         results=[
-        #             event.builder.article(title=f"{day_name} lessons", text="[✘] Something went wrong!")
-        #         ], switch_pm="Log in", switch_pm_param="inlineMode"
-        #     )
+        if not schedule:
+            await event.answer(
+                results=[
+                    event.builder.article(
+                        title=f"{day_name} lessons",
+                        text="No schedule found in analytics rn"
+                    )
+                ], switch_pm="Log in", switch_pm_param="inlineMode"
+            )
+            return
 
         try:
             for ind, day in enumerate(schedule):
@@ -614,16 +622,19 @@ class Web:
     @staticmethod
     async def receive_token(
             s: FuturesSession, sender_id: str = None, login: str = None, password: str = None
-    ) -> Optional[str]:
-        if (login is None or password is None) and sender_id is not None:
+    ):
+        """
+        Requires either a sender_id or (password and login)
+        """
+        if login is None or password is None:
             login, password = await asyncio.gather(
                 Firebase.get_analytics_login(sender_id=sender_id),
                 Firebase.get_analytics_password(sender_id=sender_id)
             )
-            if not login:
-                return
+            if not login or not password:
+                return NothingFoundError
 
-        login_data: dict[str, Optional[str]] = {
+        login_data = {
             "login": login,
             "password": password
         }
@@ -633,49 +644,31 @@ class Web:
                 login_response = login_futured.result()
                 return f'{login_response.json()["data"]["token_type"]} {login_response.json()["data"]["token"]}'
         except rq.ConnectionError:
-            return None
-
-    # TODO delete ->
-    @staticmethod
-    async def receive_token_a(s: FuturesSession, login: str, password: str) -> Optional[str]:
-        login_data: dict[str, Optional[str]] = {
-            "login": login,
-            "password": password
-        }
-        try:
-            login_future: Future = s.post(url=LOGIN_URL_LETOVO, data=login_data)
-            for login_futured in as_completed([login_future]):
-                login_response = login_futured.result()
-                return f'{login_response.json()["data"]["token_type"]} {login_response.json()["data"]["token"]}'
-        except rq.ConnectionError:
-            return None
+            return rq.ConnectionError
 
     @staticmethod
-    async def receive_student_id(s: FuturesSession, sender_id: str) -> Optional[str]:
-        me_headers: dict[str, Optional[str]] = {
-            "Authorization": await Firebase.get_token(sender_id=sender_id)
+    async def receive_student_id(
+            s: FuturesSession, sender_id: str = None, token: str = None
+    ):
+        """
+        Requires either a sender_id or token
+        """
+        if token is None:
+            token = await Firebase.get_token(sender_id=sender_id)
+
+        me_headers = {
+            "Authorization": token
         }
         try:
             me_future: Future = s.post("https://s-api.letovo.ru/api/me", headers=me_headers)
             for me_futured in as_completed([me_future]):
                 return me_futured.result().json()["data"]["user"]["student_id"]
         except rq.ConnectionError:
-            return None
-
-    @staticmethod
-    async def receive_student_id_a(s: FuturesSession, token: str) -> Optional[str]:
-        me_headers: dict[str, Optional[str]] = {
-            "Authorization": token
-        }
-        try:
-            me_future = s.post("https://s-api.letovo.ru/api/me", headers=me_headers)
-            for me_futured in as_completed([me_future]):
-                return me_futured.result().json()["data"]["user"]["student_id"]
-        except rq.ConnectionError:
-            return None
+            return rq.ConnectionError
 
     @staticmethod
     async def receive_schedule(s: FuturesSession, sender_id: str):
+        # TODO rewrite
         student_id, token = await asyncio.gather(
             Firebase.get_student_id(sender_id=sender_id),
             Firebase.get_token(sender_id=sender_id)
@@ -694,7 +687,7 @@ class Web:
             if schedule_future.result().status_code != 200:
                 return None
         except rq.ConnectionError:
-            return None
+            return rq.ConnectionError
 
         info = []
         ind: int = 0
@@ -733,28 +726,12 @@ class Web:
             ind += 1
         return info
 
-    # @classmethod
-    # async def receive_otp(cls, sender_id: str) -> str:
-    #     """not used currently"""
-    #     email, password = await asyncio.gather(
-    #         Firebase.get_mail_address(sender_id=sender_id),
-    #         Firebase.get_mail_password(sender_id=sender_id)
-    #     )
-    #     mail = IMAP4_SSL("outlook.office365.com")
-    #     mail.login(email, password)
-    #     mail.list()
-    #     mail.select("inbox")
-    #     _, data = mail.search(None, "ALL")
-    #     _, data = mail.fetch(data[0].split()[-1], "(RFC822)")
-    #     otp = message_from_string(data[0][1].decode("utf-8"))
-    #     try:
-    #         otp = otp.get_payload().split("<b>")[2].split("=")[0].split("<")[0]
-    #     except AttributeError:
-    #         print(Fg.Blue, otp, Fg.Reset)
-    #     return otp
-
 
 class Database:
+    """
+    Class for working with relational DB
+    """
+
     def __init__(self, conn, c):
         self.connection = conn
         self.cursor = c
@@ -799,6 +776,9 @@ class Database:
 
 
 class Firebase(FirebaseGetters, FirebaseSetters):
+    """
+    Class for working with Firestore DB
+    """
     pass
 
 
