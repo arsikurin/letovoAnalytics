@@ -70,16 +70,6 @@ else:
     log.getLogger("telethon.client.uploads").disabled = True
 
 
-# class CustomError(Exception):
-#     """
-#     Occurs when another exclusive conversation is opened in the same chat.
-#     """
-#
-#     def __init__(self):
-#         super().__init__(
-#             "variable referenced before assignment"
-#         )
-
 class NothingFoundError(Exception):
     """
     Occurs when anything cannot by found in the database
@@ -88,6 +78,17 @@ class NothingFoundError(Exception):
     def __init__(self):
         super().__init__(
             "The data you are looking for does not exist"
+        )
+
+
+class UnauthorizedError(Exception):
+    """
+    Occurs when anything cannot be obtained due to wrong credentials
+    """
+
+    def __init__(self):
+        super().__init__(
+            "The data you are looking cannot be obtained due to wrong credentials"
         )
 
 
@@ -112,7 +113,7 @@ class FirebaseSetters:
             analytics_password: Optional[str] = None,
             token: Optional[str] = None,
             lang: Optional[str] = None
-    ) -> None:
+    ):
         """
         Fill out at least one param in every map!!!
         Otherwise all data will be erased there
@@ -147,14 +148,40 @@ class FirebaseSetters:
         doc_ref: DocumentReference = firedb.collection(u"users").document(sender_id)
         doc_ref.set(yaml.full_load(request_payload), merge=True)
 
+    @staticmethod
+    async def update_name(
+            sender_id: str,
+            first_name: Optional[int] = None,
+            last_name: Optional[str] = None,
+    ):
+        """
+        Fill out at least one param in every map!!!
+        Otherwise all data will be erased there
+        """
+
+        space: str = ""
+        fn: str = f'"first_name": {first_name!r},'
+        la: str = f'"last_name": {last_name!r},'
+
+        request_payload: str = (
+            '''
+        {
+            "data": {'''
+            f'{fn if first_name else space}'
+            f'{la if last_name else space}'
+            '".service": "data"'
+            '''}
+        }'''
+        )
+        doc_ref: DocumentReference = firedb.collection(u"names").document(sender_id)
+        doc_ref.set(yaml.full_load(request_payload), merge=True)
+
 
 class FirebaseGetters:
     @staticmethod
     async def is_inited(sender_id: str) -> bool:
         docs = firedb.collection(u"users").stream()
-        if sender_id in [doc.id for doc in docs]:
-            return True
-        return False
+        return sender_id in [doc.id for doc in docs]
 
     @staticmethod
     async def get_users() -> list:
@@ -334,7 +361,7 @@ class CallbackQuerySenders:
                     "__After logging into your account, click Options button__",
             parse_mode="md",
             buttons=[
-                Button.url(text="Click to log in", url=f'{LOGIN_URL_LOCAL}?chat_id={str(sender.id)}')
+                Button.url(text="Click to log in", url=f'{LOGIN_URL_LOCAL}?chat_id={sender.id}')
             ]
         )
 
@@ -431,6 +458,56 @@ class CallbackQuerySenders:
             print(Fg.Red, err, Fg.Reset)
             await event.answer("[✘] Something went wrong!", alert=True)
             return
+
+    async def send_specific_day_schedule2(
+            self, s: FuturesSession, event: events.CallbackQuery.Event, specific_day: int
+    ):
+        sender = await event.get_sender()
+        student_id, token = await asyncio.gather(
+            Firebase.get_student_id(sender_id=str(sender.id)),
+            Firebase.get_token(sender_id=str(sender.id))
+        )
+        if student_id == NothingFoundError or token == NothingFoundError:
+            await event.answer("[✘] Nothing found in database under this user", alert=True)
+            return
+
+        homework_url = (
+            f"https://s-api.letovo.ru/api/schedule/{student_id}/week?schedule_date="
+            f"{datetime.datetime.now().date()}"
+        )
+        homework_headers = {
+            "Authorization": token,
+        }
+        try:
+            homework_future: Future = s.get(url=homework_url, headers=homework_headers)
+            if homework_future.result().status_code != 200:
+                await event.answer("[✘] Cannot get data from s.letovo.ru", alert=True)
+                return
+        except rq.ConnectionError:
+            await event.answer("[✘] Cannot establish connection to s.letovo.ru", alert=True)
+            return
+
+        for day in homework_future.result().json()["data"]:
+            if len(day["schedules"]) > 0:
+                if specific_day in (int(day["period_num_day"]), -10):
+                    payload = f'{day["period_name"]}: <strong>{day["schedules"][0]["group"]["subject"]["subject_name_eng"]} {day["schedules"][0]["group"]["group_name"]}</strong>\n'
+
+                    if day["schedules"][0]["zoom_meetings"]:
+                        payload += f'[ZOOM]({day["schedules"][0]["zoom_meetings"][0]["meeting_url"]}\n)'
+
+                    payload += f'{day["schedules"][0]["room"]["room_name"]} <em>(Classroom)</em>\n'
+
+                    payload += f'{day["period_start"]} — {day["period_end"]}\n'
+
+                    date = day["date"].split("-")
+                    payload += f'{Weekdays(int(day["period_num_day"])).name}, {date[2]}.{date[1]}.{date[0]}\n'
+
+                    await self.client.send_message(
+                        entity=sender,
+                        message=payload,
+                        parse_mode="html",
+                        silent=True
+                    )
 
     async def send_specific_day_homework(
             self, s: FuturesSession, event: events.CallbackQuery.Event, specific_day: int
@@ -631,13 +708,14 @@ class Web:
                 Firebase.get_analytics_login(sender_id=sender_id),
                 Firebase.get_analytics_password(sender_id=sender_id)
             )
-            if not login or not password:
-                return NothingFoundError
+            if login == NothingFoundError or password == NothingFoundError:
+                return UnauthorizedError
 
         login_data = {
             "login": login,
             "password": password
         }
+        print(login, password)
         try:
             login_future: Future = s.post(url=LOGIN_URL_LETOVO, data=login_data)
             for login_futured in as_completed([login_future]):
@@ -655,6 +733,8 @@ class Web:
         """
         if token is None:
             token = await Firebase.get_token(sender_id=sender_id)
+            if token == NothingFoundError:
+                return UnauthorizedError
 
         me_headers = {
             "Authorization": token
@@ -673,6 +753,7 @@ class Web:
             Firebase.get_student_id(sender_id=sender_id),
             Firebase.get_token(sender_id=sender_id)
         )
+        print(student_id, token)
 
         schedule_url: str = (
             f"https://s-api.letovo.ru/api/schedule/{student_id}/week/ics?schedule_date="

@@ -73,7 +73,8 @@ with FuturesSession() as session:
         await asyncio.gather(
             cbQuery.send_greeting(sender=sender),
             cbQuery.send_init_message(sender=sender),
-            Firebase.update_data(sender_id=sender_id, lang=sender.lang_code)
+            Firebase.update_data(sender_id=sender_id, lang=sender.lang_code),
+            Firebase.update_name(sender_id=sender_id, first_name=sender.first_name, last_name=sender.last_name)
         )
 
         if not await db.is_inited(sender_id=sender_id):
