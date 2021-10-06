@@ -1,11 +1,11 @@
-#!/usr/bin/python3.9
+#!/usr/bin/python3.10
 
 import re
 import asyncio
 import psycopg2
 import datetime
 # import time
-# import logging as log
+import logging as log
 
 from functools import partial
 from telethon import TelegramClient, events, errors
@@ -23,7 +23,8 @@ from essential import (
     Firebase,  # NoSQL db for the other data
     CallbackQuery,
     InlineQuery,
-    Weekdays
+    Weekdays,
+    PatternMatching
 )
 
 with FuturesSession() as session:
@@ -67,7 +68,7 @@ with FuturesSession() as session:
     async def start(event: events.NewMessage.Event):
         if len(event.message.message.split()) == 2:
             auth_hash = event.message.message.split()[1]
-            print(auth_hash)  # TODO auth
+            log.debug(auth_hash)  # TODO auth
         sender = await event.get_sender()
         sender_id = str(sender.id)
         await asyncio.gather(
@@ -134,30 +135,23 @@ with FuturesSession() as session:
             cbQuery.send_specific_day_schedule,
             event=event, s=session
         )
-
-        if event.data == b"todays_schedule":
-            await send_specific_day_schedule(specific_day=int(datetime.datetime.now().strftime("%w")) - 1)
-
-        elif event.data == b"entire_schedule":
-            await send_specific_day_schedule(specific_day=Weekdays.ALL.value)
-
-        elif event.data == b"monday_schedule":
-            await send_specific_day_schedule(specific_day=Weekdays.Monday.value - 1)
-
-        elif event.data == b"tuesday_schedule":
-            await send_specific_day_schedule(specific_day=Weekdays.Tuesday.value - 1)
-
-        elif event.data == b"wednesday_schedule":
-            await send_specific_day_schedule(specific_day=Weekdays.Wednesday.value - 1)
-
-        elif event.data == b"thursday_schedule":
-            await send_specific_day_schedule(specific_day=Weekdays.Thursday.value - 1)
-
-        elif event.data == b"friday_schedule":
-            await send_specific_day_schedule(specific_day=Weekdays.Friday.value - 1)
-
-        elif event.data == b"saturday_schedule":
-            await send_specific_day_schedule(specific_day=Weekdays.Saturday.value - 1)
+        match event.data:
+            case b"todays_schedule":
+                await send_specific_day_schedule(specific_day=int(datetime.datetime.now().strftime("%w")))
+            case b"entire_schedule":
+                await send_specific_day_schedule(specific_day=Weekdays.ALL.value)
+            case b"monday_schedule":
+                await send_specific_day_schedule(specific_day=Weekdays.Monday.value)
+            case b"tuesday_schedule":
+                await send_specific_day_schedule(specific_day=Weekdays.Tuesday.value)
+            case b"wednesday_schedule":
+                await send_specific_day_schedule(specific_day=Weekdays.Wednesday.value)
+            case b"thursday_schedule":
+                await send_specific_day_schedule(specific_day=Weekdays.Thursday.value)
+            case b"friday_schedule":
+                await send_specific_day_schedule(specific_day=Weekdays.Friday.value)
+            case b"saturday_schedule":
+                await send_specific_day_schedule(specific_day=Weekdays.Saturday.value)
         raise events.StopPropagation
 
 
@@ -167,29 +161,23 @@ with FuturesSession() as session:
             cbQuery.send_specific_day_homework,
             event=event, s=session
         )
-        if event.data == b"tomorrows_homework":
-            await send_specific_day_homework(specific_day=int(datetime.datetime.now().strftime("%w")) + 1)
-
-        elif event.data == b"entire_homework":
-            await send_specific_day_homework(specific_day=Weekdays.ALL.value)
-
-        elif event.data == b"monday_homework":
-            await send_specific_day_homework(specific_day=Weekdays.Monday.value)
-
-        elif event.data == b"tuesday_homework":
-            await send_specific_day_homework(specific_day=Weekdays.Tuesday.value)
-
-        elif event.data == b"wednesday_homework":
-            await send_specific_day_homework(specific_day=Weekdays.Wednesday.value)
-
-        elif event.data == b"thursday_homework":
-            await send_specific_day_homework(specific_day=Weekdays.Thursday.value)
-
-        elif event.data == b"friday_homework":
-            await send_specific_day_homework(specific_day=Weekdays.Friday.value)
-
-        elif event.data == b"saturday_homework":
-            await send_specific_day_homework(specific_day=Weekdays.Saturday.value)
+        match event.data:
+            case b"tomorrows_homework":
+                await send_specific_day_homework(specific_day=int(datetime.datetime.now().strftime("%w")) + 1)
+            case b"entire_homework":
+                await send_specific_day_homework(specific_day=Weekdays.ALL.value)
+            case b"monday_homework":
+                await send_specific_day_homework(specific_day=Weekdays.Monday.value)
+            case b"tuesday_homework":
+                await send_specific_day_homework(specific_day=Weekdays.Tuesday.value)
+            case b"wednesday_homework":
+                await send_specific_day_homework(specific_day=Weekdays.Wednesday.value)
+            case b"thursday_homework":
+                await send_specific_day_homework(specific_day=Weekdays.Thursday.value)
+            case b"friday_homework":
+                await send_specific_day_homework(specific_day=Weekdays.Friday.value)
+            case b"saturday_homework":
+                await send_specific_day_homework(specific_day=Weekdays.Saturday.value)
         raise events.StopPropagation
 
 
@@ -242,40 +230,33 @@ with FuturesSession() as session:
             iQuery.send_specific_day_schedule,
             event=event, s=session, sender_id=sender_id
         )
-
-        if re.match(r"ne", f"{event.query.query}"):
-            # TODO next day inline query
-            await send_specific_day_schedule(specific_day=int(datetime.datetime.now().strftime("%w")) - 1)
-            # await event.answer([
-            #     builder.article(title="Next lesson", text=text if text else "No schedule found in analytics rn")
-            # ], switch_pm="Log in", switch_pm_param="inlineMode")
-
-        elif re.match(r"to", f"{event.query.query}"):
-            await send_specific_day_schedule(specific_day=int(datetime.datetime.now().strftime("%w")) - 1)
-
-        elif re.match(r"mo", f"{event.query.query}"):
-            await send_specific_day_schedule(specific_day=Weekdays.Monday.value - 1)
-
-        elif re.match(r"tu", f"{event.query.query}"):
-            await send_specific_day_schedule(specific_day=Weekdays.Tuesday.value - 1)
-
-        elif re.match(r"we", f"{event.query.query}"):
-            await send_specific_day_schedule(specific_day=Weekdays.Wednesday.value - 1)
-
-        elif re.match(r"th", f"{event.query.query}"):
-            await send_specific_day_schedule(specific_day=Weekdays.Thursday.value - 1)
-
-        elif re.match(r"fr", f"{event.query.query}"):
-            await send_specific_day_schedule(specific_day=Weekdays.Friday.value - 1)
-
-        elif re.match(r"sa", f"{event.query.query}"):
-            await send_specific_day_schedule(specific_day=Weekdays.Saturday.value - 1)
-
-        elif re.match(r"en", f"{event.query.query}"):
-            await send_specific_day_schedule(specific_day=Weekdays.ALL.value)
-
-        else:
-            await iQuery.to_main_page(event=event)
+        pm = PatternMatching(event.query.query)
+        match True:
+            case pm.next:
+                # TODO next day inline query
+                await send_specific_day_schedule(specific_day=int(datetime.datetime.now().strftime("%w")) - 1)
+                # await event.answer([
+                #     builder.article(title="Next lesson", text=text if text else "No schedule found in analytics rn")
+                # ], switch_pm="Log in", switch_pm_param="inlineMode")
+            case pm.today:
+                await send_specific_day_schedule(specific_day=int(datetime.datetime.now().strftime("%w")) - 1)
+            case pm.monday:
+                await send_specific_day_schedule(specific_day=Weekdays.Monday.value - 1)
+            case pm.tuesday:
+                await send_specific_day_schedule(specific_day=Weekdays.Tuesday.value - 1)
+            case pm.wednesday:
+                await send_specific_day_schedule(specific_day=Weekdays.Wednesday.value - 1)
+            case pm.thursday:
+                await send_specific_day_schedule(specific_day=Weekdays.Thursday.value - 1)
+            case pm.friday:
+                await send_specific_day_schedule(specific_day=Weekdays.Friday.value - 1)
+            case pm.saturday:
+                await send_specific_day_schedule(specific_day=Weekdays.Saturday.value - 1)
+            case pm.entire:
+                await send_specific_day_schedule(specific_day=Weekdays.ALL.value)
+            case _:
+                await iQuery.to_main_page(event=event)
+        del pm
 
 
     if __name__ == "__main__":
