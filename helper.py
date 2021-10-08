@@ -1,3 +1,5 @@
+#!/usr/bin/python3.10
+
 import asyncio
 import logging as log
 

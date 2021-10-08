@@ -24,6 +24,7 @@ from essential import (
     CallbackQuery,
     InlineQuery,
     Weekdays,
+    MarkTypes,
     PatternMatching
 )
 
@@ -102,6 +103,12 @@ with FuturesSession() as session:
         raise events.StopPropagation
 
 
+    @client.on(events.CallbackQuery(data=b"marks_page"))
+    async def marks_page(event: events.CallbackQuery.Event):
+        await cbQuery.to_marks_page(event=event)
+        raise events.StopPropagation
+
+
     @client.on(events.CallbackQuery(data=b"specific_day_schedule"))
     async def specific_day_schedule(event: events.CallbackQuery.Event):
         await cbQuery.to_specific_day_schedule_page(event=event)
@@ -120,12 +127,6 @@ with FuturesSession() as session:
             event.answer(),
             cbQuery.send_holidays(sender=await event.get_sender())
         )
-        raise events.StopPropagation
-
-
-    @client.on(events.CallbackQuery(data=b"marks"))
-    async def marks(event: events.CallbackQuery.Event):
-        await event.answer("Under development", alert=False)
         raise events.StopPropagation
 
 
@@ -181,6 +182,22 @@ with FuturesSession() as session:
         raise events.StopPropagation
 
 
+    @client.on(events.CallbackQuery(pattern=r"(?i).*marks"))
+    async def schedule(event: events.CallbackQuery.Event):
+        send_marks = partial(
+            cbQuery.send_marks,
+            event=event, s=session
+        )
+        match event.data:
+            case b"all_marks":
+                await send_marks(specific=MarkTypes.ALL.value)
+            case b"only_summative_marks":
+                await send_marks(specific=MarkTypes.Only_summative.value)
+            case b"recent_marks":
+                await send_marks(specific=MarkTypes.Recent.value)
+        raise events.StopPropagation
+
+
     @client.on(events.NewMessage(pattern=r"(?i).*about"))
     async def about(event: events.NewMessage.Event):
         sender = await event.get_sender()
@@ -230,33 +247,31 @@ with FuturesSession() as session:
             iQuery.send_specific_day_schedule,
             event=event, s=session, sender_id=sender_id
         )
-        pm = PatternMatching(event.query.query)
-        match True:
-            case pm.next:
+        match PatternMatching(event.query.query):
+            case PatternMatching(next=True):
                 # TODO next day inline query
                 await send_specific_day_schedule(specific_day=int(datetime.datetime.now().strftime("%w")) - 1)
                 # await event.answer([
                 #     builder.article(title="Next lesson", text=text if text else "No schedule found in analytics rn")
                 # ], switch_pm="Log in", switch_pm_param="inlineMode")
-            case pm.today:
+            case PatternMatching(today=True):
                 await send_specific_day_schedule(specific_day=int(datetime.datetime.now().strftime("%w")) - 1)
-            case pm.monday:
+            case PatternMatching(monday=True):
                 await send_specific_day_schedule(specific_day=Weekdays.Monday.value - 1)
-            case pm.tuesday:
+            case PatternMatching(tuesday=True):
                 await send_specific_day_schedule(specific_day=Weekdays.Tuesday.value - 1)
-            case pm.wednesday:
+            case PatternMatching(wednesday=True):
                 await send_specific_day_schedule(specific_day=Weekdays.Wednesday.value - 1)
-            case pm.thursday:
+            case PatternMatching(thursday=True):
                 await send_specific_day_schedule(specific_day=Weekdays.Thursday.value - 1)
-            case pm.friday:
+            case PatternMatching(friday=True):
                 await send_specific_day_schedule(specific_day=Weekdays.Friday.value - 1)
-            case pm.saturday:
+            case PatternMatching(saturday=True):
                 await send_specific_day_schedule(specific_day=Weekdays.Saturday.value - 1)
-            case pm.entire:
+            case PatternMatching(entire=True):
                 await send_specific_day_schedule(specific_day=Weekdays.ALL.value)
             case _:
                 await iQuery.to_main_page(event=event)
-        del pm
 
 
     if __name__ == "__main__":
