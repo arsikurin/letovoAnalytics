@@ -1,15 +1,15 @@
-#!/usr/bin/python3.9
+#!/usr/bin/python3.10
 
 import requests as rq
 import logging as log
 
 from threading import Thread
-from firebase_admin import auth
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi import FastAPI, Request, HTTPException
-from requests_futures.sessions import FuturesSession
 from fastapi.responses import HTMLResponse, RedirectResponse
+from requests_futures.sessions import FuturesSession
+from firebase_admin import auth
 from firebase_admin._auth_utils import EmailAlreadyExistsError
 from essential import (
     LOGIN_URL_LETOVO,
@@ -34,7 +34,7 @@ def send_email(email):
 
 
 @app.exception_handler(500)
-def unprocessable_entity(request: Request, error):
+def server_error(request: Request, error):
     log.error(error)
     return templates.TemplateResponse(
         "pageError.html",
@@ -118,8 +118,8 @@ def unauthorized(request: Request, error):
         "pageError.html",
         context={"request": request,
                  "error": "401 Unauthorized",
-                 "explain": "[Possibly wrong credentials provided]",
-                 "fix": ""},
+                 "explain": "[Possibly wrong credentials provided or your account is blocked]",
+                 "fix": "In case your account is blocked, contact Letovo Helpdesk"},
         status_code=401
     )
 
