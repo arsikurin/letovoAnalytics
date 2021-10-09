@@ -11,3 +11,5 @@ scheduleNew.ics
 /templates/index.html
 /static/images/icons/home.svg
 /static/images/icons/login.svg
+Pipfile
+Pipfile.lock

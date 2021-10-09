@@ -100,6 +100,7 @@ class Weekdays(Enum):
     Friday = 5
     Saturday = 6
     Sunday = 7
+    Sunday2 = 0
     ALL = -10
 
 
@@ -473,8 +474,8 @@ class CallbackQuerySenders:
         if schedule_future == rq.ConnectionError:
             return await event.answer("[✘] Cannot establish connection to s.letovo.ru", alert=True)
 
-        # if specific_day == 0:
-        #     return await event.answer("Congrats! It's Sunday, no lessons", alert=False)
+        if specific_day == Weekdays.Sunday2:
+            return await event.answer("Congrats! It's Sunday, no lessons", alert=False)
 
         old_wd = 0
         schedule = schedule_future.result().json()["data"]
@@ -598,20 +599,90 @@ class CallbackQuerySenders:
             return await event.answer("[✘] Cannot establish connection to s.letovo.ru", alert=True)
 
         # TODO marks parsing
+
         for subject in marks_future.result().json()["data"]:
-            if len(subject["summative_list"]) > 0:
-                payload = f'<strong>{subject["group"]["subject"]["subject_name_eng"]} {subject["group"]["group_name"]}</strong>\n'
-                for mark in subject["summative_list"]:
-                    payload += f'{mark["mark_value"]}{mark["mark_criterion"]} '
+            if specific == MarkTypes.Only_summative and len(subject["summative_list"]) > 0:
+                payload = f'**{subject["group"]["subject"]["subject_name_eng"]} {subject["group"]["group_name"]}**\n'
+
+                marks = [(mark["mark_value"], mark["mark_criterion"]) for mark in subject["summative_list"]]
+                markA, markB, markC, markD = [0, 0], [0, 0], [0, 0], [0, 0]
+                for mark in sorted(marks, key=lambda x: x[1]):
+                    if mark[1] == "A":
+                        markA[0] += int(mark[0])
+                        markA[1] += 1
+                    elif mark[1] == "B":
+                        markB[0] += int(mark[0])
+                        markB[1] += 1
+                    elif mark[1] == "C":
+                        markC[0] += int(mark[0])
+                        markC[1] += 1
+                    elif mark[1] == "D":
+                        markD[0] += int(mark[0])
+                        markD[1] += 1
+                    payload += f"{mark[0]}**{mark[1]}**"
+
+                if markA[1] == 0:
+                    markA[1] = 1
+                if markB[1] == 0:
+                    markB[1] = 1
+                if markC[1] == 0:
+                    markC[1] = 1
+                if markD[1] == 0:
+                    markD[1] = 1
+                payload += f" | __AVG:__ {markA[0] / markA[1]}**A** {markB[0] / markB[1]}**B** {markC[0] / markC[1]}**C** {markD[0] / markD[1]}**D**"
+
                 # date = subject["date"].split("-")
                 # payload += f'{Weekdays(int(subject["period_num_day"])).name}, {date[2]}.{date[1]}.{date[0]}\n'
 
                 await self.client.send_message(
                     entity=await event.get_sender(),
                     message=payload,
-                    parse_mode="html",
+                    parse_mode="md",
                     silent=True
                 )
+            elif specific == MarkTypes.ALL:
+                ch = False
+                payload = f'**{subject["group"]["subject"]["subject_name_eng"]}**\n'
+                if len(subject["formative_list"]) > 0:
+                    ch = True
+                    for mark in subject["formative_list"]:
+                        payload += f'**{mark["mark_value"]}**F '
+
+                if len(subject["summative_list"]) > 0:
+                    ch = True
+                    marks = [(mark["mark_value"], mark["mark_criterion"]) for mark in subject["summative_list"]]
+                    markA, markB, markC, markD = [0, 0], [0, 0], [0, 0], [0, 0]
+                    for mark in sorted(marks, key=lambda x: x[1]):
+                        if mark[1] == "A":
+                            markA[0] += int(mark[0])
+                            markA[1] += 1
+                        elif mark[1] == "B":
+                            markB[0] += int(mark[0])
+                            markB[1] += 1
+                        elif mark[1] == "C":
+                            markC[0] += int(mark[0])
+                            markC[1] += 1
+                        elif mark[1] == "D":
+                            markD[0] += int(mark[0])
+                            markD[1] += 1
+                        payload += f"**{mark[0]}**{mark[1]}"
+
+                    if markA[1] == 0:
+                        markA[1] = 1
+                    if markB[1] == 0:
+                        markB[1] = 1
+                    if markC[1] == 0:
+                        markC[1] = 1
+                    if markD[1] == 0:
+                        markD[1] = 1
+                    payload += f" | __AVG:__ **{markA[0] / markA[1]}**A **{markB[0] / markB[1]}**B **{markC[0] / markC[1]}**C **{markD[0] / markD[1]}**D"
+                if ch:
+                    await self.client.send_message(
+                        entity=await event.get_sender(),
+                        message=payload,
+                        parse_mode="md",
+                        silent=True
+                    )
         await event.answer("In beta")
 
 
