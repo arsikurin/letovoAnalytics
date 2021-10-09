@@ -190,8 +190,7 @@ with FuturesSession() as session:
         )
         match event.data:
             case b"all_marks":
-                await event.answer("Under development")
-                # await send_marks(specific=MarkTypes.ALL)
+                await send_marks(specific=MarkTypes.ALL)
             case b"only_summative_marks":
                 await send_marks(specific=MarkTypes.Only_summative)
             case b"recent_marks":
