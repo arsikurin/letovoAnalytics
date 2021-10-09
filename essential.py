@@ -11,7 +11,6 @@ import logging as log
 
 # from debug import *
 from enum import Enum
-from ics import Calendar
 from colourlib import Fg, Style
 from typing import Type
 from firebase_admin import firestore, credentials
@@ -472,26 +471,41 @@ class CallbackQuerySenders:
         # if specific_day == 0:
         #     return await event.answer("Congrats! It's Sunday, no lessons", alert=False)
 
-        for day in schedule_future.result().json()["data"]:
-            if len(day["schedules"]) > 0 and specific_day in (int(day["period_num_day"]), -10):
-                payload = f'{day["period_name"]}: <strong>{day["schedules"][0]["group"]["subject"]["subject_name_eng"]} {day["schedules"][0]["group"]["group_name"]}</strong>\n'
+        old_wd = 0
+        schedule = schedule_future.result().json()["data"]
+        if specific_day != -10:
+            date = schedule[0]["date"].split("-")
+            await self.client.send_message(
+                entity=await event.get_sender(),
+                message=f'<em>{Weekdays(specific_day).name}, {int(date[2]) + specific_day - 1}.{date[1]}.{date[0]}</em>\n',
+                parse_mode="html",
+                silent=True
+            )
 
+        for day in schedule:
+            if len(day["schedules"]) > 0 and specific_day in (int(day["period_num_day"]), -10):
+                wd = Weekdays(int(day["period_num_day"])).name
+                if specific_day == -10 and wd != old_wd:
+                    await self.client.send_message(
+                        entity=await event.get_sender(),
+                        message=f'\n<strong>=={wd}==</strong>\n',
+                        parse_mode="html",
+                        silent=True
+                    )
+
+                payload = f'{day["period_name"]} | <em>{day["schedules"][0]["room"]["room_name"]}</em>:\n'
+                payload += f'<strong>{day["schedules"][0]["group"]["subject"]["subject_name_eng"]} ' \
+                           f'{day["schedules"][0]["group"]["group_name"]}</strong>\n'
                 if day["schedules"][0]["zoom_meetings"]:
                     payload += f'[ZOOM]({day["schedules"][0]["zoom_meetings"][0]["meeting_url"]}\n)'
-
-                payload += f'{day["schedules"][0]["room"]["room_name"]} <em>(Classroom)</em>\n'
-
                 payload += f'{day["period_start"]} — {day["period_end"]}\n'
-
-                date = day["date"].split("-")
-                payload += f'{Weekdays(int(day["period_num_day"])).name}, {date[2]}.{date[1]}.{date[0]}\n'
-
                 await self.client.send_message(
                     entity=await event.get_sender(),
                     message=payload,
                     parse_mode="html",
                     silent=True
                 )
+                old_wd = wd
         await event.answer()
 
     async def send_specific_day_homework(
@@ -635,90 +649,16 @@ class InlineQueryEventEditors:
 class InlineQuerySenders:
     @staticmethod
     async def send_specific_day_schedule(
-            specific_day: int,
-            event: events.InlineQuery.Event,
-            s: FuturesSession,
-            sender_id: str
-    ):
-        """
-        send specific day(s) from schedule to inline query
-
-        :param event: a return object of InlineQuery
-        :param s: requests_futures session
-        :param sender_id: user's telegram id
-        :param specific_day: day number (-1..5) or (-10) to send entire schedule
-        """
-        # TODO rewrite
-        result = ""
-        if specific_day == 0:
-            day_name = "Monday"
-        elif specific_day == 1:
-            day_name = "Tuesday"
-        elif specific_day == 2:
-            day_name = "Wednesday"
-        elif specific_day == 3:
-            day_name = "Thursday"
-        elif specific_day == 4:
-            day_name = "Friday"
-        elif specific_day == 5:
-            day_name = "Saturday"
-        else:
-            return
-
-        if specific_day == -1:
-            return await event.answer(
-                results=[
-                    event.builder.article(title=f"{day_name} lessons", text="Congrats! It's Sunday, no lessons")
-                ], switch_pm="Log in", switch_pm_param="inlineMode"
-            )
-
-        if (schedule := await Web.receive_schedule(s, sender_id)) == rq.ConnectionError:
-            return await event.answer(
-                results=[
-                    event.builder.article(
-                        title=f"{day_name} lessons",
-                        text="[✘] Cannot establish connection to s.letovo.ru"
-                    )
-                ], switch_pm="Log in", switch_pm_param="inlineMode"
-            )
-
-        if not schedule:
-            return await event.answer(
-                results=[
-                    event.builder.article(
-                        title=f"{day_name} lessons",
-                        text="No schedule found in analytics rn"
-                    )
-                ], switch_pm="Log in", switch_pm_param="inlineMode"
-            )
-
-        try:
-            for ind, day in enumerate(schedule):
-                if specific_day in (ind, -10):
-                    for lesson in day:
-                        result += "\n".join(lesson)
-                        result += "\n\n"
-            await event.answer(
-                results=[
-                    event.builder.article(title=f"{day_name} lessons", text=result)
-                ], switch_pm="Log in", switch_pm_param="inlineMode"
-            )
-
-        except Exception as err:
-            log.critical(f"{Fg.Red} {err} {Fg.Reset}")
-            await event.answer(
-                results=[
-                    event.builder.article(title=f"{day_name} lessons", text="[✘] Something went wrong!")
-                ], switch_pm="Log in", switch_pm_param="inlineMode"
-            )
-
-    @staticmethod
-    async def send_specific_day_schedule_new(
             s: FuturesSession, event: events.InlineQuery.Event, specific_day: int
     ):
         """
-        parse and send specific day(s) schedule
+        parse and send specific day(s) from schedule to inline query
+
+        :param event: a return object of InlineQuery
+        :param s: requests_futures session
+        :param specific_day: day number or -10 to send entire schedule
         """
+
         schedule_future = await Web.receive_hw_n_schedule(s, str(event.sender_id))
         if schedule_future == UnauthorizedError:
             return await event.answer(
@@ -749,14 +689,6 @@ class InlineQuerySenders:
                     )
                 ], switch_pm="Log in", switch_pm_param="inlineMode"
             )
-        # ->
-        result = ""
-        await event.answer(
-            results=[
-                event.builder.article(title=f"day_name lessons", text=result)
-            ], switch_pm="Log in", switch_pm_param="inlineMode"
-        )
-        # <-
 
         # if specific_day == 0:
         #     return await event.answer(
@@ -764,20 +696,31 @@ class InlineQuerySenders:
         #             event.builder.article(title=f"{day_name} lessons", text="Congrats! It's Sunday, no lessons")
         #         ], switch_pm="Log in", switch_pm_param="inlineMode"
         #     )
+        payload = ""
+        old_wd = 0
+        schedule = schedule_future.result().json()["data"]
+        date = schedule[0]["date"].split("-")
+        payload += f'<em>{Weekdays(specific_day).name}, {int(date[2]) + specific_day - 1}.{date[1]}.{date[0]}</em>\n'
 
-        # for day in schedule_future.result().json()["data"]:
-        #     if len(day["schedules"]) > 0 and specific_day in (int(day["period_num_day"]), -10):
-        #         payload = f'{day["period_name"]}: <strong>{day["schedules"][0]["group"]["subject"]["subject_name_eng"]} {day["schedules"][0]["group"]["group_name"]}</strong>\n'
-        #
-        #         if day["schedules"][0]["zoom_meetings"]:
-        #             payload += f'[ZOOM]({day["schedules"][0]["zoom_meetings"][0]["meeting_url"]}\n)'
-        #
-        #         payload += f'{day["schedules"][0]["room"]["room_name"]} <em>(Classroom)</em>\n'
-        #
-        #         payload += f'{day["period_start"]} — {day["period_end"]}\n'
-        #
-        #         date = day["date"].split("-")
-        #         payload += f'{Weekdays(int(day["period_num_day"])).name}, {date[2]}.{date[1]}.{date[0]}\n'
+        for day in schedule:
+            if len(day["schedules"]) > 0 and specific_day in (int(day["period_num_day"]), -10):
+                wd = Weekdays(int(day["period_num_day"])).name
+                if specific_day == -10 and wd != old_wd:
+                    payload += f'\n<strong>--{wd}--</strong>\n'
+
+                payload += f'{day["period_name"]} | <em>{day["schedules"][0]["room"]["room_name"]}</em>:\n'
+                payload += f'<strong>{day["schedules"][0]["group"]["subject"]["subject_name_eng"]} {day["schedules"][0]["group"]["group_name"]}</strong>\n'
+                if day["schedules"][0]["zoom_meetings"]:
+                    payload += f'[ZOOM]({day["schedules"][0]["zoom_meetings"][0]["meeting_url"]}\n)'
+                payload += f'{day["period_start"]} — {day["period_end"]}\n'
+                payload += "\n"
+                old_wd = wd
+
+        await event.answer(
+            results=[
+                event.builder.article(title=f'{Weekdays(specific_day).name} lessons', text=payload, parse_mode="html")
+            ], switch_pm="Log in", switch_pm_param="inlineMode"
+        )
 
 
 class Web:
@@ -806,7 +749,7 @@ class Web:
         }
         try:
             login_future: Future = s.post(url=LOGIN_URL_LETOVO, data=login_data)
-            for login_futured in as_completed([login_future]):
+            for login_futured in as_completed((login_future,)):
                 login_response = login_futured.result()
                 return f'{login_response.json()["data"]["token_type"]} {login_response.json()["data"]["token"]}'
         except rq.ConnectionError:
@@ -829,7 +772,7 @@ class Web:
         }
         try:
             me_future: Future = s.post("https://s-api.letovo.ru/api/me", headers=me_headers)
-            for me_futured in as_completed([me_future]):
+            for me_futured in as_completed((me_future,)):
                 return int(me_futured.result().json()["data"]["user"]["student_id"])
         except rq.ConnectionError:
             return rq.ConnectionError
@@ -882,66 +825,6 @@ class Web:
         except rq.ConnectionError:
             return rq.ConnectionError
         return marks_future
-
-    @staticmethod
-    async def receive_schedule(s: FuturesSession, sender_id: str):
-        # TODO rewrite
-        student_id, token = await asyncio.gather(
-            Firebase.get_student_id(sender_id=sender_id),
-            Firebase.get_token(sender_id=sender_id)
-        )
-
-        schedule_url: str = (
-            f"https://s-api.letovo.ru/api/schedule/{student_id}/week/ics?schedule_date="
-            f"{(today := str(datetime.datetime.now().date()))}"
-        )
-        schedule_headers: dict[str, str | None] = {
-            "Authorization": token,
-            "schedule_date": today
-        }
-        try:
-            schedule_future: Future = s.get(url=schedule_url, headers=schedule_headers)
-            if schedule_future.result().status_code != 200:
-                return UnauthorizedError
-        except rq.ConnectionError:
-            return rq.ConnectionError
-
-        info = []
-        ind: int = 0
-        day: int = -1
-        for ch, e in enumerate(list(Calendar(schedule_future.result().text).timeline)):
-            try:
-                desc = e.description
-            except IndexError:
-                desc: str = ""
-
-            if ind != 0 and date != (date := ".".join(reversed(str(e.begin).split("T")[0].split("-")))):
-                info.append([])
-                day += 1
-                ind = 0
-            elif ind == 0:
-                date: str = ".".join(reversed(str(e.begin).split("T")[0].split("-")))
-                info.append([])
-                day += 1
-
-            info[day].append([])
-            if (name := e.name.split()[0]) == "ММА":
-                info[day][ind].append("**ММА**")
-            elif name == "Плавание,":
-                info[day][ind].append("**Плавание**")
-            else:
-                lesson = e.name.split("(")[0].split()
-                info[day][ind].append(f'{" ".join(lesson[:2])} **{" ".join(lesson[2:])}**')
-            if desc:
-                if (zoom_url := desc.split("Zoom url:")[-1].strip()) != "no link":
-                    info[day][ind].append(f"[ZOOM]({zoom_url})")
-                info[day][ind].append(f'{desc.split()[1]} __(Classroom)__')
-            info[day][ind].append(
-                f'{str(e.begin).split("T")[1].rsplit(":", 2)[0]} — {str(e.end).split("T")[1].rsplit(":", 2)[0]}'
-            )
-            info[day][ind].append(f'{e.begin.strftime("%A")}, {date}')
-            ind += 1
-        return info
 
 
 class Database:

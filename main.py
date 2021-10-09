@@ -237,37 +237,36 @@ with FuturesSession() as session:
     @client.on(events.InlineQuery())
     async def handle_inline_query(event: events.InlineQuery.Event):
         sender = await event.get_sender()
-        sender_id = str(sender.id)
 
-        if not await Firebase.is_inited(sender_id=sender_id):
+        if not await Firebase.is_inited(sender_id=str(sender.id)):
             await event.answer(switch_pm="Log in", switch_pm_param="inlineMode")
             raise events.StopPropagation
 
         send_specific_day_schedule = partial(
             iQuery.send_specific_day_schedule,
-            event=event, s=session, sender_id=sender_id
+            event=event, s=session
         )
         match PatternMatching(event.query.query):
             case PatternMatching(next=True):
                 # TODO next day inline query
-                await send_specific_day_schedule(specific_day=int(datetime.datetime.now().strftime("%w")) - 1)
+                await send_specific_day_schedule(specific_day=int(datetime.datetime.now().strftime("%w")))
                 # await event.answer([
                 #     builder.article(title="Next lesson", text=text if text else "No schedule found in analytics rn")
                 # ], switch_pm="Log in", switch_pm_param="inlineMode")
             case PatternMatching(today=True):
-                await send_specific_day_schedule(specific_day=int(datetime.datetime.now().strftime("%w")) - 1)
+                await send_specific_day_schedule(specific_day=int(datetime.datetime.now().strftime("%w")))
             case PatternMatching(monday=True):
-                await send_specific_day_schedule(specific_day=Weekdays.Monday.value - 1)
+                await send_specific_day_schedule(specific_day=Weekdays.Monday.value)
             case PatternMatching(tuesday=True):
-                await send_specific_day_schedule(specific_day=Weekdays.Tuesday.value - 1)
+                await send_specific_day_schedule(specific_day=Weekdays.Tuesday.value)
             case PatternMatching(wednesday=True):
-                await send_specific_day_schedule(specific_day=Weekdays.Wednesday.value - 1)
+                await send_specific_day_schedule(specific_day=Weekdays.Wednesday.value)
             case PatternMatching(thursday=True):
-                await send_specific_day_schedule(specific_day=Weekdays.Thursday.value - 1)
+                await send_specific_day_schedule(specific_day=Weekdays.Thursday.value)
             case PatternMatching(friday=True):
-                await send_specific_day_schedule(specific_day=Weekdays.Friday.value - 1)
+                await send_specific_day_schedule(specific_day=Weekdays.Friday.value)
             case PatternMatching(saturday=True):
-                await send_specific_day_schedule(specific_day=Weekdays.Saturday.value - 1)
+                await send_specific_day_schedule(specific_day=Weekdays.Saturday.value)
             case PatternMatching(entire=True):
                 await send_specific_day_schedule(specific_day=Weekdays.ALL.value)
             case _:
