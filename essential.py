@@ -381,7 +381,7 @@ class CallbackQuerySenders:
         )
 
     async def send_init_message(self, sender):
-        await asyncio.sleep(0.01)
+        await asyncio.sleep(0.05)
         await self.client.send_message(
             entity=sender,
             message="I will help you access your schedule via Telegram.\n"
@@ -396,7 +396,7 @@ class CallbackQuerySenders:
         )
 
     async def send_about_message(self, sender):
-        await asyncio.sleep(0.01)
+        await asyncio.sleep(0.05)
         await self.client.send_message(
             entity=sender,
             message="**Arseny Kurin**\n\n"
@@ -538,7 +538,7 @@ class CallbackQuerySenders:
 
         if homework_future == rq.ConnectionError:
             return await event.answer("[✘] Cannot establish connection to s.letovo.ru", alert=True)
-
+        # TODO
         for day in homework_future.result().json()["data"]:
             if len(day["schedules"]) > 0 and specific_day.value in (int(day["period_num_day"]), -10):
                 ch = False
