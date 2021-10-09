@@ -633,8 +633,8 @@ standard = ["websockets (>=9.1)", "httptools (>=0.2.0,<0.3.0)", "watchgod (>=0.6
 
 [metadata]
 lock-version = "1.1"
-python-versions = "^3.10"
-content-hash = "18a70e85097152a687f917c9731b7fb4cb6edbf6e2cdd2972736b7bb058fcdd0"
+python-versions = "^3.10.0"
+content-hash = "4e9ef7c4b6adb938bf2d5653ed706f64d4f1827d0f3b073a34b9dcd2e39b2529"
 
 [metadata.files]
 aiofiles = [
