@@ -138,21 +138,21 @@ with FuturesSession() as session:
         )
         match event.data:
             case b"todays_schedule":
-                await send_specific_day_schedule(specific_day=int(datetime.datetime.now().strftime("%w")))
+                await send_specific_day_schedule(specific_day=Weekdays(int(datetime.datetime.now().strftime("%w"))))
             case b"entire_schedule":
-                await send_specific_day_schedule(specific_day=Weekdays.ALL.value)
+                await send_specific_day_schedule(specific_day=Weekdays.ALL)
             case b"monday_schedule":
-                await send_specific_day_schedule(specific_day=Weekdays.Monday.value)
+                await send_specific_day_schedule(specific_day=Weekdays.Monday)
             case b"tuesday_schedule":
-                await send_specific_day_schedule(specific_day=Weekdays.Tuesday.value)
+                await send_specific_day_schedule(specific_day=Weekdays.Tuesday)
             case b"wednesday_schedule":
-                await send_specific_day_schedule(specific_day=Weekdays.Wednesday.value)
+                await send_specific_day_schedule(specific_day=Weekdays.Wednesday)
             case b"thursday_schedule":
-                await send_specific_day_schedule(specific_day=Weekdays.Thursday.value)
+                await send_specific_day_schedule(specific_day=Weekdays.Thursday)
             case b"friday_schedule":
-                await send_specific_day_schedule(specific_day=Weekdays.Friday.value)
+                await send_specific_day_schedule(specific_day=Weekdays.Friday)
             case b"saturday_schedule":
-                await send_specific_day_schedule(specific_day=Weekdays.Saturday.value)
+                await send_specific_day_schedule(specific_day=Weekdays.Saturday)
         raise events.StopPropagation
 
 
@@ -164,37 +164,39 @@ with FuturesSession() as session:
         )
         match event.data:
             case b"tomorrows_homework":
-                await send_specific_day_homework(specific_day=int(datetime.datetime.now().strftime("%w")) + 1)
+                await send_specific_day_homework(specific_day=Weekdays(int(datetime.datetime.now().strftime("%w")) + 1))
             case b"entire_homework":
-                await send_specific_day_homework(specific_day=Weekdays.ALL.value)
+                await send_specific_day_homework(specific_day=Weekdays.ALL)
             case b"monday_homework":
-                await send_specific_day_homework(specific_day=Weekdays.Monday.value)
+                await send_specific_day_homework(specific_day=Weekdays.Monday)
             case b"tuesday_homework":
-                await send_specific_day_homework(specific_day=Weekdays.Tuesday.value)
+                await send_specific_day_homework(specific_day=Weekdays.Tuesday)
             case b"wednesday_homework":
-                await send_specific_day_homework(specific_day=Weekdays.Wednesday.value)
+                await send_specific_day_homework(specific_day=Weekdays.Wednesday)
             case b"thursday_homework":
-                await send_specific_day_homework(specific_day=Weekdays.Thursday.value)
+                await send_specific_day_homework(specific_day=Weekdays.Thursday)
             case b"friday_homework":
-                await send_specific_day_homework(specific_day=Weekdays.Friday.value)
+                await send_specific_day_homework(specific_day=Weekdays.Friday)
             case b"saturday_homework":
-                await send_specific_day_homework(specific_day=Weekdays.Saturday.value)
+                await send_specific_day_homework(specific_day=Weekdays.Saturday)
         raise events.StopPropagation
 
 
     @client.on(events.CallbackQuery(pattern=r"(?i).*marks"))
-    async def schedule(event: events.CallbackQuery.Event):
+    async def marks(event: events.CallbackQuery.Event):
         send_marks = partial(
             cbQuery.send_marks,
             event=event, s=session
         )
         match event.data:
             case b"all_marks":
-                await send_marks(specific=MarkTypes.ALL.value)
+                await event.answer("Under development")
+                # await send_marks(specific=MarkTypes.ALL)
             case b"only_summative_marks":
-                await send_marks(specific=MarkTypes.Only_summative.value)
+                await send_marks(specific=MarkTypes.Only_summative)
             case b"recent_marks":
-                await send_marks(specific=MarkTypes.Recent.value)
+                await event.answer("Under development")
+                # await send_marks(specific=MarkTypes.Recent)
         raise events.StopPropagation
 
 

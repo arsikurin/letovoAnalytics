@@ -61,7 +61,7 @@ else:
     log.getLogger("asyncio").disabled = True
     log.getLogger("telethon.network.mtprotosender").disabled = True
     log.getLogger("telethon.extensions.messagepacker").disabled = True
-    log.getLogger("telethon.client.uploads").disabled = True
+    log.getLogger("telethon.client").disabled = True
 
 
 class NothingFoundError(Exception):
@@ -99,6 +99,7 @@ class Weekdays(Enum):
     Thursday = 4
     Friday = 5
     Saturday = 6
+    Sunday = 7
     ALL = -10
 
 
@@ -450,10 +451,14 @@ class CallbackQuerySenders:
         )
 
     async def send_specific_day_schedule(
-            self, s: FuturesSession, event: events.CallbackQuery.Event, specific_day: int
+            self, s: FuturesSession, event: events.CallbackQuery.Event, specific_day: Weekdays
     ):
         """
-        parse and send specific day(s) schedule
+        parse and send specific day(s) from schedule
+
+        :param event: a return object of CallbackQuery
+        :param s: requests_futures session
+        :param specific_day: day number or -10 to send entire schedule
         """
         schedule_future = await Web.receive_hw_n_schedule(s, str(event.sender_id))
         if schedule_future == UnauthorizedError:
@@ -473,19 +478,19 @@ class CallbackQuerySenders:
 
         old_wd = 0
         schedule = schedule_future.result().json()["data"]
-        if specific_day != -10:
+        if specific_day.value != -10:
             date = schedule[0]["date"].split("-")
             await self.client.send_message(
                 entity=await event.get_sender(),
-                message=f'<em>{Weekdays(specific_day).name}, {int(date[2]) + specific_day - 1}.{date[1]}.{date[0]}</em>\n',
+                message=f'<em>{specific_day.name}, {int(date[2]) + specific_day.value - 1}.{date[1]}.{date[0]}</em>\n',
                 parse_mode="html",
                 silent=True
             )
 
         for day in schedule:
-            if len(day["schedules"]) > 0 and specific_day in (int(day["period_num_day"]), -10):
+            if len(day["schedules"]) > 0 and specific_day.value in (int(day["period_num_day"]), -10):
                 wd = Weekdays(int(day["period_num_day"])).name
-                if specific_day == -10 and wd != old_wd:
+                if specific_day.value == -10 and wd != old_wd:
                     await self.client.send_message(
                         entity=await event.get_sender(),
                         message=f'\n<strong>=={wd}==</strong>\n',
@@ -509,12 +514,19 @@ class CallbackQuerySenders:
         await event.answer()
 
     async def send_specific_day_homework(
-            self, s: FuturesSession, event: events.CallbackQuery.Event, specific_day: int
+            self, s: FuturesSession, event: events.CallbackQuery.Event, specific_day: Weekdays
     ):
         """
-        parse and send specific day(s) homework
+        parse and send specific day(s) from homework
+
+        :param event: a return object of CallbackQuery
+        :param s: requests_futures session
+        :param specific_day: day number or -10 to send all homework
         """
         homework_future = await Web.receive_hw_n_schedule(s, str(event.sender_id))
+        if specific_day == Weekdays.Sunday:
+            return await event.answer("Congrats! Tomorrow's Sunday, no hw", alert=False)
+
         if homework_future == UnauthorizedError:
             return await event.answer("[✘] Cannot get data from s.letovo.ru", alert=True)
 
@@ -528,7 +540,7 @@ class CallbackQuerySenders:
             return await event.answer("[✘] Cannot establish connection to s.letovo.ru", alert=True)
 
         for day in homework_future.result().json()["data"]:
-            if len(day["schedules"]) > 0 and specific_day in (int(day["period_num_day"]), -10):
+            if len(day["schedules"]) > 0 and specific_day.value in (int(day["period_num_day"]), -10):
                 ch = False
                 payload = f'{day["period_name"]}: <strong>{day["schedules"][0]["group"]["subject"]["subject_name_eng"]} {day["schedules"][0]["group"]["group_name"]}</strong>\n' + \
                           f'{Weekdays(int(day["period_num_day"])).name}, {day["date"]}\n'
@@ -563,42 +575,36 @@ class CallbackQuerySenders:
         await event.answer()
 
     async def send_marks(
-            self, s: FuturesSession, event: events.CallbackQuery.Event, specific: int
+            self, s: FuturesSession, event: events.CallbackQuery.Event, specific: MarkTypes
     ):
         """
-        parse and send specific day(s) schedule
+        parse and send marks
+
+        :param event: a return object of CallbackQuery
+        :param s: requests_futures session
+        :param specific: all, sum, recent
         """
-        await event.answer("Under development", alert=False)
-        return
-        schedule_future = await Web.receive_marks(s, str(event.sender_id))
-        if schedule_future == UnauthorizedError:
+        marks_future = await Web.receive_marks(s, str(event.sender_id))
+        if marks_future == UnauthorizedError:
             return await event.answer("[✘] Cannot get data from s.letovo.ru", alert=True)
 
-        if schedule_future == NothingFoundError:
+        if marks_future == NothingFoundError:
             return await event.answer(
                 "[✘] Nothing found in database for this user.\nPlease enter /start and register",
                 alert=True
             )
 
-        if schedule_future == rq.ConnectionError:
+        if marks_future == rq.ConnectionError:
             return await event.answer("[✘] Cannot establish connection to s.letovo.ru", alert=True)
 
-        # if specific_day == 0:
-        #     return await event.answer("Congrats! It's Sunday, no lessons", alert=False)
         # TODO marks parsing
-        for day in schedule_future.result().json()["data"]:
-            if len(day["schedules"]) > 0 and specific in (int(day["period_num_day"]), -10):
-                payload = f'{day["period_name"]}: <strong>{day["schedules"][0]["group"]["subject"]["subject_name_eng"]} {day["schedules"][0]["group"]["group_name"]}</strong>\n'
-
-                if day["schedules"][0]["zoom_meetings"]:
-                    payload += f'[ZOOM]({day["schedules"][0]["zoom_meetings"][0]["meeting_url"]}\n)'
-
-                payload += f'{day["schedules"][0]["room"]["room_name"]} <em>(Classroom)</em>\n'
-
-                payload += f'{day["period_start"]} — {day["period_end"]}\n'
-
-                date = day["date"].split("-")
-                payload += f'{Weekdays(int(day["period_num_day"])).name}, {date[2]}.{date[1]}.{date[0]}\n'
+        for subject in marks_future.result().json()["data"]:
+            if len(subject["summative_list"]) > 0:
+                payload = f'<strong>{subject["group"]["subject"]["subject_name_eng"]} {subject["group"]["group_name"]}</strong>\n'
+                for mark in subject["summative_list"]:
+                    payload += f'{mark["mark_value"]}{mark["mark_criterion"]} '
+                # date = subject["date"].split("-")
+                # payload += f'{Weekdays(int(subject["period_num_day"])).name}, {date[2]}.{date[1]}.{date[0]}\n'
 
                 await self.client.send_message(
                     entity=await event.get_sender(),
@@ -606,7 +612,7 @@ class CallbackQuerySenders:
                     parse_mode="html",
                     silent=True
                 )
-        await event.answer()
+        await event.answer("In beta")
 
 
 class InlineQueryEventEditors:
@@ -706,7 +712,7 @@ class InlineQuerySenders:
             if len(day["schedules"]) > 0 and specific_day in (int(day["period_num_day"]), -10):
                 wd = Weekdays(int(day["period_num_day"])).name
                 if specific_day == -10 and wd != old_wd:
-                    payload += f'\n<strong>--{wd}--</strong>\n'
+                    payload += f'\n<strong>=={wd}==</strong>\n'
 
                 payload += f'{day["period_name"]} | <em>{day["schedules"][0]["room"]["room_name"]}</em>:\n'
                 payload += f'<strong>{day["schedules"][0]["group"]["subject"]["subject_name_eng"]} {day["schedules"][0]["group"]["group_name"]}</strong>\n'
