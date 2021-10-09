@@ -13,3 +13,4 @@ scheduleNew.ics
 /static/images/icons/login.svg
 Pipfile
 Pipfile.lock
+runtime.txt
