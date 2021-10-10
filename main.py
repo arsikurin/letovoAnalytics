@@ -1,6 +1,7 @@
 #!/usr/bin/python3.10
 
 import re
+import custom_logging
 import asyncio
 import psycopg2
 import datetime
@@ -10,23 +11,13 @@ import logging as log
 from functools import partial
 from telethon import TelegramClient, events, errors
 from requests_futures.sessions import FuturesSession
-from essential import (
-    HOST_SQL,
-    PORT_SQL,
-    USER_SQL,
-    DATABASE_SQL,
-    PASSWORD_SQL,
-    API_ID,
-    API_HASH,
-    BOT_TOKEN,
-    Database,  # SQL db for clearing messages
-    Firebase,  # NoSQL db for the other data
-    CallbackQuery,
-    InlineQuery,
-    Weekdays,
-    MarkTypes,
-    PatternMatching
-)
+from constants import HOST_SQL, PORT_SQL, USER_SQL, DATABASE_SQL, PASSWORD_SQL, API_ID, API_HASH, BOT_TOKEN
+from classes.callbackquery import CallbackQuery
+from classes.inlinequery import InlineQuery
+from classes.enums import Weekdays, MarkTypes, PatternMatching
+from classes.database import Database
+from classes.firebase import Firebase
+
 
 with FuturesSession() as session:
     with psycopg2.connect(

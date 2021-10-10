@@ -1,5 +1,6 @@
 #!/usr/bin/python3.10
 
+import custom_logging
 import requests as rq
 import logging as log
 
@@ -10,12 +11,9 @@ from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
 from requests_futures.sessions import FuturesSession
 from firebase_admin import auth
-from essential import (
-    LOGIN_URL_LETOVO,
-    API_KEY,
-    Firebase,
-    Web
-)
+from constants import LOGIN_URL_LETOVO, API_KEY
+from classes.firebase import Firebase
+from classes.web import Web
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")

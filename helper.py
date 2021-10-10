@@ -1,14 +1,13 @@
 #!/usr/bin/python3.10
 
+import custom_logging
 import asyncio
 import logging as log
 
 from requests_futures.sessions import FuturesSession
-from essential import (
-    UnauthorizedError,
-    Firebase,
-    Web
-)
+from classes.errors import UnauthorizedError
+from classes.firebase import Firebase
+from classes.web import Web
 
 
 async def main():
