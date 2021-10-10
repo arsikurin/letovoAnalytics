@@ -11,13 +11,15 @@ import logging as log
 
 # from debug import *
 from enum import Enum
+from typing import Optional  # Union
 from colourlib import Fg, Style
 from typing import Type
-from firebase_admin import firestore, credentials
 from concurrent.futures import as_completed, Future
 from requests_futures.sessions import FuturesSession
 from telethon import Button, events, types
-from google.cloud.firestore_v1.document import DocumentReference, DocumentSnapshot
+from firebase_admin import credentials
+from google.cloud.firestore_v1.async_client import AsyncClient, AsyncDocumentReference, DocumentSnapshot
+from pydantic import BaseModel
 
 #
 # --------------------- Constants
@@ -37,9 +39,9 @@ PASSWORD_SQL = os.environ["PASSWORD_SQL"]
 
 #
 # --------------------- Firestore
-firebase_admin.initialize_app(
+app = firebase_admin.initialize_app(
     credentials.Certificate(yaml.full_load(os.environ["GOOGLE_KEY"])))
-firedb = firestore.client()
+firestore = AsyncClient(credentials=app.credential.get_credential(), project=app.project_id)
 
 #
 # --------------------- Debug
@@ -55,13 +57,8 @@ if DEBUG:
 else:
     log.basicConfig(
         format=f"{Fg.Green}{Style.Bold}%(asctime)s{Fg.Reset}{Style.Bold} %(message)s{Style.Reset}\n[%(name)s]\n",
-        level=log.DEBUG
+        level=log.INFO
     )
-    log.getLogger("urllib3.connectionpool").disabled = True
-    log.getLogger("asyncio").disabled = True
-    log.getLogger("telethon.network.mtprotosender").disabled = True
-    log.getLogger("telethon.extensions.messagepacker").disabled = True
-    log.getLogger("telethon.client").disabled = True
 
 
 class NothingFoundError(Exception):
@@ -102,6 +99,69 @@ class Weekdays(Enum):
     Sunday = 7
     Sunday2 = 0
     ALL = -10
+
+
+class MarksList(BaseModel):
+    # id_mark: int
+    # mark_period: int
+    # mark_student: int
+    # mark_group: int
+    # mark_work: int
+    mark_value: str
+    mark_criterion: Optional[str]
+    # created_at: str
+    # deleted_at: Optional[str]
+    # id_lesson: int
+    # lesson_date: str
+    # lesson_num: int
+    # lesson_thema: Optional[str]
+    # work_comment: Optional[str]
+    form_name: Optional[str]
+    form_description: Optional[str]
+    # form_description_eng: Optional[str]
+    # comment_list: list
+
+
+class MarksSubject(BaseModel):
+    # id_subject: int
+    subject_name: str
+    subject_name_eng: str
+    # subject_order: int
+    # subject_group: str
+    # subject_development: int
+
+
+class MarksGroup(BaseModel):
+    # id_group: int
+    group_name: str
+    # group_subject: str
+    group_level: str
+    # group_hour: int
+    # group_hour_week: int
+    subject: MarksSubject
+
+
+class MarksDataList(BaseModel):
+    # id_group: int
+    formative_avg_value: Optional[int]
+    summative_avg_value: Optional[int]
+    # criterions_summative_mark_list: list
+    formative_list: list[Optional[MarksList]]
+    # formative_dynamic_status: str
+    summative_list: list[Optional[MarksList]]
+    # summative_dynamic_status: str
+    group_avg_mark: Optional[str]
+    # target_mark: Optional[int]
+    # final_mark_list: list
+    # result_final_mark: Union[None, str, int]
+    group: MarksGroup
+
+
+class MarksResponse(BaseModel):
+    # status: str
+    # code: int
+    # message: str
+    data: list[MarksDataList]
 
 
 class PatternMatching:
@@ -160,8 +220,9 @@ class FirebaseSetters:
             '''}
         }'''
         )
-        doc_ref: DocumentReference = firedb.collection(u"users").document(sender_id)
-        doc_ref.set(yaml.full_load(request_payload), merge=True)
+        # doc_ref: DocumentReference = firestore.collection(u"users").document(sender_id)
+        doc_ref: AsyncDocumentReference = firestore.collection(u"users").document(sender_id)
+        await doc_ref.set(yaml.full_load(request_payload), merge=True)
 
     @staticmethod
     async def update_name(
@@ -188,23 +249,26 @@ class FirebaseSetters:
             '''}
         }'''
         )
-        doc_ref: DocumentReference = firedb.collection(u"names").document(sender_id)
-        doc_ref.set(yaml.full_load(request_payload), merge=True)
+        # doc_ref: DocumentReference = firestore.collection(u"names").document(sender_id)
+        doc_ref: AsyncDocumentReference = firestore.collection(u"names").document(sender_id)
+        await doc_ref.set(yaml.full_load(request_payload), merge=True)
 
 
 class FirebaseGetters:
     @staticmethod
     async def is_inited(sender_id: str) -> bool:
-        docs = firedb.collection(u"users").stream()
-        return sender_id in [doc.id for doc in docs]
+        docs = firestore.collection(u"users").stream()
+        return sender_id in [doc.id async for doc in docs]
 
     @staticmethod
     async def get_users() -> list:
-        return [doc.id for doc in firedb.collection(u"users").stream()]
+        docs = firestore.collection(u"users").stream()
+        return [doc.id async for doc in docs]
 
     @staticmethod
     async def get_student_id(sender_id: str) -> int | Type[NothingFoundError]:
-        doc: DocumentSnapshot = firedb.collection(u"users").document(sender_id).get()
+        # doc: DocumentSnapshot = firestore.collection(u"users").document(sender_id).get()
+        doc: DocumentSnapshot = await firestore.collection(u"users").document(sender_id).get()
         try:
             if not doc.exists:
                 return NothingFoundError
@@ -214,7 +278,7 @@ class FirebaseGetters:
 
     @staticmethod
     async def get_token(sender_id: str) -> str | Type[NothingFoundError]:
-        doc: DocumentSnapshot = firedb.collection(u"users").document(sender_id).get()
+        doc: DocumentSnapshot = await firestore.collection(u"users").document(sender_id).get()
         try:
             if not doc.exists:
                 return NothingFoundError
@@ -224,7 +288,7 @@ class FirebaseGetters:
 
     @staticmethod
     async def get_analytics_password(sender_id: str) -> str | Type[NothingFoundError]:
-        doc: DocumentSnapshot = firedb.collection(u"users").document(sender_id).get()
+        doc: DocumentSnapshot = await firestore.collection(u"users").document(sender_id).get()
         try:
             if not doc.exists:
                 return NothingFoundError
@@ -234,7 +298,7 @@ class FirebaseGetters:
 
     @staticmethod
     async def get_analytics_login(sender_id: str) -> str | Type[NothingFoundError]:
-        doc: DocumentSnapshot = firedb.collection(u"users").document(sender_id).get()
+        doc: DocumentSnapshot = await firestore.collection(u"users").document(sender_id).get()
         try:
             if not doc.exists:
                 return NothingFoundError
@@ -599,12 +663,12 @@ class CallbackQuerySenders:
             return await event.answer("[✘] Cannot establish connection to s.letovo.ru", alert=True)
 
         # TODO marks parsing
+        marks_response = MarksResponse.parse_obj(marks_future.result().json())
+        for subject in marks_response.data:
+            if specific == MarkTypes.Only_summative and len(subject.summative_list) > 0:
+                payload = f'**{subject.group.subject.subject_name_eng} {subject.group.group_name}**\n'
 
-        for subject in marks_future.result().json()["data"]:
-            if specific == MarkTypes.Only_summative and len(subject["summative_list"]) > 0:
-                payload = f'**{subject["group"]["subject"]["subject_name_eng"]} {subject["group"]["group_name"]}**\n'
-
-                marks = [(mark["mark_value"], mark["mark_criterion"]) for mark in subject["summative_list"]]
+                marks = [(mark.mark_value, mark.mark_criterion) for mark in subject.summative_list]
                 markA, markB, markC, markD = [0, 0], [0, 0], [0, 0], [0, 0]
                 for mark in sorted(marks, key=lambda x: x[1]):
                     if mark[1] == "A":
@@ -642,15 +706,15 @@ class CallbackQuerySenders:
                 )
             elif specific == MarkTypes.ALL:
                 ch = False
-                payload = f'**{subject["group"]["subject"]["subject_name_eng"]}**\n'
-                if len(subject["formative_list"]) > 0:
+                payload = f'**{subject.group.subject.subject_name_eng}**\n'
+                if len(subject.formative_list) > 0:
                     ch = True
-                    for mark in subject["formative_list"]:
-                        payload += f'**{mark["mark_value"]}**F '
+                    for mark in subject.formative_list:
+                        payload += f'**{mark.mark_value}**F '
 
-                if len(subject["summative_list"]) > 0:
+                if len(subject.summative_list) > 0:
                     ch = True
-                    marks = [(mark["mark_value"], mark["mark_criterion"]) for mark in subject["summative_list"]]
+                    marks = [(mark.mark_value, mark.mark_criterion) for mark in subject.summative_list]
                     markA, markB, markC, markD = [0, 0], [0, 0], [0, 0], [0, 0]
                     for mark in sorted(marks, key=lambda x: x[1]):
                         if mark[1] == "A":

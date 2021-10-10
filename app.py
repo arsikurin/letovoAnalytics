@@ -10,7 +10,6 @@ from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
 from requests_futures.sessions import FuturesSession
 from firebase_admin import auth
-from firebase_admin._auth_utils import EmailAlreadyExistsError
 from essential import (
     LOGIN_URL_LETOVO,
     API_KEY,
@@ -173,7 +172,7 @@ async def login_api(request: Request):
             )
             try:
                 auth.create_user(email=f"{analytics_login}@student.letovo.ru")
-            except EmailAlreadyExistsError:
+            except auth.EmailAlreadyExistsError:
                 pass
             thread = Thread(target=send_email, daemon=True, args=(f"{analytics_login}@student.letovo.ru",))
             thread.start()
