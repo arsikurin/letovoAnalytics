@@ -1,11 +1,10 @@
 #!/usr/bin/python3.10
 
+import custom_logging
 import requests as rq
 import logging as log
 
-from essential import (
-    MAIN_URL_API
-)
+from constants import MAIN_URL_API
 
 
 def main():
