@@ -12,7 +12,7 @@ from essential import (
 
 
 async def main():
-    log.debug("Updating tokens in Firebase")
+    log.info("Updating tokens in Firebase")
     with FuturesSession() as session:
         for user in await Firebase.get_users():
             token = await Web.receive_token(s=session, sender_id=user)

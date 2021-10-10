@@ -10,7 +10,7 @@ from essential import (
 
 def main():
     response = rq.get(MAIN_URL_API)
-    log.debug(f"I am NOT sleeping {response.status_code}")
+    log.info(f"I am NOT sleeping {response.status_code}")
 
 
 if __name__ == "__main__":
