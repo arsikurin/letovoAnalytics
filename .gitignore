@@ -14,3 +14,4 @@ scheduleNew.ics
 Pipfile
 Pipfile.lock
 runtime.txt
+logs.log

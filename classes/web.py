@@ -77,20 +77,20 @@ class Web:
         if NothingFoundError in (student_id, token):
             return UnauthorizedError
 
-        homework_url = (
+        hw_n_schedule_url = (
             f"https://s-api.letovo.ru/api/schedule/{student_id}/week?schedule_date="
             f"{datetime.datetime.now().date()}"
         )
-        homework_headers = {
+        hw_n_schedule_headers = {
             "Authorization": token,
         }
         try:
-            homework_future: Future = s.get(url=homework_url, headers=homework_headers)
-            if homework_future.result().status_code != 200:
+            hw_n_schedule_future: Future = s.get(url=hw_n_schedule_url, headers=hw_n_schedule_headers)
+            if hw_n_schedule_future.result().status_code != 200:
                 return UnauthorizedError
         except rq.ConnectionError:
             return rq.ConnectionError
-        return homework_future
+        return hw_n_schedule_future
 
     @staticmethod
     async def receive_marks(
