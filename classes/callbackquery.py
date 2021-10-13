@@ -5,9 +5,9 @@ import requests as rq
 
 from requests_futures.sessions import FuturesSession
 from telethon import Button, events
-from constants import MAIN_URL_LETOVO, LOGIN_URL_LOCAL
+from constants import MAIN_URL_LETOVO, LOGIN_URL_LOCAL, EPS
 from classes.enums import Weekdays, MarkTypes
-from classes.pydantic_models import MarksResponse
+from classes.pydantic_models import MarksResponse, ScheduleResponse
 from classes.errors import NothingFoundError, UnauthorizedError
 from classes.web import Web
 
@@ -176,6 +176,19 @@ class CallbackQuerySenders:
             parse_mode="md"
         )
 
+    async def send_help_message(self, sender):
+        await asyncio.sleep(0.05)
+        await self.client.send_message(
+            entity=sender,
+            message="**Marks:**\n"
+                    "__0-8__A — summative A\n"
+                    "__0-8__B — summative B\n"
+                    "__0-8__C — summative C\n"
+                    "__0-8__D — summative D\n"
+                    "__0-8__F  — formative",
+            parse_mode="md"
+        )
+
     async def send_main_page(self, sender):
         await self.client.send_message(
             entity=sender,
@@ -220,7 +233,7 @@ class CallbackQuerySenders:
             parse_mode="md"
         )
 
-    async def send_specific_day_schedule(
+    async def send_schedule(
             self, s: FuturesSession, event: events.CallbackQuery.Event, specific_day: Weekdays
     ):
         """
@@ -247,43 +260,48 @@ class CallbackQuerySenders:
             return await event.answer("Congrats! It's Sunday, no lessons", alert=False)
 
         old_wd = 0
-        schedule = schedule_future.result().json()["data"]
+        schedule_response = ScheduleResponse.parse_obj(schedule_future.result().json())
         if specific_day.value != -10:
-            date = schedule[0]["date"].split("-")
+            date = schedule_response.data[0].date.split("-")
             await self.client.send_message(
                 entity=await event.get_sender(),
-                message=f'<em>{specific_day.name}, {int(date[2]) + specific_day.value - 1}.{date[1]}.{date[0]}</em>\n',
-                parse_mode="html",
+                message=f'__{specific_day.name}, {int(date[2]) + specific_day.value - 1}.{date[1]}.{date[0]}__\n',
+                parse_mode="md",
                 silent=True
             )
 
-        for day in schedule:
-            if len(day["schedules"]) > 0 and specific_day.value in (int(day["period_num_day"]), -10):
-                wd = Weekdays(int(day["period_num_day"])).name
+        for day in schedule_response.data:
+
+            if day.schedules and specific_day.value in (int(day.period_num_day), -10):
+                wd = Weekdays(int(day.period_num_day)).name
                 if specific_day.value == -10 and wd != old_wd:
                     await self.client.send_message(
                         entity=await event.get_sender(),
-                        message=f'\n<strong>=={wd}==</strong>\n',
-                        parse_mode="html",
+                        message=f'\n**=={wd}==**\n',
+                        parse_mode="md",
                         silent=True
                     )
 
-                payload = f'{day["period_name"]} | <em>{day["schedules"][0]["room"]["room_name"]}</em>:\n'
-                payload += f'<strong>{day["schedules"][0]["group"]["subject"]["subject_name_eng"]} ' \
-                           f'{day["schedules"][0]["group"]["group_name"]}</strong>\n'
-                if day["schedules"][0]["zoom_meetings"]:
-                    payload += f'[ZOOM]({day["schedules"][0]["zoom_meetings"][0]["meeting_url"]}\n)'
-                payload += f'{day["period_start"]} — {day["period_end"]}\n'
+                payload = f'{day.period_name} | __{day.schedules[0].room.room_name}__:'
+                if day.schedules[0].lessons[0].attendance:
+                    payload += "  [ Missed ]\n"
+                else:
+                    payload += "\n"
+                payload += f'**{day.schedules[0].group.subject.subject_name_eng} ' \
+                           f'{day.schedules[0].group.group_name}**\n'
+                # if day.schedules[0].zoom_meetings:
+                #     payload += f'[ZOOM]({day.schedules[0].zoom_meetings[0].meeting_url}\n)'
+                payload += f'{day.period_start} — {day.period_end}\n'
                 await self.client.send_message(
                     entity=await event.get_sender(),
                     message=payload,
-                    parse_mode="html",
+                    parse_mode="md",
                     silent=True
                 )
                 old_wd = wd
         await event.answer()
 
-    async def send_specific_day_homework(
+    async def send_homework(
             self, s: FuturesSession, event: events.CallbackQuery.Event, specific_day: Weekdays
     ):
         """
@@ -308,7 +326,7 @@ class CallbackQuerySenders:
 
         if homework_future == rq.ConnectionError:
             return await event.answer("[✘] Cannot establish connection to s.letovo.ru", alert=True)
-        # TODO
+
         for day in homework_future.result().json()["data"]:
             if len(day["schedules"]) > 0 and specific_day.value in (int(day["period_num_day"]), -10):
                 ch = False
@@ -367,92 +385,108 @@ class CallbackQuerySenders:
         if marks_future == rq.ConnectionError:
             return await event.answer("[✘] Cannot establish connection to s.letovo.ru", alert=True)
 
-        # TODO marks parsing
+        # TODO recent marks
         marks_response = MarksResponse.parse_obj(marks_future.result().json())
         for subject in marks_response.data:
-            if specific == MarkTypes.Only_summative and len(subject.summative_list) > 0:
-                payload = f'**{subject.group.subject.subject_name_eng} {subject.group.group_name}**\n'
+            if specific == MarkTypes.Only_summative and subject.summative_list:
+                payload = f"**{subject.group.subject.subject_name_eng}**\n"
 
                 marks = [(mark.mark_value, mark.mark_criterion) for mark in subject.summative_list]
-                markA, markB, markC, markD = [0, 0], [0, 0], [0, 0], [0, 0]
+                mark_a, mark_b, mark_c, mark_d = [0, 0], [0, 0], [0, 0], [0, 0]
                 for mark in sorted(marks, key=lambda x: x[1]):
                     if mark[1] == "A":
-                        markA[0] += int(mark[0])
-                        markA[1] += 1
+                        mark_a[0] += int(mark[0])
+                        mark_a[1] += 1
                     elif mark[1] == "B":
-                        markB[0] += int(mark[0])
-                        markB[1] += 1
+                        mark_b[0] += int(mark[0])
+                        mark_b[1] += 1
                     elif mark[1] == "C":
-                        markC[0] += int(mark[0])
-                        markC[1] += 1
+                        mark_c[0] += int(mark[0])
+                        mark_c[1] += 1
                     elif mark[1] == "D":
-                        markD[0] += int(mark[0])
-                        markD[1] += 1
-                    payload += f"{mark[0]}**{mark[1]}**"
+                        mark_d[0] += int(mark[0])
+                        mark_d[1] += 1
+                    payload += f"**{mark[0]}**{mark[1]} "
 
-                if markA[1] == 0:
-                    markA[1] = 1
-                if markB[1] == 0:
-                    markB[1] = 1
-                if markC[1] == 0:
-                    markC[1] = 1
-                if markD[1] == 0:
-                    markD[1] = 1
-                payload += f" | __AVG:__ {markA[0] / markA[1]}**A** {markB[0] / markB[1]}**B** {markC[0] / markC[1]}**C** {markD[0] / markD[1]}**D**"
+                if mark_a[1] == 0:
+                    mark_a[1] = 1
+                if mark_b[1] == 0:
+                    mark_b[1] = 1
+                if mark_c[1] == 0:
+                    mark_c[1] = 1
+                if mark_d[1] == 0:
+                    mark_d[1] = 1
 
-                # date = subject["date"].split("-")
-                # payload += f'{Weekdays(int(subject["period_num_day"])).name}, {date[2]}.{date[1]}.{date[0]}\n'
-
+                mark_a_avg, mark_b_avg = mark_a[0] / mark_a[1], mark_b[0] / mark_b[1]
+                mark_c_avg, mark_d_avg = mark_c[0] / mark_c[1], mark_d[0] / mark_d[1]
+                if abs(mark_a_avg % 1) < EPS:
+                    mark_a_avg = round(mark_a_avg)
+                if abs(mark_b_avg % 1) < EPS:
+                    mark_b_avg = round(mark_b_avg)
+                if abs(mark_c_avg % 1) < EPS:
+                    mark_c_avg = round(mark_c_avg)
+                if abs(mark_d_avg % 1) < EPS:
+                    mark_d_avg = round(mark_d_avg)
+                payload += f" | __AVG:__ **{mark_a_avg}**A **{mark_b_avg}**B **{mark_c_avg}**C **{mark_d_avg}**D"
                 await self.client.send_message(
                     entity=await event.get_sender(),
                     message=payload,
                     parse_mode="md",
                     silent=True
                 )
-            elif specific == MarkTypes.ALL:
-                ch = False
-                payload = f'**{subject.group.subject.subject_name_eng}**\n'
-                if len(subject.formative_list) > 0:
-                    ch = True
-                    for mark in subject.formative_list:
-                        payload += f'**{mark.mark_value}**F '
 
-                if len(subject.summative_list) > 0:
-                    ch = True
+            elif specific == MarkTypes.ALL:
+                payload = f"**{subject.group.subject.subject_name_eng}**\n "
+                if subject.formative_list:
+                    for mark in subject.formative_list:
+                        payload += f"**{mark.mark_value}**F "
+
+                if subject.summative_list:
                     marks = [(mark.mark_value, mark.mark_criterion) for mark in subject.summative_list]
-                    markA, markB, markC, markD = [0, 0], [0, 0], [0, 0], [0, 0]
+                    mark_a, mark_b, mark_c, mark_d = [0, 0], [0, 0], [0, 0], [0, 0]
                     for mark in sorted(marks, key=lambda x: x[1]):
                         if mark[1] == "A":
-                            markA[0] += int(mark[0])
-                            markA[1] += 1
+                            mark_a[0] += int(mark[0])
+                            mark_a[1] += 1
                         elif mark[1] == "B":
-                            markB[0] += int(mark[0])
-                            markB[1] += 1
+                            mark_b[0] += int(mark[0])
+                            mark_b[1] += 1
                         elif mark[1] == "C":
-                            markC[0] += int(mark[0])
-                            markC[1] += 1
+                            mark_c[0] += int(mark[0])
+                            mark_c[1] += 1
                         elif mark[1] == "D":
-                            markD[0] += int(mark[0])
-                            markD[1] += 1
-                        payload += f"**{mark[0]}**{mark[1]}"
+                            mark_d[0] += int(mark[0])
+                            mark_d[1] += 1
+                        payload += f"**{mark[0]}**{mark[1]} "
 
-                    if markA[1] == 0:
-                        markA[1] = 1
-                    if markB[1] == 0:
-                        markB[1] = 1
-                    if markC[1] == 0:
-                        markC[1] = 1
-                    if markD[1] == 0:
-                        markD[1] = 1
-                    payload += f" | __AVG:__ **{markA[0] / markA[1]}**A **{markB[0] / markB[1]}**B **{markC[0] / markC[1]}**C **{markD[0] / markD[1]}**D"
-                if ch:
+                    if mark_a[1] == 0:
+                        mark_a[1] = 1
+                    if mark_b[1] == 0:
+                        mark_b[1] = 1
+                    if mark_c[1] == 0:
+                        mark_c[1] = 1
+                    if mark_d[1] == 0:
+                        mark_d[1] = 1
+
+                    mark_a_avg, mark_b_avg = mark_a[0] / mark_a[1], mark_b[0] / mark_b[1]
+                    mark_c_avg, mark_d_avg = mark_c[0] / mark_c[1], mark_d[0] / mark_d[1]
+                    if abs(mark_a_avg % 1) < EPS:
+                        mark_a_avg = round(mark_a_avg)
+                    if abs(mark_b_avg % 1) < EPS:
+                        mark_b_avg = round(mark_b_avg)
+                    if abs(mark_c_avg % 1) < EPS:
+                        mark_c_avg = round(mark_c_avg)
+                    if abs(mark_d_avg % 1) < EPS:
+                        mark_d_avg = round(mark_d_avg)
+                    payload += f" | __AVG:__ **{mark_a_avg}**A **{mark_b_avg}**B **{mark_c_avg}**C **{mark_d_avg}**D"
+                if subject.summative_list or subject.formative_list:
                     await self.client.send_message(
                         entity=await event.get_sender(),
                         message=payload,
                         parse_mode="md",
                         silent=True
                     )
-        await event.answer("In beta")
+        await event.answer()
 
 
 class CallbackQuery(CallbackQueryEventEditors, CallbackQuerySenders):

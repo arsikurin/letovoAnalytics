@@ -2,6 +2,7 @@
 
 import os
 
+EPS = 2.220446049250313e-16
 LOGIN_URL_LETOVO = "https://s-api.letovo.ru/api/login"
 MAIN_URL_LETOVO = "https://s.letovo.ru"
 MAIN_URL_API = "https://letovo-analytics-api.herokuapp.com/"

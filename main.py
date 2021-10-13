@@ -18,7 +18,6 @@ from classes.enums import Weekdays, MarkTypes, PatternMatching
 from classes.database import Database
 from classes.firebase import Firebase
 
-
 with FuturesSession() as session:
     with psycopg2.connect(
             host=HOST_SQL, port=PORT_SQL, user=USER_SQL, database=DATABASE_SQL, password=PASSWORD_SQL, sslmode="require"
@@ -31,7 +30,7 @@ with FuturesSession() as session:
 
 
     @client.on(events.NewMessage(pattern=r"(?i).*options"))
-    async def options(event: events.NewMessage.Event):
+    async def _options(event: events.NewMessage.Event):
         sender = await event.get_sender()
         sender_id = str(sender.id)
         _, ii = await asyncio.gather(
@@ -57,10 +56,10 @@ with FuturesSession() as session:
 
 
     @client.on(events.NewMessage(pattern=r"(?i).*start"))
-    async def start(event: events.NewMessage.Event):
+    async def _start(event: events.NewMessage.Event):
         if len(event.message.message.split()) == 2:
             auth_hash = event.message.message.split()[1]
-            log.debug(auth_hash)  # TODO auth
+            log.info(auth_hash)  # TODO auth
         sender = await event.get_sender()
         sender_id = str(sender.id)
         await asyncio.gather(
@@ -77,43 +76,43 @@ with FuturesSession() as session:
 
 
     @client.on(events.CallbackQuery(data=b"main_page"))
-    async def main_page(event: events.CallbackQuery.Event):
+    async def _main_page(event: events.CallbackQuery.Event):
         await cbQuery.to_main_page(event=event)
         raise events.StopPropagation
 
 
     @client.on(events.CallbackQuery(data=b"schedule_page"))
-    async def schedule_page(event: events.CallbackQuery.Event):
+    async def _schedule_page(event: events.CallbackQuery.Event):
         await cbQuery.to_schedule_page(event=event)
         raise events.StopPropagation
 
 
     @client.on(events.CallbackQuery(data=b"homework_page"))
-    async def homework_page(event: events.CallbackQuery.Event):
+    async def _homework_page(event: events.CallbackQuery.Event):
         await cbQuery.to_homework_page(event=event)
         raise events.StopPropagation
 
 
     @client.on(events.CallbackQuery(data=b"marks_page"))
-    async def marks_page(event: events.CallbackQuery.Event):
+    async def _marks_page(event: events.CallbackQuery.Event):
         await cbQuery.to_marks_page(event=event)
         raise events.StopPropagation
 
 
     @client.on(events.CallbackQuery(data=b"specific_day_schedule"))
-    async def specific_day_schedule(event: events.CallbackQuery.Event):
+    async def _specific_day_schedule(event: events.CallbackQuery.Event):
         await cbQuery.to_specific_day_schedule_page(event=event)
         raise events.StopPropagation
 
 
     @client.on(events.CallbackQuery(data=b"specific_day_homework"))
-    async def specific_day_homework(event: events.CallbackQuery.Event):
+    async def _specific_day_homework(event: events.CallbackQuery.Event):
         await cbQuery.to_specific_day_homework_page(event=event)
         raise events.StopPropagation
 
 
     @client.on(events.CallbackQuery(data=b"holidays"))
-    async def holidays(event: events.CallbackQuery.Event):
+    async def _holidays(event: events.CallbackQuery.Event):
         await asyncio.gather(
             event.answer(),
             cbQuery.send_holidays(sender=await event.get_sender())
@@ -122,59 +121,59 @@ with FuturesSession() as session:
 
 
     @client.on(events.CallbackQuery(pattern=r"(?i).*schedule"))
-    async def schedule(event: events.CallbackQuery.Event):
-        send_specific_day_schedule = partial(
-            cbQuery.send_specific_day_schedule,
+    async def _schedule(event: events.CallbackQuery.Event):
+        send_schedule = partial(
+            cbQuery.send_schedule,
             event=event, s=session
         )
         match event.data:
             case b"todays_schedule":
-                await send_specific_day_schedule(specific_day=Weekdays(int(datetime.datetime.now().strftime("%w"))))
+                await send_schedule(specific_day=Weekdays(int(datetime.datetime.now().strftime("%w"))))
             case b"entire_schedule":
-                await send_specific_day_schedule(specific_day=Weekdays.ALL)
+                await send_schedule(specific_day=Weekdays.ALL)
             case b"monday_schedule":
-                await send_specific_day_schedule(specific_day=Weekdays.Monday)
+                await send_schedule(specific_day=Weekdays.Monday)
             case b"tuesday_schedule":
-                await send_specific_day_schedule(specific_day=Weekdays.Tuesday)
+                await send_schedule(specific_day=Weekdays.Tuesday)
             case b"wednesday_schedule":
-                await send_specific_day_schedule(specific_day=Weekdays.Wednesday)
+                await send_schedule(specific_day=Weekdays.Wednesday)
             case b"thursday_schedule":
-                await send_specific_day_schedule(specific_day=Weekdays.Thursday)
+                await send_schedule(specific_day=Weekdays.Thursday)
             case b"friday_schedule":
-                await send_specific_day_schedule(specific_day=Weekdays.Friday)
+                await send_schedule(specific_day=Weekdays.Friday)
             case b"saturday_schedule":
-                await send_specific_day_schedule(specific_day=Weekdays.Saturday)
+                await send_schedule(specific_day=Weekdays.Saturday)
         raise events.StopPropagation
 
 
     @client.on(events.CallbackQuery(pattern=r"(?i).*homework"))
-    async def homework(event: events.CallbackQuery.Event):
-        send_specific_day_homework = partial(
-            cbQuery.send_specific_day_homework,
+    async def _homework(event: events.CallbackQuery.Event):
+        send_homework = partial(
+            cbQuery.send_homework,
             event=event, s=session
         )
         match event.data:
             case b"tomorrows_homework":
-                await send_specific_day_homework(specific_day=Weekdays(int(datetime.datetime.now().strftime("%w")) + 1))
+                await send_homework(specific_day=Weekdays(int(datetime.datetime.now().strftime("%w")) + 1))
             case b"entire_homework":
-                await send_specific_day_homework(specific_day=Weekdays.ALL)
+                await send_homework(specific_day=Weekdays.ALL)
             case b"monday_homework":
-                await send_specific_day_homework(specific_day=Weekdays.Monday)
+                await send_homework(specific_day=Weekdays.Monday)
             case b"tuesday_homework":
-                await send_specific_day_homework(specific_day=Weekdays.Tuesday)
+                await send_homework(specific_day=Weekdays.Tuesday)
             case b"wednesday_homework":
-                await send_specific_day_homework(specific_day=Weekdays.Wednesday)
+                await send_homework(specific_day=Weekdays.Wednesday)
             case b"thursday_homework":
-                await send_specific_day_homework(specific_day=Weekdays.Thursday)
+                await send_homework(specific_day=Weekdays.Thursday)
             case b"friday_homework":
-                await send_specific_day_homework(specific_day=Weekdays.Friday)
+                await send_homework(specific_day=Weekdays.Friday)
             case b"saturday_homework":
-                await send_specific_day_homework(specific_day=Weekdays.Saturday)
+                await send_homework(specific_day=Weekdays.Saturday)
         raise events.StopPropagation
 
 
     @client.on(events.CallbackQuery(pattern=r"(?i).*marks"))
-    async def marks(event: events.CallbackQuery.Event):
+    async def _marks(event: events.CallbackQuery.Event):
         send_marks = partial(
             cbQuery.send_marks,
             event=event, s=session
@@ -191,7 +190,7 @@ with FuturesSession() as session:
 
 
     @client.on(events.NewMessage(pattern=r"(?i).*about"))
-    async def about(event: events.NewMessage.Event):
+    async def _about(event: events.NewMessage.Event):
         sender = await event.get_sender()
         sender_id = str(sender.id)
         if not await db.is_inited(sender_id=sender_id):
@@ -206,8 +205,23 @@ with FuturesSession() as session:
         raise events.StopPropagation
 
 
+    @client.on(events.NewMessage(pattern=r"(?i).*help"))
+    async def _help(event: events.NewMessage.Event):
+        sender = await event.get_sender()
+        sender_id = str(sender.id)
+        if not await db.is_inited(sender_id=sender_id):
+            await db.init_user(sender_id=sender_id)
+
+        await asyncio.gather(
+            cbQuery.send_greeting(sender=sender),
+            db.set_message(sender_id=sender_id, message_id=event.message.id + 3),
+            cbQuery.send_help_message(sender=sender)
+        )
+        raise events.StopPropagation
+
+
     @client.on(events.NewMessage())
-    async def delete(event: events.NewMessage.Event):
+    async def _delete(event: events.NewMessage.Event):
         sender = await event.get_sender()
 
         if re.fullmatch(r"(?i).*clear previous", f"{event.message.message}"):
@@ -222,12 +236,11 @@ with FuturesSession() as session:
             except (errors.common.MultiError, errors.MessageDeleteForbiddenError):
                 pass
             raise events.StopPropagation
-
         await event.delete()
 
 
     @client.on(events.InlineQuery())
-    async def handle_inline_query(event: events.InlineQuery.Event):
+    async def _inline_query(event: events.InlineQuery.Event):
         sender = await event.get_sender()
 
         if not await Firebase.is_inited(sender_id=str(sender.id)):
