@@ -12,16 +12,14 @@ try:
 
     if VERBOSE:
         log.basicConfig(
-            format=f"{Fg.Green}{Style.Bold}%(asctime)s{Fg.Reset}{Style.Bold} %(message)s{Style.Reset}\n[%(name)s]\n",
+            format=f"{Style.Bold}(%(levelname)s) {Fg.Green}%(asctime)s{Fg.Reset} {Style.Bold}%(message)s{Style.Reset}"
+                   f"\n[%(name)s]\n",
             level=log.DEBUG
         )
     else:
-        try:
-            from debug import *
-        except ImportError:
-            pass
         log.basicConfig(
-            format=f"{Fg.Green}{Style.Bold}%(asctime)s{Fg.Reset}{Style.Bold} %(message)s{Style.Reset}\n[%(name)s]\n",
+            format=f"{Style.Bold}(%(levelname)s) {Fg.Green}%(asctime)s{Fg.Reset} {Style.Bold}%(message)s{Style.Reset}"
+                   f"\n[%(name)s]\n",
             level=log.INFO
         )
 except ImportError:
@@ -31,11 +29,7 @@ except ImportError:
             level=log.DEBUG, filemode="w", filename="logs.log"
         )
     else:
-        try:
-            from debug import *
-        except ImportError:
-            pass
         log.basicConfig(
-            format="%(asctime)s (%(levelname)s) %(message)s\n[%(name)s]\n",
+            format="(%(levelname)s) %(asctime)s %(message)s\n[%(name)s]\n",
             level=log.INFO, filemode="w", filename="logs.log"
         )

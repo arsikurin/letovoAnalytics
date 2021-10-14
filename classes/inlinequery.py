@@ -48,7 +48,7 @@ class InlineQueryEventEditors:
 
 class InlineQuerySenders:
     @staticmethod
-    async def send_specific_day_schedule(
+    async def send_schedule(
             s: FuturesSession, event: events.InlineQuery.Event, specific_day: int
     ):
         """

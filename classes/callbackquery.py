@@ -44,7 +44,7 @@ class CallbackQueryEventEditors:
                 [
                     Button.inline("Entire schedule", b"entire_schedule")
                 ], [
-                    Button.inline("For Today", b"todays_schedule"),
+                    Button.inline("For Today", b"today_schedule"),
                 ], [
                     Button.inline("Specific day »", b"specific_day_schedule"),
                 ], [
@@ -80,7 +80,7 @@ class CallbackQueryEventEditors:
                 [
                     Button.inline("All marks", b"all_marks")
                 ], [
-                    Button.inline("Only for Summatives", b"only_summative_marks"),
+                    Button.inline("For Summatives", b"summative_marks"),
                 ], [
                     Button.inline("Recent marks", b"recent_marks"),
                 ], [
@@ -154,7 +154,7 @@ class CallbackQuerySenders:
         await asyncio.sleep(0.05)
         await self.client.send_message(
             entity=sender,
-            message="I will help you access your schedule via Telegram.\n"
+            message="I will help you access s.letovo.ru resources via Telegram.\n"
                     "Initially, you should provide your **login** and **password** to"
                     f" [Letovo Analytics]({MAIN_URL_LETOVO}).\n  "
                     f'To do that click the **Log In** button below\n\n'
@@ -185,7 +185,7 @@ class CallbackQuerySenders:
                     "__0-8__B — summative B\n"
                     "__0-8__C — summative C\n"
                     "__0-8__D — summative D\n"
-                    "__0-8__F  — formative",
+                    "__0-8__F — formative",
             parse_mode="md"
         )
 
@@ -330,8 +330,11 @@ class CallbackQuerySenders:
         for day in homework_future.result().json()["data"]:
             if len(day["schedules"]) > 0 and specific_day.value in (int(day["period_num_day"]), -10):
                 ch = False
-                payload = f'{day["period_name"]}: <strong>{day["schedules"][0]["group"]["subject"]["subject_name_eng"]} {day["schedules"][0]["group"]["group_name"]}</strong>\n' + \
-                          f'{Weekdays(int(day["period_num_day"])).name}, {day["date"]}\n'
+                payload = (
+                    f'{day["period_name"]}: <strong>{day["schedules"][0]["group"]["subject"]["subject_name_eng"]} '
+                    f'{day["schedules"][0]["group"]["group_name"]}</strong>\n'
+                    f'{Weekdays(int(day["period_num_day"])).name}, {day["date"]}\n'
+                )
 
                 if day["schedules"][0]["lessons"][0]["lesson_hw"]:
                     payload += f'{day["schedules"][0]["lessons"][0]["lesson_hw"]}\n'
