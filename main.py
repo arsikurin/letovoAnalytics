@@ -5,7 +5,6 @@ import custom_logging
 import asyncio
 import psycopg2
 import datetime
-# import time
 import logging as log
 
 from functools import partial
@@ -33,9 +32,10 @@ with FuturesSession() as session:
     async def _options(event: events.NewMessage.Event):
         sender = await event.get_sender()
         sender_id = str(sender.id)
-        _, ii = await asyncio.gather(
+        _, ii, _ = await asyncio.gather(
             cbQuery.send_greeting(sender=sender),
-            Firebase.is_inited(sender_id=sender_id)
+            Firebase.is_inited(sender_id=sender_id),
+            Firebase.update_analytics(sender_id=sender_id, options=1)
         )
 
         if not ii:
@@ -66,7 +66,8 @@ with FuturesSession() as session:
             cbQuery.send_greeting(sender=sender),
             cbQuery.send_init_message(sender=sender),
             Firebase.update_data(sender_id=sender_id, lang=sender.lang_code),
-            Firebase.update_name(sender_id=sender_id, first_name=sender.first_name, last_name=sender.last_name)
+            Firebase.update_name(sender_id=sender_id, first_name=sender.first_name, last_name=sender.last_name),
+            Firebase.update_analytics(sender_id=sender_id, start=1)
         )
 
         if not await db.is_inited(sender_id=sender_id):
@@ -127,22 +128,30 @@ with FuturesSession() as session:
             event=event, s=session
         )
         match event.data:
-            case b"todays_schedule":
+            case b"today_schedule":
                 await send_schedule(specific_day=Weekdays(int(datetime.datetime.now().strftime("%w"))))
+                await Firebase.update_analytics(sender_id=str((await event.get_sender()).id), schedule_today=1)
             case b"entire_schedule":
                 await send_schedule(specific_day=Weekdays.ALL)
+                await Firebase.update_analytics(sender_id=str((await event.get_sender()).id), schedule_entire=1)
             case b"monday_schedule":
                 await send_schedule(specific_day=Weekdays.Monday)
+                await Firebase.update_analytics(sender_id=str((await event.get_sender()).id), schedule_specific=1)
             case b"tuesday_schedule":
                 await send_schedule(specific_day=Weekdays.Tuesday)
+                await Firebase.update_analytics(sender_id=str((await event.get_sender()).id), schedule_specific=1)
             case b"wednesday_schedule":
                 await send_schedule(specific_day=Weekdays.Wednesday)
+                await Firebase.update_analytics(sender_id=str((await event.get_sender()).id), schedule_specific=1)
             case b"thursday_schedule":
                 await send_schedule(specific_day=Weekdays.Thursday)
+                await Firebase.update_analytics(sender_id=str((await event.get_sender()).id), schedule_specific=1)
             case b"friday_schedule":
                 await send_schedule(specific_day=Weekdays.Friday)
+                await Firebase.update_analytics(sender_id=str((await event.get_sender()).id), schedule_specific=1)
             case b"saturday_schedule":
                 await send_schedule(specific_day=Weekdays.Saturday)
+                await Firebase.update_analytics(sender_id=str((await event.get_sender()).id), schedule_specific=1)
         raise events.StopPropagation
 
 
@@ -155,20 +164,28 @@ with FuturesSession() as session:
         match event.data:
             case b"tomorrows_homework":
                 await send_homework(specific_day=Weekdays(int(datetime.datetime.now().strftime("%w")) + 1))
+                await Firebase.update_analytics(sender_id=str((await event.get_sender()).id), homework_tomorrow=1)
             case b"entire_homework":
                 await send_homework(specific_day=Weekdays.ALL)
+                await Firebase.update_analytics(sender_id=str((await event.get_sender()).id), homework_entire=1)
             case b"monday_homework":
                 await send_homework(specific_day=Weekdays.Monday)
+                await Firebase.update_analytics(sender_id=str((await event.get_sender()).id), homework_specific=1)
             case b"tuesday_homework":
                 await send_homework(specific_day=Weekdays.Tuesday)
+                await Firebase.update_analytics(sender_id=str((await event.get_sender()).id), homework_specific=1)
             case b"wednesday_homework":
                 await send_homework(specific_day=Weekdays.Wednesday)
+                await Firebase.update_analytics(sender_id=str((await event.get_sender()).id), homework_specific=1)
             case b"thursday_homework":
                 await send_homework(specific_day=Weekdays.Thursday)
+                await Firebase.update_analytics(sender_id=str((await event.get_sender()).id), homework_specific=1)
             case b"friday_homework":
                 await send_homework(specific_day=Weekdays.Friday)
+                await Firebase.update_analytics(sender_id=str((await event.get_sender()).id), homework_specific=1)
             case b"saturday_homework":
                 await send_homework(specific_day=Weekdays.Saturday)
+                await Firebase.update_analytics(sender_id=str((await event.get_sender()).id), homework_specific=1)
         raise events.StopPropagation
 
 
@@ -181,11 +198,14 @@ with FuturesSession() as session:
         match event.data:
             case b"all_marks":
                 await send_marks(specific=MarkTypes.ALL)
-            case b"only_summative_marks":
+                await Firebase.update_analytics(sender_id=str((await event.get_sender()).id), marks_all=1)
+            case b"summative_marks":
                 await send_marks(specific=MarkTypes.Only_summative)
+                await Firebase.update_analytics(sender_id=str((await event.get_sender()).id), marks_summative=1)
             case b"recent_marks":
                 await event.answer("Under development")
                 # await send_marks(specific=MarkTypes.Recent)
+                # await Firebase.update_analytics(sender_id=str((await event.get_sender()).id), marks_recent=1)
         raise events.StopPropagation
 
 
@@ -199,7 +219,8 @@ with FuturesSession() as session:
         await asyncio.gather(
             cbQuery.send_greeting(sender=sender),
             db.set_message(sender_id=sender_id, message_id=event.message.id + 3),
-            cbQuery.send_about_message(sender=sender)
+            cbQuery.send_about_message(sender=sender),
+            Firebase.update_analytics(sender_id=sender_id, about=1)
         )
 
         raise events.StopPropagation
@@ -215,7 +236,8 @@ with FuturesSession() as session:
         await asyncio.gather(
             cbQuery.send_greeting(sender=sender),
             db.set_message(sender_id=sender_id, message_id=event.message.id + 3),
-            cbQuery.send_help_message(sender=sender)
+            cbQuery.send_help_message(sender=sender),
+            Firebase.update_analytics(sender_id=sender_id, help=1)
         )
         raise events.StopPropagation
 
@@ -225,9 +247,10 @@ with FuturesSession() as session:
         sender = await event.get_sender()
 
         if re.fullmatch(r"(?i).*clear previous", f"{event.message.message}"):
-            _, msg = await asyncio.gather(
+            _, msg, _ = await asyncio.gather(
                 event.delete(),
-                db.get_message(sender_id=str(sender.id))
+                db.get_message(sender_id=str(sender.id)),
+                Firebase.update_analytics(sender_id=str(sender.id), clear_previous=1)
             )
             msg_ids: list[int] = [i for i in range(msg, event.message.id)]
 
@@ -247,33 +270,33 @@ with FuturesSession() as session:
             await event.answer(switch_pm="Log in", switch_pm_param="inlineMode")
             raise events.StopPropagation
 
-        send_specific_day_schedule = partial(
-            iQuery.send_specific_day_schedule,
+        send_schedule = partial(
+            iQuery.send_schedule,
             event=event, s=session
         )
         match PatternMatching(event.query.query):
             case PatternMatching(next=True):
                 # TODO next day inline query
-                await send_specific_day_schedule(specific_day=int(datetime.datetime.now().strftime("%w")))
+                await send_schedule(specific_day=int(datetime.datetime.now().strftime("%w")))
                 # await event.answer([
                 #     builder.article(title="Next lesson", text=text if text else "No schedule found in analytics rn")
                 # ], switch_pm="Log in", switch_pm_param="inlineMode")
             case PatternMatching(today=True):
-                await send_specific_day_schedule(specific_day=int(datetime.datetime.now().strftime("%w")))
+                await send_schedule(specific_day=int(datetime.datetime.now().strftime("%w")))
             case PatternMatching(monday=True):
-                await send_specific_day_schedule(specific_day=Weekdays.Monday.value)
+                await send_schedule(specific_day=Weekdays.Monday.value)
             case PatternMatching(tuesday=True):
-                await send_specific_day_schedule(specific_day=Weekdays.Tuesday.value)
+                await send_schedule(specific_day=Weekdays.Tuesday.value)
             case PatternMatching(wednesday=True):
-                await send_specific_day_schedule(specific_day=Weekdays.Wednesday.value)
+                await send_schedule(specific_day=Weekdays.Wednesday.value)
             case PatternMatching(thursday=True):
-                await send_specific_day_schedule(specific_day=Weekdays.Thursday.value)
+                await send_schedule(specific_day=Weekdays.Thursday.value)
             case PatternMatching(friday=True):
-                await send_specific_day_schedule(specific_day=Weekdays.Friday.value)
+                await send_schedule(specific_day=Weekdays.Friday.value)
             case PatternMatching(saturday=True):
-                await send_specific_day_schedule(specific_day=Weekdays.Saturday.value)
+                await send_schedule(specific_day=Weekdays.Saturday.value)
             case PatternMatching(entire=True):
-                await send_specific_day_schedule(specific_day=Weekdays.ALL.value)
+                await send_schedule(specific_day=Weekdays.ALL.value)
             case _:
                 await iQuery.to_main_page(event=event)
 

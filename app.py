@@ -1,5 +1,6 @@
 #!/usr/bin/python3.10
 
+import asyncio
 import custom_logging
 import requests as rq
 import logging as log
@@ -163,10 +164,18 @@ async def login_api(request: Request):
             token = await Web.receive_token(s=session, login=analytics_login, password=analytics_password)
             if token == rq.ConnectionError:
                 raise HTTPException(status_code=503)
-
-            await Firebase.update_data(
-                token=token, student_id=await Web.receive_student_id(s=session, token=token),
-                analytics_login=analytics_login, analytics_password=analytics_password, sender_id=sender_id, lang="en"
+            await asyncio.gather(
+                Firebase.update_data(
+                    token=token, student_id=await Web.receive_student_id(s=session, token=token),
+                    analytics_login=analytics_login, analytics_password=analytics_password, sender_id=sender_id,
+                    lang="en"
+                ),
+                await Firebase.update_analytics(
+                    sender_id=sender_id, schedule_entire=0, schedule_today=0, schedule_specific=0,
+                    homework_entire=0, homework_tomorrow=0, homework_specific=0, marks_all=0,
+                    marks_summative=0, marks_recent=0, holidays=0, clear_previous=0, options=0,
+                    help=0, start=0, about=0, inline=0
+                )
             )
             try:
                 auth.create_user(email=f"{analytics_login}@student.letovo.ru")
