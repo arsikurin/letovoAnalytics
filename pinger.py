@@ -1,6 +1,6 @@
 #!/usr/bin/python3.10
 
-import custom_logging
+import customization
 import requests as rq
 import logging as log
 
