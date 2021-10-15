@@ -1,7 +1,7 @@
 #!/usr/bin/python3.10
 
+import customization
 import re
-import custom_logging
 import asyncio
 import psycopg2
 import datetime
@@ -32,11 +32,12 @@ with FuturesSession() as session:
     async def _options(event: events.NewMessage.Event):
         sender = await event.get_sender()
         sender_id = str(sender.id)
-        _, ii, _ = await asyncio.gather(
+        _, ii = await asyncio.gather(
             cbQuery.send_greeting(sender=sender),
             Firebase.is_inited(sender_id=sender_id),
-            Firebase.update_analytics(sender_id=sender_id, options=1)
+            # db.get_options_counter(sender_id=sender_id)
         )
+        await db.set_options_counter(sender_id=sender_id, options_counter=1)
 
         if not ii:
             await cbQuery.send_init_message(sender=sender)
@@ -50,7 +51,7 @@ with FuturesSession() as session:
 
         await asyncio.gather(
             cbQuery.send_main_page(sender=sender),
-            db.set_message(sender_id=sender_id, message_id=event.message.id + 3)
+            db.set_message_id(sender_id=sender_id, message_id=event.message.id + 3)
         )
         raise events.StopPropagation
 
@@ -72,7 +73,7 @@ with FuturesSession() as session:
 
         if not await db.is_inited(sender_id=sender_id):
             await db.init_user(sender_id=sender_id)
-        await db.set_message(sender_id=sender_id, message_id=event.message.id + 3)
+        await db.set_message_id(sender_id=sender_id, message_id=event.message.id + 3)
         raise events.StopPropagation
 
 
@@ -218,7 +219,7 @@ with FuturesSession() as session:
 
         await asyncio.gather(
             cbQuery.send_greeting(sender=sender),
-            db.set_message(sender_id=sender_id, message_id=event.message.id + 3),
+            db.set_message_id(sender_id=sender_id, message_id=event.message.id + 3),
             cbQuery.send_about_message(sender=sender),
             Firebase.update_analytics(sender_id=sender_id, about=1)
         )
@@ -235,7 +236,7 @@ with FuturesSession() as session:
 
         await asyncio.gather(
             cbQuery.send_greeting(sender=sender),
-            db.set_message(sender_id=sender_id, message_id=event.message.id + 3),
+            db.set_message_id(sender_id=sender_id, message_id=event.message.id + 3),
             cbQuery.send_help_message(sender=sender),
             Firebase.update_analytics(sender_id=sender_id, help=1)
         )
@@ -249,7 +250,7 @@ with FuturesSession() as session:
         if re.fullmatch(r"(?i).*clear previous", f"{event.message.message}"):
             _, msg, _ = await asyncio.gather(
                 event.delete(),
-                db.get_message(sender_id=str(sender.id)),
+                db.get_message_id(sender_id=str(sender.id)),
                 Firebase.update_analytics(sender_id=str(sender.id), clear_previous=1)
             )
             msg_ids: list[int] = [i for i in range(msg, event.message.id)]

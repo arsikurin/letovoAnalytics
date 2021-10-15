@@ -137,9 +137,10 @@ class CallbackQuerySenders:
         self.client = c
 
     async def send_greeting(self, sender):
+        payload = f'{fn if (fn := sender.first_name) else ""} {ln if (ln := sender.last_name) else ""}'.strip()
         await self.client.send_message(
             entity=sender,
-            message=f'Greetings, **{f if (f := sender.first_name) else ""} {l if (l := sender.last_name) else ""}**!',
+            message=f'Greetings, **{payload}**!',
             parse_mode="md",
             buttons=[
                 [

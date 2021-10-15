@@ -1,9 +1,14 @@
 #!/usr/bin/python3.10
 
+import asyncio
+import uvloop
 import logging as log
+
 from colourlib import Fg, Style
 
 VERBOSE = False
+asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+
 # start_time = time.perf_counter()
 # datetime.timedelta(seconds=time.perf_counter() - start_time)
 
