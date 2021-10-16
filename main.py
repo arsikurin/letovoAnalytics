@@ -129,28 +129,20 @@ with FuturesSession() as session:
         match event.data:
             case b"today_schedule":
                 await send_schedule(specific_day=Weekdays(int(datetime.datetime.now().strftime("%w"))))
-                await Firebase.update_analytics(sender_id=str((await event.get_sender()).id), schedule_today=1)
             case b"entire_schedule":
                 await send_schedule(specific_day=Weekdays.ALL)
-                await Firebase.update_analytics(sender_id=str((await event.get_sender()).id), schedule_entire=1)
             case b"monday_schedule":
                 await send_schedule(specific_day=Weekdays.Monday)
-                await Firebase.update_analytics(sender_id=str((await event.get_sender()).id), schedule_specific=1)
             case b"tuesday_schedule":
                 await send_schedule(specific_day=Weekdays.Tuesday)
-                await Firebase.update_analytics(sender_id=str((await event.get_sender()).id), schedule_specific=1)
             case b"wednesday_schedule":
                 await send_schedule(specific_day=Weekdays.Wednesday)
-                await Firebase.update_analytics(sender_id=str((await event.get_sender()).id), schedule_specific=1)
             case b"thursday_schedule":
                 await send_schedule(specific_day=Weekdays.Thursday)
-                await Firebase.update_analytics(sender_id=str((await event.get_sender()).id), schedule_specific=1)
             case b"friday_schedule":
                 await send_schedule(specific_day=Weekdays.Friday)
-                await Firebase.update_analytics(sender_id=str((await event.get_sender()).id), schedule_specific=1)
             case b"saturday_schedule":
                 await send_schedule(specific_day=Weekdays.Saturday)
-                await Firebase.update_analytics(sender_id=str((await event.get_sender()).id), schedule_specific=1)
         raise events.StopPropagation
 
 
@@ -163,28 +155,20 @@ with FuturesSession() as session:
         match event.data:
             case b"tomorrows_homework":
                 await send_homework(specific_day=Weekdays(int(datetime.datetime.now().strftime("%w")) + 1))
-                await Firebase.update_analytics(sender_id=str((await event.get_sender()).id), homework_tomorrow=1)
             case b"entire_homework":
                 await send_homework(specific_day=Weekdays.ALL)
-                await Firebase.update_analytics(sender_id=str((await event.get_sender()).id), homework_entire=1)
             case b"monday_homework":
                 await send_homework(specific_day=Weekdays.Monday)
-                await Firebase.update_analytics(sender_id=str((await event.get_sender()).id), homework_specific=1)
             case b"tuesday_homework":
                 await send_homework(specific_day=Weekdays.Tuesday)
-                await Firebase.update_analytics(sender_id=str((await event.get_sender()).id), homework_specific=1)
             case b"wednesday_homework":
                 await send_homework(specific_day=Weekdays.Wednesday)
-                await Firebase.update_analytics(sender_id=str((await event.get_sender()).id), homework_specific=1)
             case b"thursday_homework":
                 await send_homework(specific_day=Weekdays.Thursday)
-                await Firebase.update_analytics(sender_id=str((await event.get_sender()).id), homework_specific=1)
             case b"friday_homework":
                 await send_homework(specific_day=Weekdays.Friday)
-                await Firebase.update_analytics(sender_id=str((await event.get_sender()).id), homework_specific=1)
             case b"saturday_homework":
                 await send_homework(specific_day=Weekdays.Saturday)
-                await Firebase.update_analytics(sender_id=str((await event.get_sender()).id), homework_specific=1)
         raise events.StopPropagation
 
 
@@ -197,14 +181,11 @@ with FuturesSession() as session:
         match event.data:
             case b"all_marks":
                 await send_marks(specific=MarkTypes.ALL)
-                await Firebase.update_analytics(sender_id=str((await event.get_sender()).id), marks_all=1)
             case b"summative_marks":
                 await send_marks(specific=MarkTypes.Only_summative)
-                await Firebase.update_analytics(sender_id=str((await event.get_sender()).id), marks_summative=1)
             case b"recent_marks":
                 await event.answer("Under development")
                 # await send_marks(specific=MarkTypes.Recent)
-                # await Firebase.update_analytics(sender_id=str((await event.get_sender()).id), marks_recent=1)
         raise events.StopPropagation
 
 
@@ -219,7 +200,6 @@ with FuturesSession() as session:
             cbQuery.send_greeting(sender=sender),
             db.set_message_id(sender_id=sender_id, message_id=event.message.id + 3),
             cbQuery.send_about_message(sender=sender),
-            Firebase.update_analytics(sender_id=sender_id, about=1)
         )
 
         raise events.StopPropagation
@@ -236,7 +216,6 @@ with FuturesSession() as session:
             cbQuery.send_greeting(sender=sender),
             db.set_message_id(sender_id=sender_id, message_id=event.message.id + 3),
             cbQuery.send_help_message(sender=sender),
-            Firebase.update_analytics(sender_id=sender_id, help=1)
         )
         raise events.StopPropagation
 
@@ -246,10 +225,9 @@ with FuturesSession() as session:
         sender = await event.get_sender()
 
         if re.fullmatch(r"(?i).*clear previous", f"{event.message.message}"):
-            _, msg, _ = await asyncio.gather(
+            _, msg = await asyncio.gather(
                 event.delete(),
                 db.get_message_id(sender_id=str(sender.id)),
-                Firebase.update_analytics(sender_id=str(sender.id), clear_previous=1)
             )
             msg_ids: list[int] = [i for i in range(msg, event.message.id)]
 

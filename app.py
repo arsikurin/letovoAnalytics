@@ -11,7 +11,7 @@ from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
 from requests_futures.sessions import FuturesSession
 from firebase_admin import auth
-from constants import LOGIN_URL_LETOVO, API_KEY
+from constants import LOGIN_URL_LETOVO
 from classes.firebase import Firebase
 from classes.web import Web
 
@@ -20,14 +20,27 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
 
-async def send_email(email):
-    api_url = f"https://www.googleapis.com/identitytoolkit/v3/relyingparty/getOobConfirmationCode?key={API_KEY}"
-    headers = {
-        "content-type": "application/json; charset=UTF-8"
-    }
-    data = f'{{"requestType": "PASSWORD_RESET", "email": "{email}"}}'
-    request_object = rq.post(api_url, headers=headers, data=data)
-    return request_object.json()
+# async def send_email(email):
+#     api_url = f"https://www.googleapis.com/identitytoolkit/v3/relyingparty/getOobConfirmationCode?key={API_KEY}"
+#     headers = {
+#         "content-type": "application/json; charset=UTF-8"
+#     }
+#     data = f'{{"requestType": "PASSWORD_RESET", "email": "{email}"}}'
+#     request_object = rq.post(api_url, headers=headers, data=data)
+#     return request_object.json()
+
+
+@app.exception_handler(502)
+async def bad_gateway(request: Request, error):
+    log.error(error)
+    return templates.TemplateResponse(
+        "pageError.html",
+        context={"request": request,
+                 "error": "502 Bad Gateway",
+                 "explain": "[s.letovo.ru might not responding]",
+                 "fix": "Enhance Your Calm"},
+        status_code=422
+    )
 
 
 @app.exception_handler(500)
@@ -102,7 +115,7 @@ async def forbidden(request: Request, error):
         "pageError.html",
         context={"request": request,
                  "error": "403 Forbidden",
-                 "explain": "[You have no access to this page]",
+                 "explain": "[You have no power here, Gandalf the Grey]",
                  "fix": ""},
         status_code=403
     )
@@ -157,30 +170,24 @@ async def login_api(request: Request):
         if not rq.post(url=LOGIN_URL_LETOVO, data=login_data).status_code == 200:
             raise HTTPException(status_code=401)
     except rq.ConnectionError:
-        raise HTTPException(status_code=400, detail="s.letovo.ru might be down")
+        raise HTTPException(status_code=502)
     try:
         with FuturesSession() as session:
             token = await Web.receive_token(s=session, login=analytics_login, password=analytics_password)
             if token == rq.ConnectionError:
-                raise HTTPException(status_code=503)
+                raise HTTPException(status_code=502)
+            try:
+                auth.create_user(email=f"{analytics_login}@student.letovo.ru")
+            except auth.EmailAlreadyExistsError:
+                pass
             await asyncio.gather(
                 Firebase.update_data(
                     token=token, student_id=await Web.receive_student_id(s=session, token=token),
                     analytics_login=analytics_login, analytics_password=analytics_password, sender_id=sender_id,
                     lang="en"
                 ),
-                await Firebase.update_analytics(
-                    sender_id=sender_id, schedule_entire=0, schedule_today=0, schedule_specific=0,
-                    homework_entire=0, homework_tomorrow=0, homework_specific=0, marks_all=0,
-                    marks_summative=0, marks_recent=0, holidays=0, clear_previous=0, options=0,
-                    help=0, start=0, about=0, inline=0
-                )
+                Firebase.send_email(f"{analytics_login}@student.letovo.ru")
             )
-            try:
-                auth.create_user(email=f"{analytics_login}@student.letovo.ru")
-            except auth.EmailAlreadyExistsError:
-                pass
-            await send_email(f"{analytics_login}@student.letovo.ru")
             return RedirectResponse("https://letovo-analytics.web.app/", status_code=302)
     except Exception as err:
         log.debug(err)
