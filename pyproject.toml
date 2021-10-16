@@ -24,6 +24,7 @@ uvloop = "^0.16.0"
 psycopg = "^3.0.1"
 
 [tool.poetry.dev-dependencies]
+psycopg-binary = "^3.0.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
