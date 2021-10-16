@@ -39,6 +39,8 @@ class Web:
         try:
             login_future: Future = s.post(url=LOGIN_URL_LETOVO, data=login_data)
             for login_futured in as_completed((login_future,)):
+                if login_future.result().status_code != 200:
+                    return UnauthorizedError
                 login_response = login_futured.result()
                 return f'{login_response.json()["data"]["token_type"]} {login_response.json()["data"]["token"]}'
         except rq.ConnectionError:
