@@ -21,6 +21,7 @@ uvicorn = "^0.15.0"
 python-multipart = "^0.0.5"
 pydantic = "^1.8.2"
 uvloop = "^0.16.0"
+psycopg = {extras = ["binary"], version = "^3.0.1"}
 
 [tool.poetry.dev-dependencies]
 

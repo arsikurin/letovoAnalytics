@@ -321,7 +321,7 @@ class CallbackQuerySenders:
 
         if homework_future == NothingFoundError:
             return await event.answer(
-                "[✘] Nothing found in database for this user.\nPlease enter /start and register",
+                "[✘] Nothing found in database for this user.\nPlease type /start and register",
                 alert=True
             )
 
@@ -397,7 +397,7 @@ class CallbackQuerySenders:
 
                 marks = [(mark.mark_value, mark.mark_criterion) for mark in subject.summative_list]
                 mark_a, mark_b, mark_c, mark_d = [0, 0], [0, 0], [0, 0], [0, 0]
-                for mark in sorted(marks, key=lambda x: x[1]):
+                for mark in marks:
                     if mark[1] == "A":
                         mark_a[0] += int(mark[0])
                         mark_a[1] += 1
@@ -448,7 +448,7 @@ class CallbackQuerySenders:
                 if subject.summative_list:
                     marks = [(mark.mark_value, mark.mark_criterion) for mark in subject.summative_list]
                     mark_a, mark_b, mark_c, mark_d = [0, 0], [0, 0], [0, 0], [0, 0]
-                    for mark in sorted(marks, key=lambda x: x[1]):
+                    for mark in marks:
                         if mark[1] == "A":
                             mark_a[0] += int(mark[0])
                             mark_a[1] += 1

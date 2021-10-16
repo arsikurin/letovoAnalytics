@@ -26,8 +26,8 @@ class Web:
         """
         if None in (login, password):
             login, password = await asyncio.gather(
-                Firebase.get_analytics_login(sender_id=sender_id),
-                Firebase.get_analytics_password(sender_id=sender_id)
+                Firebase.get_login(sender_id=sender_id),
+                Firebase.get_password(sender_id=sender_id)
             )
             if NothingFoundError in (login, password):
                 return UnauthorizedError

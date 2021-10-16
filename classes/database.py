@@ -315,8 +315,8 @@ class Database:
     async def crate_table(self):
         with self.connection:
             self.cursor.execute(
-                "create table users ("
-                "sender_id VARCHAR(255) primary key,"
+                "CREATE TABLE users ("
+                "sender_id VARCHAR(255) PRIMARY KEY,"
                 "message_id INTEGER,"
                 "schedule_counter INTEGER,"
                 "homework_counter INTEGER,"
