@@ -35,19 +35,19 @@ with FuturesSession() as session:
         _, ii = await asyncio.gather(
             cbQuery.send_greeting(sender=sender),
             Firebase.is_inited(sender_id=sender_id),
-            # db.get_options_counter(sender_id=sender_id)
         )
-        await db.set_options_counter(sender_id=sender_id, options_counter=1)
 
         if not ii:
             await cbQuery.send_init_message(sender=sender)
 
             if not await db.is_inited(sender_id=sender_id):
                 await db.init_user(sender_id=sender_id)
+                await db.set_options_counter(sender_id=sender_id, options_counter=1)
             raise events.StopPropagation
 
         if not await db.is_inited(sender_id=sender_id):
             await db.init_user(sender_id=sender_id)
+            await db.set_options_counter(sender_id=sender_id, options_counter=1)
 
         await asyncio.gather(
             cbQuery.send_main_page(sender=sender),
@@ -68,9 +68,7 @@ with FuturesSession() as session:
             cbQuery.send_init_message(sender=sender),
             Firebase.update_data(sender_id=sender_id, lang=sender.lang_code),
             Firebase.update_name(sender_id=sender_id, first_name=sender.first_name, last_name=sender.last_name),
-            Firebase.update_analytics(sender_id=sender_id, start=1)
         )
-
         if not await db.is_inited(sender_id=sender_id):
             await db.init_user(sender_id=sender_id)
         await db.set_message_id(sender_id=sender_id, message_id=event.message.id + 3)

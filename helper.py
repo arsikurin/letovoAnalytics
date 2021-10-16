@@ -2,6 +2,7 @@
 
 import customization
 import asyncio
+import requests as rq
 import logging as log
 
 from requests_futures.sessions import FuturesSession
@@ -15,7 +16,7 @@ async def main():
     with FuturesSession() as session:
         for user in await Firebase.get_users():
             token = await Web.receive_token(s=session, sender_id=user)
-            if token == UnauthorizedError:
+            if token in (UnauthorizedError, rq.ConnectionError):
                 continue
             await Firebase.update_data(sender_id=user, token=token)
             await Firebase.update_analytics(

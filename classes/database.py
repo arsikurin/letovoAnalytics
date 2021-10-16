@@ -24,7 +24,7 @@ class Database:
                 "sender_id, message_id, schedule_counter, homework_counter, marks_counter, holidays_counter, "
                 "clear_counter, options_counter, help_counter, about_counter, inline_counter"
                 ") VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-                (sender_id, None, None, None, None, None, None, None, None, None, None, None)
+                (sender_id, None, None, None, None, None, None, None, None, None, None)
             )
 
     async def get_message_id(self, sender_id: str) -> int:
