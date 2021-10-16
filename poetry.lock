@@ -424,9 +424,6 @@ category = "main"
 optional = false
 python-versions = ">=3.6"
 
-[package.dependencies]
-psycopg-binary = {version = "3.0.1", optional = true, markers = "extra == \"binary\""}
-
 [package.extras]
 binary = ["psycopg-binary (==3.0.1)"]
 c = ["psycopg-c (==3.0.1)"]
@@ -674,7 +671,7 @@ test = ["aiohttp", "flake8 (>=3.9.2,<3.10.0)", "psutil", "pycodestyle (>=2.7.0,<
 [metadata]
 lock-version = "1.1"
 python-versions = "3.10.0"
-content-hash = "47692c66ffcc0c0e668aa180075f9c5008840e0bc8569ce57716a27cca7e620f"
+content-hash = "fcd57ba2fb3148c1369aeac454be1b2707f2cf002c0e9e0564289027266d58e5"
 
 [metadata.files]
 aiofiles = [
