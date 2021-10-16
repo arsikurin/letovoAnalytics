@@ -3,7 +3,6 @@
 import customization
 import re
 import asyncio
-import psycopg
 import psycopg2
 import datetime
 import logging as log
