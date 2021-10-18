@@ -1,6 +1,7 @@
 #!/usr/bin/python3.10
 
 import essential
+import uvloop
 import re
 import asyncio
 import datetime
@@ -31,7 +32,7 @@ async def _establish_connection():
 
 # TODO aiohttp
 with FuturesSession() as session:
-    asyncio.set_event_loop(asyncio.new_event_loop())
+    asyncio.set_event_loop(uvloop.new_event_loop())
 
 
     @client.on(events.NewMessage(pattern=r"(?i).*options"))
@@ -44,7 +45,7 @@ with FuturesSession() as session:
         )
 
         if not ii:
-            await cbQuery.send_init_message(sender=sender)
+            await cbQuery.send_start(sender=sender)
 
             if not await db.is_inited(sender_id=sender_id):
                 await asyncio.gather(
@@ -73,7 +74,7 @@ with FuturesSession() as session:
         sender_id = str(sender.id)
         await asyncio.gather(
             cbQuery.send_greeting(sender=sender),
-            cbQuery.send_init_message(sender=sender),
+            cbQuery.send_start(sender=sender),
             Firebase.update_data(sender_id=sender_id, lang=sender.lang_code),
             Firebase.update_name(sender_id=sender_id, first_name=sender.first_name, last_name=sender.last_name),
         )
@@ -220,7 +221,7 @@ with FuturesSession() as session:
             cbQuery.send_greeting(sender=sender),
             db.set_message_id(sender_id=sender_id, message_id=event.message.id + 3),
             db.increase_about_counter(sender_id=sender_id),
-            cbQuery.send_about_message(sender=sender)
+            cbQuery.send_about(sender=sender)
         )
 
         raise events.StopPropagation
@@ -237,7 +238,7 @@ with FuturesSession() as session:
             cbQuery.send_greeting(sender=sender),
             db.set_message_id(sender_id=sender_id, message_id=event.message.id + 3),
             db.increase_help_counter(sender_id=sender_id),
-            cbQuery.send_help_message(sender=sender)
+            cbQuery.send_help(sender=sender)
         )
         raise events.StopPropagation
 

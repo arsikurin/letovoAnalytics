@@ -10,8 +10,6 @@ VERBOSE = False
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 
-# start_time = time.perf_counter()
-# datetime.timedelta(seconds=time.perf_counter() - start_time)
 def execute_immediately(func):
     """
     Decorator used to execute asynchronous functions more conveniently
@@ -19,6 +17,8 @@ def execute_immediately(func):
     asyncio.run(func())
 
 
+# start_time = time.perf_counter()
+# datetime.timedelta(seconds=time.perf_counter() - start_time)
 try:
     from debug import *
 
