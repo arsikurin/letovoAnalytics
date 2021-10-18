@@ -1,6 +1,6 @@
 #!/usr/bin/python3.10
 
-import customization
+import essential
 import requests as rq
 import logging as log
 

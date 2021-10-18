@@ -1,31 +1,37 @@
 #!/usr/bin/python3.10
 
-import customization
+import essential
 import re
 import asyncio
-import psycopg2
 import datetime
 import logging as log
 
 from functools import partial
 from telethon import TelegramClient, events, errors
 from requests_futures.sessions import FuturesSession
-from constants import HOST_SQL, PORT_SQL, USER_SQL, DATABASE_SQL, PASSWORD_SQL, API_ID, API_HASH, BOT_TOKEN
+from constants import API_ID, API_HASH, BOT_TOKEN
 from classes.callbackquery import CallbackQuery
 from classes.inlinequery import InlineQuery
 from classes.enums import Weekdays, MarkTypes, PatternMatching
 from classes.database import Database
 from classes.firebase import Firebase
 
+client = TelegramClient("letovoAnalytics", API_ID, API_HASH)
+db: Database = ...
+cbQuery = CallbackQuery(c=client)
+iQuery = InlineQuery()
+
+
+@essential.execute_immediately
+async def _establish_connection():
+    global db
+    log.debug("established connection to the Postgres")
+    db = await Database.create()
+
+
+# TODO aiohttp
 with FuturesSession() as session:
-    with psycopg2.connect(
-            host=HOST_SQL, port=PORT_SQL, user=USER_SQL, database=DATABASE_SQL, password=PASSWORD_SQL, sslmode="require"
-    ) as connection:
-        cursor = connection.cursor()
-    client = TelegramClient("letovoAnalytics", API_ID, API_HASH)
-    cbQuery = CallbackQuery(c=client)
-    iQuery = InlineQuery()
-    db = Database(conn=connection, c=cursor)
+    asyncio.set_event_loop(asyncio.new_event_loop())
 
 
     @client.on(events.NewMessage(pattern=r"(?i).*options"))
@@ -41,17 +47,19 @@ with FuturesSession() as session:
             await cbQuery.send_init_message(sender=sender)
 
             if not await db.is_inited(sender_id=sender_id):
-                await db.init_user(sender_id=sender_id)
-                await db.set_options_counter(sender_id=sender_id, options_counter=1)
+                await asyncio.gather(
+                    db.init_user(sender_id=sender_id),
+                    db.increase_options_counter(sender_id=sender_id)
+                )
             raise events.StopPropagation
 
         if not await db.is_inited(sender_id=sender_id):
             await db.init_user(sender_id=sender_id)
-            await db.set_options_counter(sender_id=sender_id, options_counter=1)
 
         await asyncio.gather(
             cbQuery.send_main_page(sender=sender),
-            db.set_message_id(sender_id=sender_id, message_id=event.message.id + 3)
+            db.set_message_id(sender_id=sender_id, message_id=event.message.id + 3),
+            db.increase_options_counter(sender_id=sender_id)
         )
         raise events.StopPropagation
 
@@ -113,15 +121,20 @@ with FuturesSession() as session:
 
     @client.on(events.CallbackQuery(data=b"holidays"))
     async def _holidays(event: events.CallbackQuery.Event):
+        sender = await event.get_sender()
+        sender_id = str(sender.id)
         await asyncio.gather(
             event.answer(),
-            cbQuery.send_holidays(sender=await event.get_sender())
+            cbQuery.send_holidays(sender=await event.get_sender()),
+            db.increase_holidays_counter(sender_id=sender_id)
         )
         raise events.StopPropagation
 
 
     @client.on(events.CallbackQuery(pattern=r"(?i).*schedule"))
     async def _schedule(event: events.CallbackQuery.Event):
+        sender = await event.get_sender()
+        sender_id = str(sender.id)
         send_schedule = partial(
             cbQuery.send_schedule,
             event=event, s=session
@@ -143,11 +156,14 @@ with FuturesSession() as session:
                 await send_schedule(specific_day=Weekdays.Friday)
             case b"saturday_schedule":
                 await send_schedule(specific_day=Weekdays.Saturday)
+        await db.increase_schedule_counter(sender_id=sender_id)
         raise events.StopPropagation
 
 
     @client.on(events.CallbackQuery(pattern=r"(?i).*homework"))
     async def _homework(event: events.CallbackQuery.Event):
+        sender = await event.get_sender()
+        sender_id = str(sender.id)
         send_homework = partial(
             cbQuery.send_homework,
             event=event, s=session
@@ -169,11 +185,14 @@ with FuturesSession() as session:
                 await send_homework(specific_day=Weekdays.Friday)
             case b"saturday_homework":
                 await send_homework(specific_day=Weekdays.Saturday)
+        await db.increase_homework_counter(sender_id=sender_id)
         raise events.StopPropagation
 
 
     @client.on(events.CallbackQuery(pattern=r"(?i).*marks"))
     async def _marks(event: events.CallbackQuery.Event):
+        sender = await event.get_sender()
+        sender_id = str(sender.id)
         send_marks = partial(
             cbQuery.send_marks,
             event=event, s=session
@@ -186,6 +205,7 @@ with FuturesSession() as session:
             case b"recent_marks":
                 await event.answer("Under development")
                 # await send_marks(specific=MarkTypes.Recent)
+        await db.increase_marks_counter(sender_id=sender_id)
         raise events.StopPropagation
 
 
@@ -199,7 +219,8 @@ with FuturesSession() as session:
         await asyncio.gather(
             cbQuery.send_greeting(sender=sender),
             db.set_message_id(sender_id=sender_id, message_id=event.message.id + 3),
-            cbQuery.send_about_message(sender=sender),
+            db.increase_about_counter(sender_id=sender_id),
+            cbQuery.send_about_message(sender=sender)
         )
 
         raise events.StopPropagation
@@ -215,7 +236,8 @@ with FuturesSession() as session:
         await asyncio.gather(
             cbQuery.send_greeting(sender=sender),
             db.set_message_id(sender_id=sender_id, message_id=event.message.id + 3),
-            cbQuery.send_help_message(sender=sender),
+            db.increase_help_counter(sender_id=sender_id),
+            cbQuery.send_help_message(sender=sender)
         )
         raise events.StopPropagation
 
@@ -223,11 +245,13 @@ with FuturesSession() as session:
     @client.on(events.NewMessage())
     async def _delete(event: events.NewMessage.Event):
         sender = await event.get_sender()
+        sender_id = str(sender.id)
 
         if re.fullmatch(r"(?i).*clear previous", f"{event.message.message}"):
-            _, msg = await asyncio.gather(
+            _, msg, _ = await asyncio.gather(
                 event.delete(),
-                db.get_message_id(sender_id=str(sender.id)),
+                db.get_message_id(sender_id=sender_id),
+                db.increase_clear_counter(sender_id=sender_id)
             )
             msg_ids: list[int] = [i for i in range(msg, event.message.id)]
 
@@ -242,8 +266,9 @@ with FuturesSession() as session:
     @client.on(events.InlineQuery())
     async def _inline_query(event: events.InlineQuery.Event):
         sender = await event.get_sender()
+        sender_id = str(sender.id)
 
-        if not await Firebase.is_inited(sender_id=str(sender.id)):
+        if not await Firebase.is_inited(sender_id=sender_id):
             await event.answer(switch_pm="Log in", switch_pm_param="inlineMode")
             raise events.StopPropagation
 

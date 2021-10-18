@@ -9,8 +9,15 @@ from colourlib import Fg, Style
 VERBOSE = False
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
+
 # start_time = time.perf_counter()
 # datetime.timedelta(seconds=time.perf_counter() - start_time)
+def execute_immediately(func):
+    """
+    Decorator used to execute asynchronous functions more conveniently
+    """
+    asyncio.run(func())
+
 
 try:
     from debug import *

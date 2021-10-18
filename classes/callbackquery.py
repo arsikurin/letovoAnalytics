@@ -398,16 +398,16 @@ class CallbackQuerySenders:
                 marks = [(mark.mark_value, mark.mark_criterion) for mark in subject.summative_list]
                 mark_a, mark_b, mark_c, mark_d = [0, 0], [0, 0], [0, 0], [0, 0]
                 for mark in marks:
-                    if mark[1] == "A":
+                    if mark[1] == "A" and isinstance(mark[0], int):
                         mark_a[0] += int(mark[0])
                         mark_a[1] += 1
-                    elif mark[1] == "B":
+                    elif mark[1] == "B" and isinstance(mark[0], int):
                         mark_b[0] += int(mark[0])
                         mark_b[1] += 1
-                    elif mark[1] == "C":
+                    elif mark[1] == "C" and isinstance(mark[0], int):
                         mark_c[0] += int(mark[0])
                         mark_c[1] += 1
-                    elif mark[1] == "D":
+                    elif mark[1] == "D" and isinstance(mark[0], int):
                         mark_d[0] += int(mark[0])
                         mark_d[1] += 1
                     payload += f"**{mark[0]}**{mark[1]} "
