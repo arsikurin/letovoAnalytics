@@ -1,6 +1,6 @@
 #!/usr/bin/python3.10
 
-import customization
+import essential
 import asyncio
 import requests as rq
 import logging as log
@@ -18,16 +18,6 @@ from classes.web import Web
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
-
-
-# async def send_email(email):
-#     api_url = f"https://www.googleapis.com/identitytoolkit/v3/relyingparty/getOobConfirmationCode?key={API_KEY}"
-#     headers = {
-#         "content-type": "application/json; charset=UTF-8"
-#     }
-#     data = f'{{"requestType": "PASSWORD_RESET", "email": "{email}"}}'
-#     request_object = rq.post(api_url, headers=headers, data=data)
-#     return request_object.json()
 
 
 @app.exception_handler(502)
@@ -186,9 +176,9 @@ async def login_api(request: Request):
                     analytics_login=analytics_login, analytics_password=analytics_password, sender_id=sender_id,
                     lang="en"
                 ),
-                Firebase.send_email(f"{analytics_login}@student.letovo.ru")
+                Firebase.send_email(email=f"{analytics_login}@student.letovo.ru")
             )
             return RedirectResponse("https://letovo-analytics.web.app/", status_code=302)
     except Exception as err:
-        log.debug(err)
+        log.error(err)
         raise HTTPException(status_code=400)
