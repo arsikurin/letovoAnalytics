@@ -26,6 +26,13 @@ class Database:
         )
         return await cursor.fetchall()
 
+    async def get_analytics(self, sender_id: str) -> list:
+        cursor = await self.connection.execute(
+            "SELECT * FROM users WHERE sender_id = %s",
+            (sender_id,)
+        )
+        return await cursor.fetchone()
+
     async def is_inited(self, sender_id: str) -> str:
         cursor = await self.connection.execute(
             "SELECT sender_id FROM users WHERE sender_id = %s",

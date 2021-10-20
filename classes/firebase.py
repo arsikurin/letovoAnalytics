@@ -151,6 +151,16 @@ class FirebaseGetters:
         except KeyError:
             return NothingFoundError
 
+    @staticmethod
+    async def get_surname(sender_id: str) -> str | Type[NothingFoundError]:
+        doc: DocumentSnapshot = await firestore.collection(u"names").document(sender_id).get()
+        try:
+            if not doc.exists:
+                return NothingFoundError
+            return doc.get("data.last_name")
+        except KeyError:
+            return NothingFoundError
+
 
 class Firebase(FirebaseGetters, FirebaseSetters):
     """
