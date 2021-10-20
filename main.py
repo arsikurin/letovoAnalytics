@@ -16,6 +16,7 @@ from classes.inlinequery import InlineQuery
 from classes.enums import Weekdays, MarkTypes, PatternMatching
 from classes.database import Database
 from classes.firebase import Firebase
+from classes.errors import NothingFoundError
 
 client = TelegramClient("letovoAnalytics", API_ID, API_HASH)
 db: Database = ...
@@ -30,9 +31,51 @@ async def _establish_connection():
     db = await Database.create()
 
 
+class AnalyticsResponse:
+    def __init__(self, t):
+        self.sender_id = t[0]
+        self.message_id = t[1]
+        self.schedule_counter = t[2]
+        self.marks_counter = t[3]
+        self.holidays_counter = t[4]
+        self.clear_counter = t[5]
+        self.options_counter = t[6]
+        self.help_counter = t[7]
+        self.about_counter = t[8]
+        self.inline_counter = t[9]
+
+
 # TODO aiohttp
 with FuturesSession() as session:
     asyncio.set_event_loop(uvloop.new_event_loop())
+
+
+    @client.on(events.NewMessage(pattern=r"(?i).*stats"))
+    async def _stats(event: events.NewMessage.Event):
+        sender = await event.get_sender()
+        sender_id = str(sender.id)
+        if sender_id not in ("606336225", "644775011", "1381048606", "757953400"):
+            raise events.StopPropagation
+
+        for user in await db.get_users():
+            keys = ("sender_id", "message_id", "schedule_counter", "marks_counter", "holidays_counter", "clear_counter",
+                    "options_counter", "help_counter", "about_counter", "inline_counter")
+            resp = await db.get_analytics(user[0])
+            name = await Firebase.get_name(resp[0])
+            surname = await Firebase.get_surname(resp[0])
+            name = name if name is not NothingFoundError else ""
+            surname = surname if surname is not NothingFoundError else ""
+            print(resp[0])
+            if not any((resp[2], resp[3], resp[4], resp[5], resp[6], resp[7], resp[8])):
+                continue
+
+            await client.send_message(
+                entity=sender,
+                message=f"ID: {resp[0]}\nName: {name} {surname}\nSchedule: {resp[2]}\nMarks: {resp[3]}\nHolidays: {resp[4]}\nClear: {resp[5]}\n"
+                        f"Options: {resp[6]}\nHelp: {resp[7]}\nAbout: {resp[8]}",
+                parse_mode="md"
+            )
+        raise events.StopPropagation
 
 
     @client.on(events.NewMessage(pattern=r"(?i).*options"))
