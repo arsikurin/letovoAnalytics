@@ -25,24 +25,10 @@ iQuery = InlineQuery()
 
 
 @essential.execute_immediately
-async def _establish_connection():
+async def _connect_to_db():
     global db
     log.debug("established connection to the Postgres")
     db = await Database.create()
-
-
-class AnalyticsResponse:
-    def __init__(self, t):
-        self.sender_id = t[0]
-        self.message_id = t[1]
-        self.schedule_counter = t[2]
-        self.marks_counter = t[3]
-        self.holidays_counter = t[4]
-        self.clear_counter = t[5]
-        self.options_counter = t[6]
-        self.help_counter = t[7]
-        self.about_counter = t[8]
-        self.inline_counter = t[9]
 
 
 # TODO aiohttp
@@ -58,21 +44,22 @@ with FuturesSession() as session:
             raise events.StopPropagation
 
         for user in await db.get_users():
-            keys = ("sender_id", "message_id", "schedule_counter", "marks_counter", "holidays_counter", "clear_counter",
-                    "options_counter", "help_counter", "about_counter", "inline_counter")
+            _ = ("sender_id", "message_id", "schedule_counter", "homework_counter", "marks_counter",
+                 "holidays_counter", "clear_counter", "options_counter", "help_counter", "about_counter",
+                 "inline_counter")
             resp = await db.get_analytics(user[0])
             name = await Firebase.get_name(resp[0])
             surname = await Firebase.get_surname(resp[0])
             name = name if name is not NothingFoundError else ""
             surname = surname if surname is not NothingFoundError else ""
-            print(resp[0])
             if not any((resp[2], resp[3], resp[4], resp[5], resp[6], resp[7], resp[8])):
                 continue
 
             await client.send_message(
                 entity=sender,
-                message=f"ID: {resp[0]}\nName: {name} {surname}\nSchedule: {resp[2]}\nMarks: {resp[3]}\nHolidays: {resp[4]}\nClear: {resp[5]}\n"
-                        f"Options: {resp[6]}\nHelp: {resp[7]}\nAbout: {resp[8]}",
+                message=f"ID: {resp[0]}\nName: {name} {surname}\nSchedule: {resp[2]}\nHomework {resp[3]}\n"
+                        f"Marks: {resp[4]}\nHolidays: {resp[5]}\nClear: {resp[6]}\nOptions: {resp[7]}\n"
+                        f"Help: {resp[8]}\nAbout: {resp[9]}",
                 parse_mode="md"
             )
         raise events.StopPropagation
@@ -297,7 +284,7 @@ with FuturesSession() as session:
                 db.get_message_id(sender_id=sender_id),
                 db.increase_clear_counter(sender_id=sender_id)
             )
-            msg_ids: list[int] = [i for i in range(msg, event.message.id)]
+            msg_ids = (i for i in range(msg, event.message.id))
 
             try:
                 await client.delete_messages(entity=sender, message_ids=msg_ids)

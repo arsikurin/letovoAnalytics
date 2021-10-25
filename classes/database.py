@@ -8,6 +8,7 @@ class Database:
     """
     Class for working with relational DB
     """
+    __slots__ = ("connection",)
 
     def __init__(self):
         self.connection: psycopg.AsyncConnection = ...
