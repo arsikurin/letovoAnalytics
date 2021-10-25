@@ -17,6 +17,8 @@ class Web:
     Class for working with web requests
     """
 
+    # TODO add Session attr
+
     @staticmethod
     async def receive_token(
             s: FuturesSession, sender_id: str | None = None, login: str | None = None, password: str | None = None

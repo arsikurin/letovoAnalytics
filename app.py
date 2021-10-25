@@ -15,9 +15,23 @@ from constants import LOGIN_URL_LETOVO
 from classes.firebase import Firebase
 from classes.web import Web
 
-app = FastAPI()
+app = FastAPI(
+    title="Letovo Analytics Bot API",
+    version="1.0.0",
+    description="Small API for adding new users and validating their credentials"
+)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
+
+
+# @app.on_event("startup")
+# async def startup():
+#     await database.connect()
+#
+#
+# @app.on_event("shutdown")
+# async def shutdown():
+#     await database.disconnect()
 
 
 @app.exception_handler(502)
@@ -138,7 +152,7 @@ async def bad_request(request: Request, error):
 
 
 @app.get("/", response_class=HTMLResponse)
-async def read_item(request: Request):
+async def landing_page(request: Request):
     return templates.TemplateResponse("indexAPI.html", {"request": request})
 
 

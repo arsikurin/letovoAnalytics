@@ -5,7 +5,7 @@ import requests as rq
 
 from requests_futures.sessions import FuturesSession
 from telethon import Button, events
-from constants import MAIN_URL_LETOVO, LOGIN_URL_LOCAL, EPS
+from constants import LOGIN_URL_LOCAL, EPS
 from classes.enums import Weekdays, MarkTypes
 from classes.pydantic_models import MarksResponse, ScheduleResponse
 from classes.errors import NothingFoundError, UnauthorizedError
@@ -133,6 +133,8 @@ class CallbackQueryEventEditors:
 
 
 class CallbackQuerySenders:
+    __slots__ = ("client",)
+
     def __init__(self, c):
         self.client = c
 
@@ -156,13 +158,12 @@ class CallbackQuerySenders:
         await self.client.send_message(
             entity=sender,
             message="I will help you access s.letovo.ru resources via Telegram.\n"
-                    "Initially, you should provide your **login** and **password** to"
-                    f" [Letovo Analytics]({MAIN_URL_LETOVO}).\n  "
-                    f'To do that click the **Log In** button below\n\n'
-                    "__After logging into your account, click Options button__",
+                    "  Initially, you should provide your **school** credentials.\n"
+                    "  To do that click the **Log In** button below\n\n"
+                    "__After logging into your account, click **Options** button__",
             parse_mode="md",
             buttons=[
-                Button.url(text="Click to log in", url=f'{LOGIN_URL_LOCAL}?chat_id={sender.id}')
+                Button.url(text="Click here to log in", url=f'{LOGIN_URL_LOCAL}?chat_id={sender.id}')
             ]
         )
 
@@ -431,7 +432,7 @@ class CallbackQuerySenders:
                     mark_c_avg = round(mark_c_avg)
                 if abs(mark_d_avg % 1) < EPS:
                     mark_d_avg = round(mark_d_avg)
-                payload += f" | __AVG:__ **{mark_a_avg}**A **{mark_b_avg}**B **{mark_c_avg}**C **{mark_d_avg}**D"
+                payload += f" | __avg:__ **{mark_a_avg}**A **{mark_b_avg}**B **{mark_c_avg}**C **{mark_d_avg}**D"
                 await self.client.send_message(
                     entity=await event.get_sender(),
                     message=payload,
