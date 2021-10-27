@@ -2,7 +2,6 @@
 
 import requests as rq
 
-from requests_futures.sessions import FuturesSession
 from telethon import types, events
 from classes.errors import NothingFoundError, UnauthorizedError
 from classes.enums import Weekdays
@@ -47,19 +46,22 @@ class InlineQueryEventEditors:
 
 
 class InlineQuerySenders:
-    @staticmethod
+    __slots__ = ("session",)
+
+    def __init__(self, s):
+        self.session = s
+
     async def send_schedule(
-            s: FuturesSession, event: events.InlineQuery.Event, specific_day: int
+            self, event: events.InlineQuery.Event, specific_day: int
     ):
         """
         parse and send specific day(s) from schedule to inline query
 
         :param event: a return object of InlineQuery
-        :param s: requests_futures session
         :param specific_day: day number or -10 to send entire schedule
         """
 
-        schedule_future = await Web.receive_hw_n_schedule(s, str(event.sender_id))
+        schedule_future = await Web.receive_hw_n_schedule(self.session, str(event.sender_id))
         if schedule_future == UnauthorizedError:
             return await event.answer(
                 results=[
