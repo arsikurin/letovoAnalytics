@@ -291,14 +291,16 @@ class CallbackQuerySenders:
                     payload += "\n"
                 payload += f'**{day.schedules[0].group.subject.subject_name_eng} ' \
                            f'{day.schedules[0].group.group_name}**\n'
-                # if day.schedules[0].zoom_meetings:
-                #     payload += f'[ZOOM]({day.schedules[0].zoom_meetings[0].meeting_url}\n)'
+
                 payload += f'{day.period_start} — {day.period_end}\n'
+                if day.schedules[0].zoom_meetings:
+                    payload += f'[ZOOM]({day.schedules[0].zoom_meetings.meeting_url})'
                 await self.client.send_message(
                     entity=await event.get_sender(),
                     message=payload,
                     parse_mode="md",
-                    silent=True
+                    silent=True,
+                    link_preview=False
                 )
                 old_wd = wd
         await event.answer()

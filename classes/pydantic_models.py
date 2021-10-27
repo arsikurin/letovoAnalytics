@@ -139,13 +139,22 @@ class ScheduleLessonsList(BaseModel):
     attendance: list[ScheduleAttendance]
 
 
+class ScheduleZoomMeetings(BaseModel):
+    # meeting_id: int
+    # meeting_topic: str
+    # meeting_group_id: int
+    # meeting_shedule_day: int
+    # meeting_shedule_lesson: str
+    meeting_url: str
+
+
 class ScheduleList(BaseModel):
     # id_schedule: int = Field(alias="id_shedule")
     # schedule_period: int = Field(alias="shedule_period")
     # schedule_group: int = Field(alias="shedule_group")
     schedule_room: int = Field(alias="shedule_room")
     lessons: list[ScheduleLessonsList]
-    zoom_meetings: Optional[list]
+    zoom_meetings: Optional[ScheduleZoomMeetings]
     # program_dev_type: str
     group: ScheduleGroup
     room: ScheduleRoom
