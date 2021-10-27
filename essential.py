@@ -37,11 +37,13 @@ try:
 except ImportError:
     if VERBOSE:
         log.basicConfig(
-            format="(%(levelname)s) %(asctime)s %(message)s\n[%(name)s]\n",
-            level=log.DEBUG, filemode="w", filename="logs.log"
+            format=f"{Style.Bold}(%(levelname)s) {Fg.Green}%(asctime)s{Fg.Reset} {Style.Bold}%(message)s{Style.Reset}"
+                   f"\n[%(name)s]\n",
+            level=log.DEBUG
         )
     else:
         log.basicConfig(
-            format="(%(levelname)s) %(asctime)s %(message)s\n[%(name)s]\n",
-            level=log.INFO, filemode="w", filename="logs.log"
+            format=f"{Style.Bold}(%(levelname)s) {Fg.Green}%(asctime)s{Fg.Reset} {Style.Bold}%(message)s{Style.Reset}"
+                   f"\n[%(name)s]\n",
+            level=log.INFO
         )
