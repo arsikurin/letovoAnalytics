@@ -86,7 +86,7 @@ class ScheduleAttendance(BaseModel):
 class ScheduleSubject(BaseModel):
     # id_subject: int
     subject_name: str
-    subject_name_eng: str
+    subject_name_eng: Optional[str]
     # subject_order: int
     # subject_group: str
     # subject_development: int
