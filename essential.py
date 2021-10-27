@@ -6,7 +6,7 @@ import logging as log
 
 from colourlib import Fg, Style
 
-VERBOSE = False
+VERBOSE = True
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 
