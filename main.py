@@ -20,8 +20,6 @@ from classes.errors import NothingFoundError
 
 client = TelegramClient("letovoAnalytics", API_ID, API_HASH)
 db: Database = ...
-cbQuery = CallbackQuery(c=client)
-iQuery = InlineQuery()
 
 
 @essential.execute_immediately
@@ -31,9 +29,11 @@ async def _connect_to_db():
     db = await Database.create()
 
 
-# TODO aiohttp
+# TODO aiohttp/httpx
 with FuturesSession() as session:
     asyncio.set_event_loop(uvloop.new_event_loop())
+    cbQuery = CallbackQuery(c=client, s=session)
+    iQuery = InlineQuery(s=session)
 
 
     @client.on(events.NewMessage(pattern=r"(?i).*stats"))
@@ -168,7 +168,7 @@ with FuturesSession() as session:
         sender_id = str(sender.id)
         send_schedule = partial(
             cbQuery.send_schedule,
-            event=event, s=session
+            event=event
         )
         match event.data:
             case b"today_schedule":
@@ -197,7 +197,7 @@ with FuturesSession() as session:
         sender_id = str(sender.id)
         send_homework = partial(
             cbQuery.send_homework,
-            event=event, s=session
+            event=event
         )
         match event.data:
             case b"tomorrows_homework":
@@ -226,7 +226,7 @@ with FuturesSession() as session:
         sender_id = str(sender.id)
         send_marks = partial(
             cbQuery.send_marks,
-            event=event, s=session
+            event=event
         )
         match event.data:
             case b"all_marks":
@@ -275,22 +275,6 @@ with FuturesSession() as session:
 
     @client.on(events.NewMessage())
     async def _delete(event: events.NewMessage.Event):
-        sender = await event.get_sender()
-        sender_id = str(sender.id)
-
-        if re.fullmatch(r"(?i).*clear previous", f"{event.message.message}"):
-            _, msg, _ = await asyncio.gather(
-                event.delete(),
-                db.get_message_id(sender_id=sender_id),
-                db.increase_clear_counter(sender_id=sender_id)
-            )
-            msg_ids = (i for i in range(msg, event.message.id))
-
-            try:
-                await client.delete_messages(entity=sender, message_ids=msg_ids)
-            except (errors.common.MultiError, errors.MessageDeleteForbiddenError):
-                pass
-            raise events.StopPropagation
         await event.delete()
 
 
@@ -305,7 +289,7 @@ with FuturesSession() as session:
 
         send_schedule = partial(
             iQuery.send_schedule,
-            event=event, s=session
+            event=event
         )
         match PatternMatching(event.query.query):
             case PatternMatching(next=True):

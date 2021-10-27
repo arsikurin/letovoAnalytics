@@ -3,7 +3,6 @@
 import asyncio
 import requests as rq
 
-from requests_futures.sessions import FuturesSession
 from telethon import Button, events
 from constants import LOGIN_URL_LOCAL, EPS
 from classes.enums import Weekdays, MarkTypes
@@ -133,10 +132,11 @@ class CallbackQueryEventEditors:
 
 
 class CallbackQuerySenders:
-    __slots__ = ("client",)
+    __slots__ = ("client", "session")
 
-    def __init__(self, c):
+    def __init__(self, c, s):
         self.client = c
+        self.session = s
 
     async def send_greeting(self, sender):
         payload = f'{fn if (fn := sender.first_name) else ""} {ln if (ln := sender.last_name) else ""}'.strip()
@@ -147,8 +147,6 @@ class CallbackQuerySenders:
             buttons=[
                 [
                     Button.text("Options", resize=True, single_use=False)
-                ], [
-                    Button.text("Clear previous", resize=True, single_use=False)
                 ]
             ]
         )
@@ -236,16 +234,15 @@ class CallbackQuerySenders:
         )
 
     async def send_schedule(
-            self, s: FuturesSession, event: events.CallbackQuery.Event, specific_day: Weekdays
+            self, event: events.CallbackQuery.Event, specific_day: Weekdays
     ):
         """
         parse and send specific day(s) from schedule
 
         :param event: a return object of CallbackQuery
-        :param s: requests_futures session
         :param specific_day: day number or -10 to send entire schedule
         """
-        schedule_future = await Web.receive_hw_n_schedule(s, str(event.sender_id))
+        schedule_future = await Web.receive_hw_n_schedule(self.session, str(event.sender_id))
         if schedule_future == UnauthorizedError:
             return await event.answer("[✘] Cannot get data from s.letovo.ru", alert=True)
 
@@ -306,16 +303,15 @@ class CallbackQuerySenders:
         await event.answer()
 
     async def send_homework(
-            self, s: FuturesSession, event: events.CallbackQuery.Event, specific_day: Weekdays
+            self, event: events.CallbackQuery.Event, specific_day: Weekdays
     ):
         """
         parse and send specific day(s) from homework
 
         :param event: a return object of CallbackQuery
-        :param s: requests_futures session
         :param specific_day: day number or -10 to send all homework
         """
-        homework_future = await Web.receive_hw_n_schedule(s, str(event.sender_id))
+        homework_future = await Web.receive_hw_n_schedule(self.session, str(event.sender_id))
         if specific_day == Weekdays.Sunday:
             return await event.answer("Congrats! Tomorrow's Sunday, no hw", alert=False)
 
@@ -370,16 +366,15 @@ class CallbackQuerySenders:
         await event.answer()
 
     async def send_marks(
-            self, s: FuturesSession, event: events.CallbackQuery.Event, specific: MarkTypes
+            self, event: events.CallbackQuery.Event, specific: MarkTypes
     ):
         """
         parse and send marks
 
         :param event: a return object of CallbackQuery
-        :param s: requests_futures session
         :param specific: all, sum, recent
         """
-        marks_future = await Web.receive_marks(s, str(event.sender_id))
+        marks_future = await Web.receive_marks(self.session, str(event.sender_id))
         if marks_future == UnauthorizedError:
             return await event.answer("[✘] Cannot get data from s.letovo.ru", alert=True)
 
