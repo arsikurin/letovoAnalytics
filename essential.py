@@ -19,31 +19,24 @@ def execute_immediately(func):
 
 # start_time = time.perf_counter()
 # datetime.timedelta(seconds=time.perf_counter() - start_time)
+
+
+if VERBOSE:
+    log.basicConfig(
+        format=f"{Style.Bold}(%(levelname)s) {Fg.Green}%(asctime)s{Fg.Reset} {Style.Bold}%(message)s{Style.Reset}"
+               f"\n[%(name)s]\n",
+        level=log.DEBUG
+    )
+else:
+    log.basicConfig(
+        format=f"{Style.Bold}(%(levelname)s) {Fg.Green}%(asctime)s{Fg.Reset} {Style.Bold}%(message)s{Style.Reset}"
+               f"\n[%(name)s]\n",
+        level=log.INFO
+    )
+
 try:
     from debug import *
 
-    if VERBOSE:
-        log.basicConfig(
-            format=f"{Style.Bold}(%(levelname)s) {Fg.Green}%(asctime)s{Fg.Reset} {Style.Bold}%(message)s{Style.Reset}"
-                   f"\n[%(name)s]\n",
-            level=log.DEBUG
-        )
-    else:
-        log.basicConfig(
-            format=f"{Style.Bold}(%(levelname)s) {Fg.Green}%(asctime)s{Fg.Reset} {Style.Bold}%(message)s{Style.Reset}"
-                   f"\n[%(name)s]\n",
-            level=log.INFO
-        )
+    log.info("Running on local machine")
 except ImportError:
-    if VERBOSE:
-        log.basicConfig(
-            format=f"{Style.Bold}(%(levelname)s) {Fg.Green}%(asctime)s{Fg.Reset} {Style.Bold}%(message)s{Style.Reset}"
-                   f"\n[%(name)s]\n",
-            level=log.DEBUG
-        )
-    else:
-        log.basicConfig(
-            format=f"{Style.Bold}(%(levelname)s) {Fg.Green}%(asctime)s{Fg.Reset} {Style.Bold}%(message)s{Style.Reset}"
-                   f"\n[%(name)s]\n",
-            level=log.INFO
-        )
+    pass
