@@ -36,32 +36,14 @@ with FuturesSession() as session:
     iQuery = InlineQuery(s=session)
 
 
-    @client.on(events.NewMessage(pattern=r"(?i).*stats"))
-    async def _stats(event: events.NewMessage.Event):
+    @client.on(events.NewMessage(pattern=r"(?i).*dev"))
+    async def _dev(event: events.NewMessage.Event):
         sender = await event.get_sender()
         sender_id = str(sender.id)
         if sender_id not in ("606336225", "644775011", "1381048606", "757953400"):
             raise events.StopPropagation
-
-        for user in await db.get_users():
-            _ = ("sender_id", "message_id", "schedule_counter", "homework_counter", "marks_counter",
-                 "holidays_counter", "clear_counter", "options_counter", "help_counter", "about_counter",
-                 "inline_counter")
-            resp = await db.get_analytics(user[0])
-            name = await Firebase.get_name(resp[0])
-            surname = await Firebase.get_surname(resp[0])
-            name = name if name is not NothingFoundError else ""
-            surname = surname if surname is not NothingFoundError else ""
-            if not any((resp[2], resp[3], resp[4], resp[5], resp[6], resp[7], resp[8])):
-                continue
-
-            await client.send_message(
-                entity=sender,
-                message=f"ID: {resp[0]}\nName: {name} {surname}\nSchedule: {resp[2]}\nHomework {resp[3]}\n"
-                        f"Marks: {resp[4]}\nHolidays: {resp[5]}\nClear: {resp[6]}\nOptions: {resp[7]}\n"
-                        f"Help: {resp[8]}\nAbout: {resp[9]}",
-                parse_mode="md"
-            )
+        await cbQuery.send_greeting(sender=sender)
+        await cbQuery.send_dev_page(sender=sender)
         raise events.StopPropagation
 
 
@@ -89,7 +71,6 @@ with FuturesSession() as session:
 
         await asyncio.gather(
             cbQuery.send_main_page(sender=sender),
-            db.set_message_id(sender_id=sender_id, message_id=event.message.id + 3),
             db.increase_options_counter(sender_id=sender_id)
         )
         raise events.StopPropagation
@@ -110,7 +91,14 @@ with FuturesSession() as session:
         )
         if not await db.is_inited(sender_id=sender_id):
             await db.init_user(sender_id=sender_id)
-        await db.set_message_id(sender_id=sender_id, message_id=event.message.id + 3)
+        raise events.StopPropagation
+
+
+    @client.on(events.CallbackQuery(data=b"stats"))
+    async def _stats(event: events.CallbackQuery.Event):
+        sender = await event.get_sender()
+        await cbQuery.send_stats(sender=sender, db=db)
+        await event.answer()
         raise events.StopPropagation
 
 
@@ -249,8 +237,6 @@ with FuturesSession() as session:
 
         await asyncio.gather(
             cbQuery.send_greeting(sender=sender),
-            db.set_message_id(sender_id=sender_id, message_id=event.message.id + 3),
-            db.increase_about_counter(sender_id=sender_id),
             cbQuery.send_about(sender=sender)
         )
 
@@ -266,7 +252,6 @@ with FuturesSession() as session:
 
         await asyncio.gather(
             cbQuery.send_greeting(sender=sender),
-            db.set_message_id(sender_id=sender_id, message_id=event.message.id + 3),
             db.increase_help_counter(sender_id=sender_id),
             cbQuery.send_help(sender=sender)
         )

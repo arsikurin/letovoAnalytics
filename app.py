@@ -1,4 +1,6 @@
 #!/usr/bin/python3.10
+import fastapi.testclient
+import starlette.exceptions
 
 import essential
 import asyncio
@@ -22,6 +24,7 @@ app = FastAPI(
 )
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
+client = fastapi.testclient.TestClient(app=app)
 
 
 # @app.on_event("startup")
@@ -100,8 +103,7 @@ async def method_not_allowed(request: Request, error):
 
 
 @app.exception_handler(404)
-async def not_found(request: Request, error):
-    log.error(error)
+async def not_found(request: Request, error: HTTPException) -> templates.TemplateResponse:
     return templates.TemplateResponse(
         "pageError.html",
         context={"request": request,

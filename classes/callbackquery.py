@@ -8,6 +8,7 @@ from constants import LOGIN_URL_LOCAL, EPS
 from classes.enums import Weekdays, MarkTypes
 from classes.pydantic_models import MarksResponse, ScheduleResponse
 from classes.errors import NothingFoundError, UnauthorizedError
+from classes.firebase import Firebase
 from classes.web import Web
 
 
@@ -165,6 +166,26 @@ class CallbackQuerySenders:
             ]
         )
 
+    async def send_stats(self, sender, db):
+        for user in await db.get_users():
+            _ = ("sender_id", "message_id", "schedule_counter", "homework_counter", "marks_counter",
+                 "holidays_counter", "clear_counter", "options_counter", "help_counter", "about_counter",
+                 "inline_counter")
+            resp = await db.get_analytics(user[0])
+            if not any((resp[2], resp[3], resp[4], resp[5], resp[7], resp[8])):
+                continue
+            name = await Firebase.get_name(resp[0])
+            surname = await Firebase.get_surname(resp[0])
+            name = name if name is not NothingFoundError else ""
+            surname = surname if surname is not NothingFoundError else ""
+            await self.client.send_message(
+                entity=sender,
+                message=f"ID: {resp[0]}\nName: {name} {surname}\nSchedule: {resp[2]}\nHomework {resp[3]}\n"
+                        f"Marks: {resp[4]}\nHolidays: {resp[5]}\nOptions: {resp[7]}\n"
+                        f"Help: {resp[8]}\nAbout: {resp[9]}",
+                parse_mode="md"
+            )
+
     async def send_about(self, sender):
         await asyncio.sleep(0.05)
         await self.client.send_message(
@@ -180,13 +201,31 @@ class CallbackQuerySenders:
         await asyncio.sleep(0.05)
         await self.client.send_message(
             entity=sender,
-            message="**Marks:**\n"
-                    "__0-8__A — summative A\n"
-                    "__0-8__B — summative B\n"
-                    "__0-8__C — summative C\n"
-                    "__0-8__D — summative D\n"
-                    "__0-8__F — formative",
-            parse_mode="md"
+            message="I can help you access s.letovo.ru resources via Telegram. "
+                    "If you're new here, please see the [Terms of Use](https://example.com).\n"
+                    "\n"
+                    "**You can control me by sending these commands:**\n"
+                    "\n"
+                    "**/start** - restart bot. You'll get a welcome message\n"
+                    "**/about** - get info about the bot developers\n"
+                    "**/options** - get a menu of options that the bot can serve\n"
+                    "**/help** - get this manual page\n"
+                    "**/schedule** - get schedule from s.letovo.ru\n"
+                    "**/marks** - get marks from s.letovo.ru\n"
+                    "**/homework** - get homework from s.letovo.ru **[beta]**\n"
+                    "\n"
+                    "\n"
+                    "**Bot Settings**\n"
+                    "__coming soon__\n"
+                    "\n"
+                    "**Marks UI**\n"
+                    "**0..8**A — Summative A\n"
+                    "**0..8**B — Summative B\n"
+                    "**0..8**C — Summative C\n"
+                    "**0..8**D — Summative D\n"
+                    "**0..8**F — Formative\n",
+            parse_mode="md",
+            link_preview=False
         )
 
     async def send_main_page(self, sender):
@@ -203,6 +242,20 @@ class CallbackQuerySenders:
                     Button.inline("Marks »", b"marks_page"),
                 ], [
                     Button.inline("Holidays", b"holidays"),
+                ]
+            ]
+        )
+
+    async def send_dev_page(self, sender):
+        await self.client.send_message(
+            entity=sender,
+            message="Choose an option below ↴",
+            parse_mode="md",
+            buttons=[
+                [
+                    Button.inline("Statistics", b"stats")
+                ], [
+                    Button.inline("Update tokens", b"tokens"),
                 ]
             ]
         )
@@ -264,34 +317,36 @@ class CallbackQuerySenders:
             date = schedule_response.data[0].date.split("-")
             await self.client.send_message(
                 entity=await event.get_sender(),
-                message=f'__{specific_day.name}, {int(date[2]) + specific_day.value - 1}.{date[1]}.{date[0]}__\n',
+                message=f"__{specific_day.name}, {int(date[2]) + specific_day.value - 1}.{date[1]}.{date[0]}__\n",
                 parse_mode="md",
                 silent=True
             )
 
         for day in schedule_response.data:
-
             if day.schedules and specific_day.value in (int(day.period_num_day), -10):
                 wd = Weekdays(int(day.period_num_day)).name
                 if specific_day.value == -10 and wd != old_wd:
                     await self.client.send_message(
                         entity=await event.get_sender(),
-                        message=f'\n**=={wd}==**\n',
+                        message=f"\n**=={wd}==**\n",
                         parse_mode="md",
                         silent=True
                     )
 
-                payload = f'{day.period_name} | __{day.schedules[0].room.room_name}__:'
-                if day.schedules[0].lessons[0].attendance:
-                    payload += "  [ Missed ]\n"
+                payload = f"{day.period_name} | __{day.schedules[0].room.room_name}__:\n"
+                # if day.schedules[0].lessons[0].attendance:
+                #     payload += "  Missed\n"
+                # else:
+                #     payload += "\n"
+                if day.schedules[0].group.subject.subject_name_eng:
+                    subject = day.schedules[0].group.subject.subject_name_eng
                 else:
-                    payload += "\n"
-                payload += f'**{day.schedules[0].group.subject.subject_name_eng} ' \
-                           f'{day.schedules[0].group.group_name}**\n'
+                    subject = day.schedules[0].group.subject.subject_name
+                payload += f"**{subject} {day.schedules[0].group.group_name}**\n"
 
-                payload += f'{day.period_start} — {day.period_end}\n'
+                payload += f"{day.period_start} — {day.period_end}\n"
                 if day.schedules[0].zoom_meetings:
-                    payload += f'[ZOOM]({day.schedules[0].zoom_meetings.meeting_url})'
+                    payload += f"[ZOOM]({day.schedules[0].zoom_meetings.meeting_url})"
                 await self.client.send_message(
                     entity=await event.get_sender(),
                     message=payload,
@@ -423,12 +478,20 @@ class CallbackQuerySenders:
                 mark_c_avg, mark_d_avg = mark_c[0] / mark_c[1], mark_d[0] / mark_d[1]
                 if abs(mark_a_avg % 1) < EPS:
                     mark_a_avg = round(mark_a_avg)
+                else:
+                    mark_a_avg = round(mark_a_avg, 1)
                 if abs(mark_b_avg % 1) < EPS:
                     mark_b_avg = round(mark_b_avg)
+                else:
+                    mark_b_avg = round(mark_b_avg, 1)
                 if abs(mark_c_avg % 1) < EPS:
                     mark_c_avg = round(mark_c_avg)
+                else:
+                    mark_c_avg = round(mark_c_avg, 1)
                 if abs(mark_d_avg % 1) < EPS:
                     mark_d_avg = round(mark_d_avg)
+                else:
+                    mark_d_avg = round(mark_d_avg, 1)
                 payload += f" | __avg:__ **{mark_a_avg}**A **{mark_b_avg}**B **{mark_c_avg}**C **{mark_d_avg}**D"
                 await self.client.send_message(
                     entity=await event.get_sender(),
@@ -474,12 +537,20 @@ class CallbackQuerySenders:
                     mark_c_avg, mark_d_avg = mark_c[0] / mark_c[1], mark_d[0] / mark_d[1]
                     if abs(mark_a_avg % 1) < EPS:
                         mark_a_avg = round(mark_a_avg)
+                    else:
+                        mark_a_avg = round(mark_a_avg, 1)
                     if abs(mark_b_avg % 1) < EPS:
                         mark_b_avg = round(mark_b_avg)
+                    else:
+                        mark_b_avg = round(mark_b_avg, 1)
                     if abs(mark_c_avg % 1) < EPS:
                         mark_c_avg = round(mark_c_avg)
+                    else:
+                        mark_c_avg = round(mark_c_avg, 1)
                     if abs(mark_d_avg % 1) < EPS:
                         mark_d_avg = round(mark_d_avg)
+                    else:
+                        mark_d_avg = round(mark_d_avg, 1)
                     payload += f" | __AVG:__ **{mark_a_avg}**A **{mark_b_avg}**B **{mark_c_avg}**C **{mark_d_avg}**D"
                 if subject.summative_list or subject.formative_list:
                     await self.client.send_message(
