@@ -5,8 +5,8 @@ import uvloop
 import logging as log
 
 from colourlib import Fg, Style
+from config import settings
 
-VERBOSE = True
 PROJECT_ROOT = os.path.abspath(os.path.join(
     os.path.dirname(__file__),
     os.pardir)
@@ -18,7 +18,7 @@ asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 # datetime.timedelta(seconds=time.perf_counter() - start_time)
 
 
-if VERBOSE:
+if settings().debug:
     log.basicConfig(
         format=f"{Style.Bold}(%(levelname)s) {Fg.Green}%(asctime)s{Fg.Reset} {Style.Bold}%(message)s{Style.Reset}"
                f"\n[%(name)s]\n",

@@ -2,11 +2,9 @@ try:
     from debug import *
 except ImportError:
     pass
-
 from pydantic import BaseSettings
 from functools import cache
 
-# TODO add to sys.path!!!
 # import os
 # import sys
 # fpath = os.path.join(os.path.dirname(__file__), 'utils')
@@ -49,6 +47,6 @@ class AppSettings(BaseSettings):
 @cache
 def settings() -> AppSettings:
     """
-    `settings.cache_clear()` if wanna cache dump
+    `settings.cache_clear()` if wanna dump cache
     """
     return AppSettings()

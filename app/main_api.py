@@ -13,5 +13,5 @@ app = FastAPI(
 app.mount("/static", StaticFiles(directory="./app/static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
-app.include_router(login_router, tags=["login"], default_response_class=ORJSONResponse)
-app.include_router(schedule_router, tags=["schedule"], default_response_class=ORJSONResponse)
+app.include_router(login_router, tags=["login"])
+app.include_router(schedule_router, tags=["schedule"])

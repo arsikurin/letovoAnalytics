@@ -8,6 +8,7 @@ from requests_futures.sessions import FuturesSession
 from app.dependencies import NothingFoundError, UnauthorizedError, Firebase
 from config import settings
 
+
 class Web:
     """
     Class for working with web requests
