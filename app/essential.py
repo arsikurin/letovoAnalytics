@@ -1,5 +1,11 @@
 import os
 import sys
+
+PROJECT_ROOT = os.path.abspath(os.path.join(
+    os.path.dirname(__file__),
+    os.pardir)
+)
+sys.path.append(PROJECT_ROOT)
 import asyncio
 import uvloop
 import logging as log
@@ -7,11 +13,6 @@ import logging as log
 from colourlib import Fg, Style
 from config import settings
 
-PROJECT_ROOT = os.path.abspath(os.path.join(
-    os.path.dirname(__file__),
-    os.pardir)
-)
-sys.path.append(PROJECT_ROOT)
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 # start_time = time.perf_counter()

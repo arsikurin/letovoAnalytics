@@ -288,7 +288,7 @@ class CallbackQuerySenders:
             self, event: events.CallbackQuery.Event, specific_day: Weekdays
     ):
         """
-        parse and send specific day(s) from schedule
+        parse & send specific day(s) from schedule
 
         :param event: a return object of CallbackQuery
         :param specific_day: day number or -10 to send entire schedule
@@ -303,14 +303,14 @@ class CallbackQuerySenders:
                 alert=True
             )
 
-        if schedule_future == rq.ConnectionError:
+        if schedule_future == aiohttp.ClientConnectionError:
             return await event.answer("[✘] Cannot establish connection to s.letovo.ru", alert=True)
 
         if specific_day == Weekdays.Sunday2:
             return await event.answer("Congrats! It's Sunday, no lessons", alert=False)
 
         old_wd = 0
-        schedule_response = ScheduleResponse.parse_obj(schedule_future.result().json())
+        schedule_response = ScheduleResponse.parse_obj(schedule_future)
         if specific_day.value != -10:
             date = schedule_response.data[0].date.split("-")
             await self.client.send_message(
@@ -359,7 +359,7 @@ class CallbackQuerySenders:
             self, event: events.CallbackQuery.Event, specific_day: Weekdays
     ):
         """
-        parse and send specific day(s) from homework
+        parse & send specific day(s) from homework
 
         :param event: a return object of CallbackQuery
         :param specific_day: day number or -10 to send all homework
@@ -377,10 +377,10 @@ class CallbackQuerySenders:
                 alert=True
             )
 
-        if homework_future == rq.ConnectionError:
+        if homework_future == aiohttp.ClientConnectionError:
             return await event.answer("[✘] Cannot establish connection to s.letovo.ru", alert=True)
 
-        for day in homework_future.result().json()["data"]:
+        for day in homework_future["data"]:
             if len(day["schedules"]) > 0 and specific_day.value in (int(day["period_num_day"]), -10):
                 ch = False
                 payload = (
@@ -388,24 +388,23 @@ class CallbackQuerySenders:
                     f'{day["schedules"][0]["group"]["group_name"]}</strong>\n'
                     f'{Weekdays(int(day["period_num_day"])).name}, {day["date"]}\n'
                 )
-
-                if day["schedules"][0]["lessons"][0]["lesson_hw"]:
+                if day["schedules"][0]["lessons"]:
                     payload += f'{day["schedules"][0]["lessons"][0]["lesson_hw"]}\n'
                 else:
                     payload += "<em>No homework</em>\n"
 
-                if day["schedules"][0]["lessons"][0]["lesson_url"]:
+                if day["schedules"][0]["lessons"]:
                     ch = True
                     payload += f'<a href="{day["schedules"][0]["lessons"][0]["lesson_url"]}">Attached link</a>\n'
 
-                if day["schedules"][0]["lessons"][0]["lesson_hw_url"]:
+                if day["schedules"][0]["lessons"]:
                     ch = True
                     payload += f'<a href="{day["schedules"][0]["lessons"][0]["lesson_hw_url"]}">Attached hw link</a>\n'
 
                 if not ch:
                     payload += "<em>No links attached</em>\n"
 
-                if day["schedules"][0]["lessons"][0]["lesson_thema"]:
+                if day["schedules"][0]["lessons"]:
                     payload += f'{day["schedules"][0]["lessons"][0]["lesson_thema"]}\n'
                 else:
                     payload += "<em>No topic</em>\n"
@@ -422,7 +421,7 @@ class CallbackQuerySenders:
             self, event: events.CallbackQuery.Event, specific: MarkTypes
     ):
         """
-        parse and send marks
+        parse & send marks
 
         :param event: a return object of CallbackQuery
         :param specific: all, sum, recent
