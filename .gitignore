@@ -1,15 +1,3 @@
-letovoAnalytics.session
-letovoAnalytics.session-journal
-/__pycache__
-sandbox/sandbox.py
 debug.py
-/templates/email_template.html
-sandbox/scheduleNew.ics
-/templates/login.html
-/templates/index.html
-/static/images/icons/home.svg
-/static/images/icons/login.svg
-sandbox/Pipfile
-sandbox/Pipfile.lock
-sandbox/runtime.txt
-logs.log
+letovoAnalytics.session
+__pycache__
