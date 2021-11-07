@@ -2,6 +2,7 @@
 
 import asyncio
 import requests as rq
+import aiohttp
 
 from telethon import Button, events
 from app.dependencies import Weekdays, MarkTypes, NothingFoundError, UnauthorizedError, Firebase, Web

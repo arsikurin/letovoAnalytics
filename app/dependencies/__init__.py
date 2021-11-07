@@ -6,6 +6,13 @@ from .web import Web
 from .utils import execute_immediately
 
 __all__ = (
-    "Database", "Weekdays", "MarkTypes", "PatternMatching", "NothingFoundError", "UnauthorizedError", "Firebase", "Web",
+    "Database",
+    "Weekdays",
+    "MarkTypes",
+    "PatternMatching",
+    "NothingFoundError",
+    "UnauthorizedError",
+    "Firebase",
+    "Web",
     "execute_immediately"
 )
