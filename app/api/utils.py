@@ -1,8 +1,11 @@
+import logging as log
 from asyncio import iscoroutinefunction
 from asyncio.coroutines import _is_coroutine
 from typing import Callable, TypeVar
 
 from fastapi import FastAPI, Header, HTTPException, Request
+# from fastapi.exceptions import StarletteHTTPException
+# from fastapi.responses import ORJSONResponse
 from fastapi.dependencies.utils import solve_dependencies
 from fastapi.routing import get_dependant, run_endpoint_function
 
@@ -22,7 +25,9 @@ async def get(app: FastAPI, func: Callable[..., T], request: Request = None) -> 
     values, errors, *_ = await solve_dependencies(
         request=request, dependant=dependant, dependency_overrides_provider=app,
     )
-
+    if errors:
+        for err in errors:
+            log.error(err)
     assert not errors
 
     return await run_endpoint_function(
@@ -55,4 +60,5 @@ class AcceptContent:
 
 
 def accept(accept_content):
+    """Use as decorator. Manages Accept header from requests"""
     return AcceptContent().accept(accept_content)

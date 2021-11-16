@@ -1,18 +1,20 @@
 import asyncio
 import datetime
+import functools as ft
 import logging as log
 
-from functools import partial
+import aiohttp
 from telethon import events
+
 from app.bot import CallbackQuery, InlineQuery, client
 from app.dependencies import (
     Weekdays, MarkTypes, PatternMatching, Database, Firebase
 )
 
 
-async def include_handlers(session):
+async def include_handlers(session: aiohttp.ClientSession):
     db = await Database.create()
-    cbQuery = CallbackQuery(c=client, s=session)
+    cbQuery = CallbackQuery(client=client, session=session)
     iQuery = InlineQuery(s=session)
 
     @client.on(events.NewMessage(pattern=r"(?i).*dev"))
@@ -122,7 +124,7 @@ async def include_handlers(session):
     async def _schedule(event: events.CallbackQuery.Event):
         sender = await event.get_sender()
         sender_id = str(sender.id)
-        send_schedule = partial(
+        send_schedule = ft.partial(
             cbQuery.send_schedule,
             event=event
         )
@@ -150,7 +152,7 @@ async def include_handlers(session):
     async def _homework(event: events.CallbackQuery.Event):
         sender = await event.get_sender()
         sender_id = str(sender.id)
-        send_homework = partial(
+        send_homework = ft.partial(
             cbQuery.send_homework,
             event=event
         )
@@ -178,7 +180,7 @@ async def include_handlers(session):
     async def _marks(event: events.CallbackQuery.Event):
         sender = await event.get_sender()
         sender_id = str(sender.id)
-        send_marks = partial(
+        send_marks = ft.partial(
             cbQuery.send_marks,
             event=event
         )
@@ -234,7 +236,7 @@ async def include_handlers(session):
             await event.answer(switch_pm="Log in", switch_pm_param="inlineMode")
             raise events.StopPropagation
 
-        send_schedule = partial(
+        send_schedule = ft.partial(
             iQuery.send_schedule,
             event=event
         )

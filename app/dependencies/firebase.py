@@ -1,10 +1,11 @@
-import yaml
+import typing
+
 import firebase_admin
 import requests as rq
-
-from typing import Type
+import yaml
 from firebase_admin import credentials
 from google.cloud.firestore_v1.async_client import AsyncClient, AsyncDocumentReference, DocumentSnapshot
+
 from app.dependencies import NothingFoundError
 from config import settings
 
@@ -56,7 +57,7 @@ class FirebaseSetters:
             '''}
         }'''
         )
-        doc_ref: AsyncDocumentReference = firestore.collection(u"users").document(sender_id)
+        doc_ref: AsyncDocumentReference = firestore.collection("users").document(sender_id)
         await doc_ref.set(yaml.full_load(request_payload), merge=True)
 
     @staticmethod
@@ -84,24 +85,24 @@ class FirebaseSetters:
             '''}
         }'''
         )
-        doc_ref: AsyncDocumentReference = firestore.collection(u"names").document(sender_id)
+        doc_ref: AsyncDocumentReference = firestore.collection("names").document(sender_id)
         await doc_ref.set(yaml.full_load(request_payload), merge=True)
 
 
 class FirebaseGetters:
     @staticmethod
     async def is_inited(sender_id: str) -> bool:
-        docs = firestore.collection(u"users").stream()
+        docs = firestore.collection("users").stream()
         return sender_id in [doc.id async for doc in docs]
 
     @staticmethod
     async def get_users() -> list:
-        docs = firestore.collection(u"users").stream()
+        docs = firestore.collection("users").stream()
         return [doc.id async for doc in docs]
 
     @staticmethod
-    async def get_student_id(sender_id: str) -> int | Type[NothingFoundError]:
-        doc: DocumentSnapshot = await firestore.collection(u"users").document(sender_id).get()
+    async def get_student_id(sender_id: str) -> int | typing.Type[NothingFoundError]:
+        doc: DocumentSnapshot = await firestore.collection("users").document(sender_id).get()
         try:
             if not doc.exists:
                 return NothingFoundError
@@ -110,8 +111,8 @@ class FirebaseGetters:
             return NothingFoundError
 
     @staticmethod
-    async def get_token(sender_id: str) -> str | Type[NothingFoundError]:
-        doc: DocumentSnapshot = await firestore.collection(u"users").document(sender_id).get()
+    async def get_token(sender_id: str) -> str | typing.Type[NothingFoundError]:
+        doc: DocumentSnapshot = await firestore.collection("users").document(sender_id).get()
         try:
             if not doc.exists:
                 return NothingFoundError
@@ -120,8 +121,8 @@ class FirebaseGetters:
             return NothingFoundError
 
     @staticmethod
-    async def get_password(sender_id: str) -> str | Type[NothingFoundError]:
-        doc: DocumentSnapshot = await firestore.collection(u"users").document(sender_id).get()
+    async def get_password(sender_id: str) -> str | typing.Type[NothingFoundError]:
+        doc: DocumentSnapshot = await firestore.collection("users").document(sender_id).get()
         try:
             if not doc.exists:
                 return NothingFoundError
@@ -130,8 +131,8 @@ class FirebaseGetters:
             return NothingFoundError
 
     @staticmethod
-    async def get_login(sender_id: str) -> str | Type[NothingFoundError]:
-        doc: DocumentSnapshot = await firestore.collection(u"users").document(sender_id).get()
+    async def get_login(sender_id: str) -> str | typing.Type[NothingFoundError]:
+        doc: DocumentSnapshot = await firestore.collection("users").document(sender_id).get()
         try:
             if not doc.exists:
                 return NothingFoundError
@@ -140,8 +141,8 @@ class FirebaseGetters:
             return NothingFoundError
 
     @staticmethod
-    async def get_name(sender_id: str) -> str | Type[NothingFoundError]:
-        doc: DocumentSnapshot = await firestore.collection(u"names").document(sender_id).get()
+    async def get_name(sender_id: str) -> str | typing.Type[NothingFoundError]:
+        doc: DocumentSnapshot = await firestore.collection("names").document(sender_id).get()
         try:
             if not doc.exists:
                 return NothingFoundError
@@ -150,8 +151,8 @@ class FirebaseGetters:
             return NothingFoundError
 
     @staticmethod
-    async def get_surname(sender_id: str) -> str | Type[NothingFoundError]:
-        doc: DocumentSnapshot = await firestore.collection(u"names").document(sender_id).get()
+    async def get_surname(sender_id: str) -> str | typing.Type[NothingFoundError]:
+        doc: DocumentSnapshot = await firestore.collection("names").document(sender_id).get()
         try:
             if not doc.exists:
                 return NothingFoundError

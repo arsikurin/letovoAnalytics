@@ -1,5 +1,3 @@
-#!/usr/bin/python3.10
-
 class NothingFoundError(Exception):
     """
     Occurs when anything cannot by found in the database

@@ -1,11 +1,10 @@
 #!/usr/bin/python3.10
 
-import essential
-import aiorun
 import aiohttp
+import aiorun
 
-from config import settings
 from app.bot import handlers, client
+from config import settings
 
 session: aiohttp.ClientSession = ...
 

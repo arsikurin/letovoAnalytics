@@ -1,9 +1,13 @@
+import functools as ft
+import typing
+
 try:
-    from debug import *
+    from debug import include_secrets
+
+    include_secrets()
 except ImportError:
-    pass
+    include_secrets = typing.Any
 from pydantic import BaseSettings
-from functools import cache
 
 # import os
 # import sys
@@ -28,7 +32,7 @@ class AppSettings(BaseSettings):
     URL_LOGIN_LETOVO: str = "https://s-api.letovo.ru/api/login"
     GOOGLE_FS_KEY: str
     GOOGLE_API_KEY: str
-    TG_API_ID: str
+    TG_API_ID: int
     TG_API_HASH: str
     TG_BOT_TOKEN: str
     SQL_HOST: str
@@ -44,7 +48,7 @@ class AppSettings(BaseSettings):
         ...
 
 
-@cache
+@ft.cache
 def settings() -> AppSettings:
     """
     `settings.cache_clear()` if wanna dump cache

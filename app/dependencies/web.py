@@ -1,11 +1,12 @@
-import requests as rq
-import aiohttp
 import asyncio
 import datetime
+import typing
+from concurrent.futures import Future
 
-from typing import Type
-from concurrent.futures import Future, as_completed
+import aiohttp
+import requests as rq
 from requests_futures.sessions import FuturesSession
+
 from app.dependencies import NothingFoundError, UnauthorizedError, Firebase
 from config import settings
 
@@ -19,7 +20,7 @@ class Web:
     async def receive_token(
             session: aiohttp.ClientSession, sender_id: str | None = None, login: str | None = None,
             password: str | None = None
-    ) -> str | Type[aiohttp.ClientConnectionError] | Type[UnauthorizedError]:
+    ) -> str | typing.Type[aiohttp.ClientConnectionError] | typing.Type[UnauthorizedError]:
         """
         Requires either a sender_id or (password and login)
         """
@@ -54,8 +55,8 @@ class Web:
 
     @staticmethod
     async def receive_student_id(
-            s: FuturesSession, sender_id: str = None, token: str = None
-    ) -> int | Type[rq.ConnectionError] | Type[UnauthorizedError]:
+            session: aiohttp.ClientSession, sender_id: str = None, token: str = None
+    ) -> int | typing.Type[aiohttp.ClientConnectionError] | typing.Type[UnauthorizedError]:
         """
         Requires either a sender_id or token
         """
@@ -68,16 +69,18 @@ class Web:
             "Authorization": token
         }
         try:
-            me_future: Future = s.post("https://s-api.letovo.ru/api/me", headers=me_headers)
-            for me_futured in as_completed((me_future,)):
-                return int(me_futured.result().json()["data"]["user"]["student_id"])
-        except rq.ConnectionError:
-            return rq.ConnectionError
+            async with session.post("https://s-api.letovo.ru/api/me", headers=me_headers) as resp:
+                if resp.status != 200:
+                    return UnauthorizedError
+                resp = await resp.json()
+                return int(resp["data"]["user"]["student_id"])
+        except aiohttp.ClientConnectionError:
+            return aiohttp.ClientConnectionError
 
     @staticmethod
     async def receive_hw_n_schedule(
             session: aiohttp.ClientSession, sender_id: str
-    ) -> dict | Type[aiohttp.ClientConnectionError] | Type[UnauthorizedError]:
+    ) -> dict | typing.Type[aiohttp.ClientConnectionError] | typing.Type[UnauthorizedError]:
         student_id, token = await asyncio.gather(
             Firebase.get_student_id(sender_id=sender_id),
             Firebase.get_token(sender_id=sender_id)
@@ -101,18 +104,10 @@ class Web:
         except aiohttp.ClientConnectionError:
             return aiohttp.ClientConnectionError
 
-        # try:
-        #     hw_n_schedule_future: Future = session.get(url=hw_n_schedule_url, headers=hw_n_schedule_headers)
-        #     if hw_n_schedule_future.result().status_code != 200:
-        #         return UnauthorizedError
-        # except rq.ConnectionError:
-        #     return rq.ConnectionError
-        # return hw_n_schedule_future
-
     @staticmethod
     async def receive_marks(
             s: FuturesSession, sender_id: str
-    ) -> Future | Type[rq.ConnectionError] | Type[UnauthorizedError]:
+    ) -> Future | typing.Type[rq.ConnectionError] | typing.Type[UnauthorizedError]:
         student_id, token = await asyncio.gather(
             Firebase.get_student_id(sender_id=sender_id),
             Firebase.get_token(sender_id=sender_id)
