@@ -2,10 +2,11 @@
 
 import essential
 import asyncio
-import requests as rq
 import logging as log
 
+import requests as rq
 from requests_futures.sessions import FuturesSession
+
 from app.dependencies import Web, Database, Firebase, UnauthorizedError
 
 

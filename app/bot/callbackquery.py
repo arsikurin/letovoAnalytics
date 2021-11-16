@@ -1,10 +1,11 @@
 #!/usr/bin/python3.10
 
 import asyncio
-import requests as rq
-import aiohttp
 
-from telethon import Button, events
+import aiohttp
+import requests as rq
+from telethon import Button, events, TelegramClient
+
 from app.dependencies import Weekdays, MarkTypes, NothingFoundError, UnauthorizedError, Firebase, Web
 from app.schemas import MarksResponse, ScheduleResponse
 from config import settings
@@ -133,9 +134,9 @@ class CallbackQueryEventEditors:
 class CallbackQuerySenders:
     __slots__ = ("client", "session")
 
-    def __init__(self, c, s):
-        self.client = c
-        self.session = s
+    def __init__(self, client: TelegramClient, session: aiohttp.ClientSession):
+        self.client: TelegramClient = client
+        self.session: aiohttp.ClientSession = session
 
     async def send_greeting(self, sender):
         payload = f'{fn if (fn := sender.first_name) else ""} {ln if (ln := sender.last_name) else ""}'.strip()
@@ -294,6 +295,15 @@ class CallbackQuerySenders:
         :param specific_day: day number or -10 to send entire schedule
         """
         schedule_future = await Web.receive_hw_n_schedule(self.session, str(event.sender_id))
+        headers = {
+            "Accept": "application/json",
+            "sender-id": f"{event.sender_id}",
+        }
+        # async with self.session.get("http://127.0.0.1:8081/schedule/", headers=headers) as resp:
+        #     if resp.status != 200:
+        #         return UnauthorizedError
+        #     return await resp.json()
+        # schedule_future = rq.get("http://127.0.0.1:8081/schedule/", headers=headers)
         if schedule_future == UnauthorizedError:
             return await event.answer("[✘] Cannot get data from s.letovo.ru", alert=True)
 
@@ -310,7 +320,7 @@ class CallbackQuerySenders:
             return await event.answer("Congrats! It's Sunday, no lessons", alert=False)
 
         old_wd = 0
-        schedule_response = ScheduleResponse.parse_obj(schedule_future)
+        schedule_response = ScheduleResponse.parse_raw(schedule_future.content)
         if specific_day.value != -10:
             date = schedule_response.data[0].date.split("-")
             await self.client.send_message(

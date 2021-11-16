@@ -1,8 +1,8 @@
 #!/usr/bin/python3.10
 
 import requests as rq
-
 from telethon import types, events
+
 from app.dependencies import NothingFoundError, UnauthorizedError, Weekdays, Web
 
 

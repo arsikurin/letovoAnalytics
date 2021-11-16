@@ -34,7 +34,7 @@
             text-decoration: underline;
         }
 
-        .text__explain,
+        .text__detail,
         .text__error,
         .text__link,
         .text__fix {
@@ -58,7 +58,7 @@
             }
         }
 
-        .text__explain {
+        .text__detail {
             margin-top: 95px;
             height: 30px;
             line-height: 30px;
@@ -69,7 +69,7 @@
             margin-top: -35px;
             height: 30px;
             line-height: 30px;
-            font-size: 2rem;
+            font-size: 4rem;
         }
 
         .text__link {
@@ -83,7 +83,7 @@
 </head>
 <body>
 <div class="text__error" data-text="{{ error }}"></div>
-<div class="text__explain" data-text="{{ explain }}"></div>
+<div class="text__detail" data-text="{{ detail }}"></div>
 <div class="text__fix" data-text="{{ fix }}"></div>
 <div class="text__link"><a href="https://letovo-analytics.web.app/" data-text="click here to go home"></a></div>
 <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js'></script>
@@ -98,8 +98,8 @@
     let progress404 = 0;
     let total404 = $('.text__error').data('text').length;
 
-    let progressExplain = 0;
-    let totalExplain = $('.text__explain').data('text').length;
+    let progressDetail = 0;
+    let totalDetail = $('.text__detail').data('text').length;
 
     let progressFix = 0;
     let totalFix = $('.text__fix').data('text').length;
@@ -109,7 +109,7 @@
 
     let scrambleInterval = setInterval(function () {
         let string404 = $('.text__error').data('text');
-        let stringExplain = $('.text__explain').data('text');
+        let stringDetail = $('.text__detail').data('text');
         let stringFix = $('.text__fix').data('text');
         let stringLink = $('.text__link a').data('text');
 
@@ -119,9 +119,9 @@
             }
         }
 
-        //for (let i = 0; i < totalExplain; i++) {
-        //    if (i >= progressExplain) {
-        //        stringExplain = setCharAt(stringExplain, i, characters[Math.round(Math.random() * (characters.length - 1))]);
+        //for (let i = 0; i < totalDetail; i++) {
+        //    if (i >= progressDetail) {
+        //        stringDetail = setCharAt(stringDetail, i, characters[Math.round(Math.random() * (characters.length - 1))]);
         //    }
         //}
 
@@ -132,7 +132,7 @@
         }
 
         $('.text__error').text(string404);
-        $('.text__explain').text(stringExplain);
+        $('.text__detail').text(stringDetail);
         $('.text__fix').text(stringFix);
         $('.text__link a').text(stringLink);
     }, 1000 / 60);
@@ -141,8 +141,8 @@
         let revealInterval = setInterval(function () {
             if (progress404 < total404) {
                 progress404++;
-                //} else if (progressExplain < totalExplain) {
-                //    progressExplain++;
+                //} else if (progressDetail < totalDetail) {
+                //    progressDetail++;
             } else if (progressLink < totalLink) {
                 progressLink++;
             } else {
