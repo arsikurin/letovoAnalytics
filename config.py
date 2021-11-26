@@ -7,7 +7,7 @@ try:
     include_secrets()
 except ImportError:
     include_secrets = typing.Any
-from pydantic import BaseSettings
+from pydantic import BaseSettings, HttpUrl
 
 # import os
 # import sys
@@ -25,11 +25,11 @@ from pydantic import BaseSettings
 
 class AppSettings(BaseSettings):
     EPS: float = 2.220446049250313e-16
-    URL_MAIN_LETOVO: str = "https://s.letovo.ru"
-    URL_MAIN_API: str = "https://letovo-analytics-api.herokuapp.com/"
-    URL_MAIN_LOCAL: str = "https://letovo-analytics.web.app/"
-    URL_LOGIN_LOCAL: str = "https://letovo-analytics.web.app/login"
-    URL_LOGIN_LETOVO: str = "https://s-api.letovo.ru/api/login"
+    URL_MAIN_LETOVO: HttpUrl = "https://s.letovo.ru"
+    URL_MAIN_API: HttpUrl = "https://letovo-analytics-api.herokuapp.com/"
+    URL_MAIN_LOCAL: HttpUrl = "https://letovo-analytics.web.app/"
+    URL_LOGIN_LOCAL: HttpUrl = "https://letovo-analytics.web.app/login"
+    URL_LOGIN_LETOVO: HttpUrl = "https://s-api.letovo.ru/api/login"
     GOOGLE_FS_KEY: str
     GOOGLE_API_KEY: str
     TG_API_ID: int
@@ -42,6 +42,7 @@ class AppSettings(BaseSettings):
     SQL_PASSWORD: str
     debug: bool = True
     title: str = "Letovo Analytics Bot API"
+    favicon_path: str = "app/static/images/icons/api-icon.png"
 
     class Config:
         # validate_assignment

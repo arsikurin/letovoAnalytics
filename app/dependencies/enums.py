@@ -3,8 +3,8 @@ from enum import Enum
 
 
 class MarkTypes(Enum):
-    Recent = 1
-    Only_summative = 2
+    RECENT = 1
+    ONLY_SUMMATIVE = 2
     ALL = -10
 
 
@@ -15,8 +15,8 @@ class Weekdays(Enum):
     Thursday = 4
     Friday = 5
     Saturday = 6
-    Sunday = 7
-    Sunday2 = 0
+    SundayHW = 7
+    Sunday = 0
     ALL = -10
 
 

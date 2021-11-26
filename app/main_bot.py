@@ -1,8 +1,8 @@
 #!/usr/bin/python3.10
-
 import aiohttp
 import aiorun
 
+import essential  # noqa
 from app.bot import handlers, client
 from config import settings
 

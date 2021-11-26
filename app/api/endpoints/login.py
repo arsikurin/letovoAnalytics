@@ -1,18 +1,24 @@
-import asyncio
 import logging as log
 
 import aiohttp
-import requests as rq
-from fastapi import APIRouter, Request, HTTPException
+from fastapi import APIRouter, Request, HTTPException, BackgroundTasks
 from fastapi.responses import RedirectResponse  # , ORJSONResponse HTMLResponse,
 from firebase_admin import auth
-from requests_futures.sessions import FuturesSession
 
-from app.dependencies import Firebase, Web
+from app.dependencies import Firebase, Web, UnauthorizedError
 from config import settings
 
 router = APIRouter(prefix="/login")
 session: aiohttp.ClientSession = ...
+
+
+async def send_email(analytics_login: str):
+    try:
+        auth.create_user(email=f"{analytics_login}@student.letovo.ru")
+    except auth.EmailAlreadyExistsError:
+        pass
+    await Firebase.send_email(email=f"{analytics_login}@student.letovo.ru")
+    return True
 
 
 @router.on_event("startup")
@@ -27,42 +33,70 @@ async def on_shutdown():
 
 
 @router.post("/")
-async def login_api(request: Request):
+async def login_api(request: Request, bg: BackgroundTasks):
     try:
         request_data = await request.form()
-        analytics_login = request_data.get("login")
-        analytics_password = request_data.get("password")
-        sender_id = request_data.get("chat_id")
+
+        analytics_login = request_data["login"]
+        analytics_password = request_data["password"]
+        sender_id = request_data["sender_id"]
     except KeyError as err:
-        raise HTTPException(status_code=422) from err
+        raise HTTPException(
+            detail="Missing some fields in the request data",
+            headers={"fix": "You have to supply login & password & sender_id"},
+            status_code=400
+        ) from err
 
     login_data = {
         "login": analytics_login,
         "password": analytics_password
     }
     try:
-        if not rq.post(url=settings().URL_LOGIN_LETOVO, data=login_data).status_code == 200:
-            raise HTTPException(status_code=401)
-    except rq.ConnectionError as err:
-        raise HTTPException(status_code=502, detail="s.letovo.ru might not responding") from err
+        async with session.post(url=settings().URL_LOGIN_LETOVO, data=login_data) as resp:
+            if resp.status != 200:
+                raise HTTPException(
+                    status_code=401, detail="Possibly wrong credentials provided or your account is blocked",
+                    headers={"fix": "In case your account is blocked, contact Letovo Helpdesk"}
+                )
+    except aiohttp.ClientConnectionError as err:
+        raise HTTPException(
+            status_code=502, detail="s.letovo.ru might not responding",
+            headers={"fix": ""}
+        ) from err
+
     try:
-        # with FuturesSession() as session:
         token = await Web.receive_token(session=session, login=analytics_login, password=analytics_password)
-        if token == rq.ConnectionError:
-            raise HTTPException(status_code=502, detail="s.letovo.ru might not responding")
-        try:
-            auth.create_user(email=f"{analytics_login}@student.letovo.ru")
-        except auth.EmailAlreadyExistsError:
-            pass
-        await asyncio.gather(
-            Firebase.update_data(
-                token=token, student_id=await Web.receive_student_id(session=session, token=token),
-                analytics_login=analytics_login, analytics_password=analytics_password, sender_id=sender_id,
-                lang="en"
-            ),
-            Firebase.send_email(email=f"{analytics_login}@student.letovo.ru")
-        )
-        return RedirectResponse(settings().URL_MAIN_LOCAL, status_code=302)
-    except Exception as err:
+    except UnauthorizedError as err:
         log.error(err)
-        raise HTTPException(status_code=400) from err
+        raise HTTPException(
+            status_code=400, detail="Cannot get data from s.letovo.ru",
+            headers={"fix": ""}
+        )
+    except aiohttp.ClientConnectionError:
+        raise HTTPException(
+            status_code=502, detail="s.letovo.ru might not responding",
+            headers={"fix": ""}
+        )
+
+    try:
+        student_id = await Web.receive_student_id(session=session, token=token)
+    except UnauthorizedError as err:
+        log.error(err)
+        raise HTTPException(
+            status_code=400, detail="Cannot get data from s.letovo.ru",
+            headers={"fix": ""}
+        )
+    except aiohttp.ClientConnectionError as err:
+        log.error(err)
+        raise HTTPException(
+            status_code=502, detail="Cannot establish connection to s.letovo.ru",
+            headers={"fix": ""}
+        )
+
+    await Firebase.update_data(
+        token=token, student_id=student_id,
+        analytics_login=analytics_login, analytics_password=analytics_password, sender_id=sender_id,
+        lang="en"
+    )
+    bg.add_task(send_email, analytics_login)
+    return RedirectResponse(settings().URL_MAIN_LOCAL, status_code=302)
