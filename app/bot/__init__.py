@@ -6,4 +6,6 @@ from .inlinequery import InlineQuery
 
 __all__ = ("CallbackQuery", "InlineQuery", "client")
 
-client = TelegramClient("letovoAnalytics", api_id=settings().TG_API_ID, api_hash=settings().TG_API_HASH)
+client = TelegramClient(
+    session="letovoAnalytics", api_id=settings().TG_API_ID, api_hash=settings().TG_API_HASH
+)

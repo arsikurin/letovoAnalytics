@@ -1,5 +1,6 @@
 import typing
 
+import aiohttp
 import firebase_admin
 import requests as rq
 import yaml
@@ -176,5 +177,9 @@ class Firebase(FirebaseGetters, FirebaseSetters):
             "content-type": "application/json; charset=UTF-8"
         }
         data = f'{{"requestType": "PASSWORD_RESET", "email": "{email}"}}'
-        request_object = rq.post(api_url, headers=headers, data=data)
-        return request_object.json()
+
+        async with aiohttp.ClientSession() as session:
+            async with session.post(url=api_url, headers=headers, data=data) as resp:
+                return await resp.json()
+        # request_object = rq.post(api_url, headers=headers, data=data)
+        # return request_object.json()

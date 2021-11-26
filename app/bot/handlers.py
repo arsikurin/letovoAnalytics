@@ -188,10 +188,10 @@ async def include_handlers(session: aiohttp.ClientSession):
             case b"all_marks":
                 await send_marks(specific=MarkTypes.ALL)
             case b"summative_marks":
-                await send_marks(specific=MarkTypes.Only_summative)
+                await send_marks(specific=MarkTypes.ONLY_SUMMATIVE)
             case b"recent_marks":
                 await event.answer("Under development")
-                # await send_marks(specific=MarkTypes.Recent)
+                # await send_marks(specific=MarkTypes.RECENT)
         await db.increase_marks_counter(sender_id=sender_id)
         raise events.StopPropagation
 

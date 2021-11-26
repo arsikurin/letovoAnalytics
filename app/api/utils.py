@@ -1,12 +1,12 @@
 import logging as log
 from asyncio import iscoroutinefunction
-from asyncio.coroutines import _is_coroutine
+from asyncio.coroutines import _is_coroutine  # noqa
 from typing import Callable, TypeVar
 
-from fastapi import FastAPI, Header, HTTPException, Request
-# from fastapi.exceptions import StarletteHTTPException
-# from fastapi.responses import ORJSONResponse
+from fastapi import FastAPI, Header, Request
 from fastapi.dependencies.utils import solve_dependencies
+from fastapi.exceptions import HTTPException
+from fastapi.responses import ORJSONResponse
 from fastapi.routing import get_dependant, run_endpoint_function
 
 T = TypeVar("T")
@@ -25,10 +25,11 @@ async def get(app: FastAPI, func: Callable[..., T], request: Request = None) -> 
     values, errors, *_ = await solve_dependencies(
         request=request, dependant=dependant, dependency_overrides_provider=app,
     )
+
     if errors:
         for err in errors:
             log.error(err)
-    assert not errors
+        return ORJSONResponse({"code": 400, "status": "error", "detail": f"{errors}"}, status_code=400)
 
     return await run_endpoint_function(
         dependant=dependant, values=values, is_coroutine=iscoroutinefunction(func)
@@ -44,7 +45,8 @@ class AcceptContent:
             _is_coroutine  # trick fastAPI into thinking this class is an async endpoint
         )
 
-    async def __call__(self, request: Request, accept=Header(...)):
+    async def __call__(self, request: Request, accept=Header(...)):  # noqa
+        """as API endpoint"""
         for accept_content in accept.split(","):
             route = self.routes.get(accept_content, None)
             if route is not None:

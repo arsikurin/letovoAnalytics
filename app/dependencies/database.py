@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 import logging as log
+import typing
 
 import psycopg
 
+from app.schemas import AnalyticsResponse
 from config import settings
 
 
+@typing.final
 class Database:
     """
     Class for working with relational DB
@@ -18,6 +21,7 @@ class Database:
 
     @staticmethod
     async def create() -> Database:
+        """Factory"""
         self = Database()
         self.connection = await Database._connect()
         # self.connection = await psycopg.AsyncConnection.connect(
@@ -32,7 +36,7 @@ class Database:
             password=settings().SQL_PASSWORD, sslmode="require"
         )
 
-    async def get_users(self) -> list:
+    async def get_users(self) -> list[tuple[str]]:
         try:
             cursor = await self.connection.execute(
                 "SELECT sender_id FROM users"
@@ -41,32 +45,44 @@ class Database:
         except psycopg.OperationalError as err:
             log.error(err)
             if err == "the connection is lost":
+                log.info(f"Trying to fix `{err}` Error!")
+                await self.connection.close()
                 self.connection = await self._connect()
                 await self.get_users()
 
-    async def get_analytics(self, sender_id: str) -> list:
+    async def get_analytics(self, sender_id: str) -> AnalyticsResponse:
         try:
             cursor = await self.connection.execute(
                 "SELECT * FROM users WHERE sender_id = %s",
                 (sender_id,)
             )
-            return await cursor.fetchone()
+            resp = await cursor.fetchone()
+            return AnalyticsResponse.parse_obj({
+                "sender_id": resp[0], "message_id": resp[1], "schedule_counter": resp[2], "homework_counter": resp[3],
+                "marks_counter": resp[4], "holidays_counter": resp[5],
+                "clear_counter": resp[6], "options_counter": resp[7], "help_counter": resp[8],
+                "about_counter": resp[9], "inline_counter": resp[10]
+            })
         except psycopg.OperationalError as err:
             log.error(err)
             if err == "the connection is lost":
+                log.info(f"Trying to fix `{err}` Error!")
+                await self.connection.close()
                 self.connection = await self._connect()
                 await self.get_analytics(sender_id)
 
-    async def is_inited(self, sender_id: str) -> str:
+    async def is_inited(self, sender_id: str) -> bool:
         try:
             cursor = await self.connection.execute(
                 "SELECT sender_id FROM users WHERE sender_id = %s",
                 (sender_id,)
             )
-            return await cursor.fetchone()
+            return bool(await cursor.fetchone())
         except psycopg.OperationalError as err:
             log.error(err)
             if err == "the connection is lost":
+                log.info(f"Trying to fix `{err}` Error!")
+                await self.connection.close()
                 self.connection = await self._connect()
                 await self.is_inited(sender_id)
 
@@ -83,13 +99,15 @@ class Database:
         except psycopg.OperationalError as err:
             log.error(err)
             if err == "the connection is lost":
+                log.info(f"Trying to fix `{err}` Error!")
+                await self.connection.close()
                 self.connection = await Database._connect()
                 await self.init_user(sender_id)
 
     async def reset_analytics(self):
         try:
             await self.connection.execute(
-                "UPDATE users SET "
+                "UPDATE users SET "  # noqa
                 "schedule_counter = %s, homework_counter = %s, marks_counter = %s, holidays_counter = %s, "
                 "clear_counter = %s, options_counter = %s, help_counter = %s, about_counter = %s, inline_counter = %s",
                 (0, 0, 0, 0, 0, 0, 0, 0, 0)
@@ -98,57 +116,10 @@ class Database:
         except psycopg.OperationalError as err:
             log.error(err)
             if err == "the connection is lost":
+                log.info(f"Trying to fix `{err}` Error!")
+                await self.connection.close()
                 self.connection = await Database._connect()
                 await self.reset_analytics()
-
-    async def get_schedule_counter(self, sender_id: str) -> int:
-        cursor = await self.connection.execute(
-            "SELECT schedule_counter FROM users WHERE sender_id = %s",
-            (sender_id,)
-        )
-        return (await cursor.fetchone())[0]
-
-    async def get_homework_counter(self, sender_id: str) -> int:
-        cursor = await self.connection.execute(
-            "SELECT homework_counter FROM users WHERE sender_id = %s",
-            (sender_id,)
-        )
-        return (await cursor.fetchone())[0]
-
-    async def get_marks_counter(self, sender_id: str) -> int:
-        cursor = await self.connection.execute(
-            "SELECT marks_counter FROM users WHERE sender_id = %s",
-            (sender_id,)
-        )
-        return (await cursor.fetchone())[0]
-
-    async def get_holidays_counter(self, sender_id: str) -> int:
-        cursor = await self.connection.execute(
-            "SELECT holidays_counter FROM users WHERE sender_id = %s",
-            (sender_id,)
-        )
-        return (await cursor.fetchone())[0]
-
-    async def get_options_counter(self, sender_id: str) -> int:
-        cursor = await self.connection.execute(
-            "SELECT options_counter FROM users WHERE sender_id = %s",
-            (sender_id,)
-        )
-        return (await cursor.fetchone())[0]
-
-    async def get_help_counter(self, sender_id: str) -> int:
-        cursor = await self.connection.execute(
-            "SELECT help_counter FROM users WHERE sender_id = %s",
-            (sender_id,)
-        )
-        return (await cursor.fetchone())[0]
-
-    async def get_inline_counter(self, sender_id: str) -> int:
-        cursor = await self.connection.execute(
-            "SELECT inline_counter FROM users WHERE sender_id = %s",
-            (sender_id,)
-        )
-        return (await cursor.fetchone())[0]
 
     async def increase_schedule_counter(self, sender_id: str):
         try:
@@ -160,6 +131,8 @@ class Database:
         except psycopg.OperationalError as err:
             log.error(err)
             if err == "the connection is lost":
+                log.info(f"Trying to fix `{err}` Error!")
+                await self.connection.close()
                 self.connection = await Database._connect()
                 await self.increase_schedule_counter(sender_id)
 
@@ -173,6 +146,8 @@ class Database:
         except psycopg.OperationalError as err:
             log.error(err)
             if err == "the connection is lost":
+                log.info(f"Trying to fix `{err}` Error!")
+                await self.connection.close()
                 self.connection = await Database._connect()
                 await self.increase_homework_counter(sender_id)
 
@@ -186,6 +161,8 @@ class Database:
         except psycopg.OperationalError as err:
             log.error(err)
             if err == "the connection is lost":
+                log.info(f"Trying to fix `{err}` Error!")
+                await self.connection.close()
                 self.connection = await Database._connect()
                 await self.increase_marks_counter(sender_id)
 
@@ -199,6 +176,8 @@ class Database:
         except psycopg.OperationalError as err:
             log.error(err)
             if err == "the connection is lost":
+                log.info(f"Trying to fix `{err}` Error!")
+                await self.connection.close()
                 self.connection = await Database._connect()
                 await self.increase_holidays_counter(sender_id)
 
@@ -212,6 +191,8 @@ class Database:
         except psycopg.OperationalError as err:
             log.error(err)
             if err == "the connection is lost":
+                log.info(f"Trying to fix `{err}` Error!")
+                await self.connection.close()
                 self.connection = await Database._connect()
                 await self.increase_options_counter(sender_id)
 
@@ -225,20 +206,30 @@ class Database:
         except psycopg.OperationalError as err:
             log.error(err)
             if err == "the connection is lost":
+                log.info(f"Trying to fix `{err}` Error!")
+                await self.connection.close()
                 self.connection = await Database._connect()
                 await self.increase_help_counter(sender_id)
 
     async def increase_inline_counter(self, sender_id: str):
-        await self.connection.execute(
-            "UPDATE users SET inline_counter = inline_counter + 1 WHERE sender_id = %s",
-            (sender_id,)
-        )
-        await self.connection.commit()
+        try:
+            await self.connection.execute(
+                "UPDATE users SET inline_counter = inline_counter + 1 WHERE sender_id = %s",
+                (sender_id,)
+            )
+            await self.connection.commit()
+        except psycopg.OperationalError as err:
+            log.error(err)
+            if err == "the connection is lost":
+                log.info(f"Trying to fix `{err}` Error!")
+                await self.connection.close()
+                self.connection = await Database._connect()
+                await self.increase_inline_counter(sender_id)
 
-    async def crate_table(self):
+    async def create_table(self):
         await self.connection.execute(
             "CREATE TABLE users ("
-            "sender_id VARCHAR(255) PRIMARY KEY,"
+            "sender_id VARCHAR(255) PRIMARY KEY,"  # TODO change to integer
             "message_id INTEGER,"
             "schedule_counter INTEGER,"
             "homework_counter INTEGER,"
@@ -259,9 +250,9 @@ class Database:
         await self.connection.commit()
 
     @property
-    def connection(self):
+    def connection(self) -> psycopg.AsyncConnection[typing.Any]:
         return self._connection
 
     @connection.setter
-    def connection(self, value):
+    def connection(self, value: psycopg.AsyncConnection[typing.Any]):
         self._connection = value

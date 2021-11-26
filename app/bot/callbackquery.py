@@ -3,11 +3,10 @@
 import asyncio
 
 import aiohttp
-import requests as rq
 from telethon import Button, events, TelegramClient
 
 from app.dependencies import Weekdays, MarkTypes, NothingFoundError, UnauthorizedError, Firebase, Web
-from app.schemas import MarksResponse, ScheduleResponse
+from app.schemas import MarksResponse, ScheduleResponse, HomeworkResponse
 from config import settings
 
 
@@ -139,10 +138,10 @@ class CallbackQuerySenders:
         self.session: aiohttp.ClientSession = session
 
     async def send_greeting(self, sender):
-        payload = f'{fn if (fn := sender.first_name) else ""} {ln if (ln := sender.last_name) else ""}'.strip()
+        payload = f'{fn if (fn := sender.first_name) else ""} {ln if (ln := sender.last_name) else ""}'.strip()  # NOSONAR
         await self.client.send_message(
             entity=sender,
-            message=f'Greetings, **{payload}**!',
+            message=f"Greetings, **{payload}**!",
             parse_mode="md",
             buttons=[
                 [
@@ -171,17 +170,22 @@ class CallbackQuerySenders:
                  "holidays_counter", "clear_counter", "options_counter", "help_counter", "about_counter",
                  "inline_counter")
             resp = await db.get_analytics(user[0])
-            if not any((resp[2], resp[3], resp[4], resp[5], resp[7], resp[8])):
+            if not any((resp.schedule_counter, resp.homework_counter, resp.marks_counter, resp.holidays_counter,
+                        resp.options_counter, resp.help_counter, resp.about_counter)):
                 continue
-            name = await Firebase.get_name(resp[0])
-            surname = await Firebase.get_surname(resp[0])
+
+            name, surname = await asyncio.gather(
+                Firebase.get_name(resp.sender_id),
+                Firebase.get_surname(resp.sender_id)
+            )
             name = name if name is not NothingFoundError else ""
             surname = surname if surname is not NothingFoundError else ""
             await self.client.send_message(
                 entity=sender,
-                message=f"ID: {resp[0]}\nName: {name} {surname}\nSchedule: {resp[2]}\nHomework {resp[3]}\n"
-                        f"Marks: {resp[4]}\nHolidays: {resp[5]}\nOptions: {resp[7]}\n"
-                        f"Help: {resp[8]}\nAbout: {resp[9]}",
+                message=f"ID: {resp.sender_id}\nName: {name} {surname}\nSchedule: {resp.schedule_counter}\n"
+                        f"Homework {resp.homework_counter}\nMarks: {resp.marks_counter}\n"
+                        f"Holidays: {resp.holidays_counter}\nOptions: {resp.options_counter}\n"
+                        f"Help: {resp.help_counter}\nAbout: {resp.about_counter}",
                 parse_mode="md"
             )
 
@@ -294,33 +298,21 @@ class CallbackQuerySenders:
         :param event: a return object of CallbackQuery
         :param specific_day: day number or -10 to send entire schedule
         """
-        schedule_future = await Web.receive_hw_n_schedule(self.session, str(event.sender_id))
-        headers = {
-            "Accept": "application/json",
-            "sender-id": f"{event.sender_id}",
-        }
-        # async with self.session.get("http://127.0.0.1:8081/schedule/", headers=headers) as resp:
-        #     if resp.status != 200:
-        #         return UnauthorizedError
-        #     return await resp.json()
-        # schedule_future = rq.get("http://127.0.0.1:8081/schedule/", headers=headers)
-        if schedule_future == UnauthorizedError:
-            return await event.answer("[✘] Cannot get data from s.letovo.ru", alert=True)
-
-        if schedule_future == NothingFoundError:
-            return await event.answer(
-                "[✘] Nothing found in database for this user.\nPlease enter /start and register",
-                alert=True
-            )
-
-        if schedule_future == aiohttp.ClientConnectionError:
-            return await event.answer("[✘] Cannot establish connection to s.letovo.ru", alert=True)
-
-        if specific_day == Weekdays.Sunday2:
+        if specific_day == Weekdays.Sunday:
             return await event.answer("Congrats! It's Sunday, no lessons", alert=False)
 
+        try:
+            schedule_resp = await Web.receive_hw_n_schedule(self.session, str(event.sender_id))
+        except UnauthorizedError as err:
+            return await event.answer(f"[✘] {err}", alert=True)
+        except NothingFoundError as err:
+            # "[✘] Nothing found in database for this user.\nPlease enter /start and register"
+            return await event.answer(f"[✘] {err}", alert=True)
+        except aiohttp.ClientConnectionError as err:
+            return await event.answer(f"[✘] {err}", alert=True)
+
         old_wd = 0
-        schedule_response = ScheduleResponse.parse_raw(schedule_future.content)
+        schedule_response = ScheduleResponse.parse_raw(schedule_resp)
         if specific_day.value != -10:
             date = schedule_response.data[0].date.split("-")
             await self.client.send_message(
@@ -374,48 +366,47 @@ class CallbackQuerySenders:
         :param event: a return object of CallbackQuery
         :param specific_day: day number or -10 to send all homework
         """
-        homework_future = await Web.receive_hw_n_schedule(self.session, str(event.sender_id))
-        if specific_day == Weekdays.Sunday:
+
+        if specific_day == Weekdays.SundayHW:
             return await event.answer("Congrats! Tomorrow's Sunday, no hw", alert=False)
 
-        if homework_future == UnauthorizedError:
-            return await event.answer("[✘] Cannot get data from s.letovo.ru", alert=True)
+        try:
+            homework_resp = await Web.receive_hw_n_schedule(self.session, str(event.sender_id))
+        except UnauthorizedError as err:
+            return await event.answer(f"[✘] {err}", alert=True)
+        except NothingFoundError as err:
+            # "[✘] Nothing found in database for this user.\nPlease enter /start and register"
+            return await event.answer(f"[✘] {err}", alert=True)
+        except aiohttp.ClientConnectionError as err:
+            return await event.answer(f"[✘] {err}", alert=True)
 
-        if homework_future == NothingFoundError:
-            return await event.answer(
-                "[✘] Nothing found in database for this user.\nPlease type /start and register",
-                alert=True
-            )
-
-        if homework_future == aiohttp.ClientConnectionError:
-            return await event.answer("[✘] Cannot establish connection to s.letovo.ru", alert=True)
-
-        for day in homework_future["data"]:
-            if len(day["schedules"]) > 0 and specific_day.value in (int(day["period_num_day"]), -10):
-                ch = False
+        homework_response = HomeworkResponse.parse_raw(homework_resp)
+        for day in homework_response.data:
+            if len(day.schedules) > 0 and specific_day.value in (int(day.period_num_day), -10):
+                flag = False
                 payload = (
-                    f'{day["period_name"]}: <strong>{day["schedules"][0]["group"]["subject"]["subject_name_eng"]} '
-                    f'{day["schedules"][0]["group"]["group_name"]}</strong>\n'
-                    f'{Weekdays(int(day["period_num_day"])).name}, {day["date"]}\n'
+                    f'{day.period_name}: <strong>{day.schedules[0].group.subject.subject_name_eng} '
+                    f'{day.schedules[0].group.group_name}</strong>\n'
+                    f'{Weekdays(int(day.period_num_day)).name}, {day.date}\n'
                 )
-                if day["schedules"][0]["lessons"]:
-                    payload += f'{day["schedules"][0]["lessons"][0]["lesson_hw"]}\n'
+                if day.schedules[0].lessons[0].lesson_hw:
+                    payload += f'{day.schedules[0].lessons[0].lesson_hw}\n'
                 else:
                     payload += "<em>No homework</em>\n"
 
-                if day["schedules"][0]["lessons"]:
-                    ch = True
-                    payload += f'<a href="{day["schedules"][0]["lessons"][0]["lesson_url"]}">Attached link</a>\n'
+                if day.schedules[0].lessons[0].lesson_url:
+                    flag = True
+                    payload += f'<a href="{day.schedules[0].lessons[0].lesson_url}">Attached link</a>\n'
 
-                if day["schedules"][0]["lessons"]:
-                    ch = True
-                    payload += f'<a href="{day["schedules"][0]["lessons"][0]["lesson_hw_url"]}">Attached hw link</a>\n'
+                if day.schedules[0].lessons[0].lesson_hw_url:
+                    flag = True
+                    payload += f'<a href="{day.schedules[0].lessons[0].lesson_hw_url}">Attached hw link</a>\n'
 
-                if not ch:
+                if not flag:
                     payload += "<em>No links attached</em>\n"
 
-                if day["schedules"][0]["lessons"]:
-                    payload += f'{day["schedules"][0]["lessons"][0]["lesson_thema"]}\n'
+                if day.schedules[0].lessons[0].lesson_topic:
+                    payload += f'{day.schedules[0].lessons[0].lesson_topic}\n'
                 else:
                     payload += "<em>No topic</em>\n"
 
@@ -423,7 +414,8 @@ class CallbackQuerySenders:
                     entity=await event.get_sender(),
                     message=payload,
                     parse_mode="html",
-                    silent=True
+                    silent=True,
+                    link_preview=False
                 )
         await event.answer()
 
@@ -436,23 +428,21 @@ class CallbackQuerySenders:
         :param event: a return object of CallbackQuery
         :param specific: all, sum, recent
         """
-        marks_future = await Web.receive_marks(self.session, str(event.sender_id))
-        if marks_future == UnauthorizedError:
-            return await event.answer("[✘] Cannot get data from s.letovo.ru", alert=True)
 
-        if marks_future == NothingFoundError:
-            return await event.answer(
-                "[✘] Nothing found in database for this user.\nPlease enter /start and register",
-                alert=True
-            )
-
-        if marks_future == rq.ConnectionError:
-            return await event.answer("[✘] Cannot establish connection to s.letovo.ru", alert=True)
+        try:
+            marks_resp = await Web.receive_marks(self.session, str(event.sender_id))
+        except UnauthorizedError as err:
+            return await event.answer(f"[✘] {err}", alert=True)
+        except NothingFoundError as err:
+            # "[✘] Nothing found in database for this user.\nPlease enter /start and register"
+            return await event.answer(f"[✘] {err}", alert=True)
+        except aiohttp.ClientConnectionError as err:
+            return await event.answer(f"[✘] {err}", alert=True)
 
         # TODO recent marks
-        marks_response = MarksResponse.parse_obj(marks_future.result().json())
+        marks_response = MarksResponse.parse_raw(marks_resp)
         for subject in marks_response.data:
-            if specific == MarkTypes.Only_summative and subject.summative_list:
+            if specific == MarkTypes.ONLY_SUMMATIVE and subject.summative_list:
                 payload = f"**{subject.group.subject.subject_name_eng}**\n"
 
                 marks = [(mark.mark_value, mark.mark_criterion) for mark in subject.summative_list]
@@ -558,13 +548,14 @@ class CallbackQuerySenders:
                         mark_d_avg = round(mark_d_avg)
                     else:
                         mark_d_avg = round(mark_d_avg, 1)
-                    payload += f" | __AVG:__ **{mark_a_avg}**A **{mark_b_avg}**B **{mark_c_avg}**C **{mark_d_avg}**D"
+                    payload += f" | __avg:__ **{mark_a_avg}**A **{mark_b_avg}**B **{mark_c_avg}**C **{mark_d_avg}**D"
                 if subject.summative_list or subject.formative_list:
                     await self.client.send_message(
                         entity=await event.get_sender(),
                         message=payload,
                         parse_mode="md",
-                        silent=True
+                        silent=True,
+                        link_preview=False
                     )
         await event.answer()
 

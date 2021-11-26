@@ -13,7 +13,7 @@ PROJECT_ROOT = os.path.abspath(os.path.join(
 sys.path.append(PROJECT_ROOT)
 
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
-from config import settings
+from config import settings  # noqa
 
 # start_time = time.perf_counter()
 # datetime.timedelta(seconds=time.perf_counter() - start_time)
@@ -34,3 +34,5 @@ else:
     )
     log.getLogger("telethon.network.mtprotosender").disabled = True
     log.getLogger("telethon.extensions.messagepacker").disabled = True
+    log.getLogger("urllib3.connectionpool").disabled = True
+    log.getLogger("multipart.multipart").disabled = True

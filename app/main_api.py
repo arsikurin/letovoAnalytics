@@ -1,15 +1,15 @@
 #!/usr/bin/python3.10
 
-import essential
 import aiohttp
 from fastapi import FastAPI
 from fastapi.exceptions import HTTPException, StarletteHTTPException, ValidationError
 from fastapi.requests import Request
-from fastapi.responses import ORJSONResponse, HTMLResponse
+from fastapi.responses import ORJSONResponse, HTMLResponse  # FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from app.api.endpoints import login_router, schedule_router
+import essential  # noqa
+# from app.api.endpoints import login_router, schedule_router, marks_router
 from config import settings
 
 session: aiohttp.ClientSession = ...
@@ -19,8 +19,9 @@ app = FastAPI(
 
 app.mount("/static", StaticFiles(directory="./app/static"), name="static")
 templates = Jinja2Templates(directory="./app/templates")
-app.include_router(login_router, tags=["login"])
-app.include_router(schedule_router, tags=["schedule"])
+# app.include_router(login_router, tags=["login"])
+# app.include_router(schedule_router, tags=["schedule"])
+# app.include_router(marks_router, tags=["marks"])
 
 
 @app.on_event("startup")
@@ -32,6 +33,11 @@ async def on_startup():
 @app.on_event("shutdown")
 async def on_shutdown():
     await session.close()
+
+
+# @app.get("/favicon.ico", include_in_schema=False, response_class=FileResponse)
+# async def favicon():
+#     return FileResponse(settings().favicon_path)
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -80,7 +86,7 @@ async def bad_gateway(request: Request, error: HTTPException):
 
 
 @app.exception_handler(500)
-async def bad_gateway(request: Request, error: HTTPException):
+async def server_error(request: Request, error: HTTPException):
     if isinstance(error, HTTPException):
         if error.headers is None:
             error.headers = {}
@@ -93,22 +99,19 @@ async def bad_gateway(request: Request, error: HTTPException):
             return templates.TemplateResponse(
                 "pageError.html",
                 context={"request": request,
-                         "error": "500 Internal Server Error",
-                         "detail": f"[{error.detail}]",
-                         "fix": f"{error.headers.get('fix')}"},
+                         "error": "500 Internal Server Error"},
                 status_code=500
             )
     if request.headers.get("accept") == "application/json":
         return ORJSONResponse(
-            {"code": 500, "status": "error", "detail": error.__str__()},
+            {"code": 500, "status": "error", "detail": error.__repr__(), "doc": error.__doc__},
             status_code=500
         )
     else:
         return templates.TemplateResponse(
             "pageError.html",
             context={"request": request,
-                     "error": "500 Internal Server Error",
-                     "detail": f"[{error.__str__()}]"},
+                     "error": "500 Internal Server Error"},
             status_code=500
         )
 
@@ -119,7 +122,7 @@ async def unprocessable_entity(request: Request, error: HTTPException):
         error.headers = {}
     if request.headers.get("accept") == "application/json":
         return ORJSONResponse(
-            {"code": error.status_code, "status": "error", "detail": error.detail},
+            {"code": error.status_code, "status": "error", "detail": error.detail, "fix": error.headers.get("fix")},
             status_code=error.status_code
         )
     else:
@@ -147,22 +150,34 @@ async def im_a_teapot(request: Request, error: HTTPException):
 
 @app.exception_handler(404)
 async def not_found(request: Request, error: HTTPException):
-    if error.headers is None:
-        error.headers = {}
     if request.headers.get("accept") == "application/json":
-        return ORJSONResponse(
-            {"code": error.status_code, "status": "error", "detail": error.detail, "fix": error.headers.get("fix")},
-            status_code=error.status_code
-        )
+        if hasattr(error, "headers"):
+            return ORJSONResponse(
+                {"code": 404, "status": "error", "detail": error.detail, "fix": error.headers.get("fix")},
+                status_code=404
+            )
+        else:
+            return ORJSONResponse(
+                {"code": 404, "status": "error", "detail": error.detail},
+                status_code=404
+            )
     else:
-        return templates.TemplateResponse(
-            "pageError.html",
-            context={"request": request,
-                     "error": "404 Not Found",
-                     "detail": f"[{error.detail}]",  # [The page you are looking for does not exist]
-                     "fix": f"{error.headers.get('fix')}"},
-            status_code=404
-        )
+        if error.detail != "Not Found":
+            return templates.TemplateResponse(
+                "pageError.html",
+                context={"request": request,
+                         "error": "404 Not Found",
+                         "detail": f"[{error.detail}]"},
+                status_code=404
+            )
+        else:
+            return templates.TemplateResponse(
+                "pageError.html",
+                context={"request": request,
+                         "error": "404 Not Found",
+                         "detail": "[The page you are looking for does not exist]"},
+                status_code=404
+            )
 
 
 @app.exception_handler(403)
@@ -225,3 +240,13 @@ async def bad_request(request: Request, error: HTTPException) -> templates.Templ
                      "fix": f"{error.headers.get('fix')}"},
             status_code=400
         )
+
+
+if __name__ == "__main__":
+    import uvicorn
+    import sys
+    import os
+
+    c = uvicorn.Config(app=app, port=int(sys.argv[1]), workers=os.cpu_count())
+    s = uvicorn.Server(config=c)
+    s.run()
