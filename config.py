@@ -9,18 +9,11 @@ except ImportError:
     include_secrets = typing.Any
 from pydantic import BaseSettings, HttpUrl
 
+
 # import os
 # import sys
 # fpath = os.path.join(os.path.dirname(__file__), 'utils')
 # sys.path.append(fpath)
-"""
- --loop [auto|asyncio|uvloop]    Event loop implementation.  [default: auto]
-  --http [auto|h11|httptools]     HTTP protocol implementation.  [default:
-                                  auto]
-  --ws [auto|none|websockets|wsproto]
-                                  WebSocket protocol implementation.
-
-"""
 
 
 class AppSettings(BaseSettings):

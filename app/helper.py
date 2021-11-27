@@ -17,15 +17,15 @@ async def main():
     await db.reset_analytics()
 
     log.info("Updating tokens in Firebase")
-    with FuturesSession() as session:  # TODO
-        for user in await Firebase.get_users():
+    async with aiohttp.ClientSession() as session:
+        async for user in await Firebase.get_users():
             log.info(user)
             try:
-                token = await Web.receive_token(session=session, sender_id=user)
+                token = await Web.receive_token(session=session, sender_id=user.id)
             except (NothingFoundError, UnauthorizedError, aiohttp.ClientConnectionError):
                 continue
 
-            await Firebase.update_data(sender_id=user, token=token)
+            await Firebase.update_data(sender_id=user.id, token=token)
 
 
 if __name__ == "__main__":

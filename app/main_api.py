@@ -19,6 +19,8 @@ app = FastAPI(
 
 app.mount("/static", StaticFiles(directory="./app/static"), name="static")
 templates = Jinja2Templates(directory="./app/templates")
+
+
 # app.include_router(login_router, tags=["login"])
 # app.include_router(schedule_router, tags=["schedule"])
 # app.include_router(marks_router, tags=["marks"])
@@ -245,8 +247,9 @@ async def bad_request(request: Request, error: HTTPException) -> templates.Templ
 if __name__ == "__main__":
     import uvicorn
     import sys
-    import os
 
-    c = uvicorn.Config(app=app, port=int(sys.argv[1]), workers=os.cpu_count())
-    s = uvicorn.Server(config=c)
-    s.run()
+    c = uvicorn.Config(
+        app=app, host="0.0.0.0", port=int(sys.argv[1]), workers=4, http="httptools", loop="uvloop",
+    )  # limit_concurrency
+
+    uvicorn.Server(config=c).run()

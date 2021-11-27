@@ -8,12 +8,9 @@ authors = ["arsikurin <arseny.kurin@gmail.com>"]
 python = "3.10.0"
 orjson = "^3.6.4"
 fastapi = "^0.70.0"
-uvicorn = "^0.15.0"
-psycopg = "^3.0.1"
 requests = "^2.26.0"
 requests-futures = "^1.0.0"
 firebase-admin = "^5.1.0"
-Telethon = "^1.23.0"
 colourlib = "^0.5.3"
 PyYAML = "^6.0"
 cryptg = "^0.2.post4"
@@ -24,9 +21,12 @@ uvloop = "^0.16.0"
 aiorun = "^2021.10.1"
 aiohttp = "^3.8.0"
 celery = "^5.2.1"
+uvicorn = {extras = ["standard"], version = "^0.15.0"}
+psycopg = {extras = ["binary"], version = "^3.0.4"}
+Telethon = "^1.23.0"
+pydantic = "^1.8.2"
 
 [tool.poetry.dev-dependencies]
-psycopg-binary = "^3.0.1"
 pylint = "^2.11.1"
 locust = "^2.5.0"
 

@@ -2,7 +2,6 @@ import typing
 
 import aiohttp
 import firebase_admin
-import requests as rq
 import yaml
 from firebase_admin import credentials
 from google.cloud.firestore_v1.async_client import AsyncClient, AsyncDocumentReference, DocumentSnapshot
@@ -94,12 +93,14 @@ class FirebaseGetters:
     @staticmethod
     async def is_inited(sender_id: str) -> bool:
         docs = firestore.collection("users").stream()
-        return sender_id in [doc.id async for doc in docs]
+        return sender_id in (doc.id async for doc in docs)
+        # return sender_id in [doc.id async for doc in docs]
 
     @staticmethod
-    async def get_users() -> list:
+    async def get_users() -> typing.AsyncIterator[DocumentSnapshot]:
         docs = firestore.collection("users").stream()
-        return [doc.id async for doc in docs]
+        return docs
+        # return [doc.id async for doc in docs]
 
     @staticmethod
     async def get_student_id(sender_id: str) -> int | typing.Type[NothingFoundError]:
@@ -181,5 +182,3 @@ class Firebase(FirebaseGetters, FirebaseSetters):
         async with aiohttp.ClientSession() as session:
             async with session.post(url=api_url, headers=headers, data=data) as resp:
                 return await resp.json()
-        # request_object = rq.post(api_url, headers=headers, data=data)
-        # return request_object.json()
