@@ -1,4 +1,5 @@
 #!/usr/bin/python3.10
+import typing
 
 import requests as rq
 from telethon import types, events
@@ -49,7 +50,7 @@ class InlineQuerySenders:
     def __init__(self, s):
         self.session = s
 
-    async def send_schedule(
+    async def send_schedule(  # TODO
             self, event: events.InlineQuery.Event, specific_day: int
     ):
         """
@@ -123,6 +124,7 @@ class InlineQuerySenders:
         )
 
 
+@typing.final
 class InlineQuery(InlineQueryEventEditors, InlineQuerySenders):
     """
     Class for working with inline query

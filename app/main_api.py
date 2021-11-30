@@ -9,7 +9,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 import essential  # noqa
-# from app.api.endpoints import login_router, schedule_router, marks_router
+from app.api.endpoints import login_router  # , schedule_router, marks_router
 from config import settings
 
 session: aiohttp.ClientSession = ...
@@ -21,7 +21,7 @@ app.mount("/static", StaticFiles(directory="./app/static"), name="static")
 templates = Jinja2Templates(directory="./app/templates")
 
 
-# app.include_router(login_router, tags=["login"])
+app.include_router(login_router, tags=["login"])
 # app.include_router(schedule_router, tags=["schedule"])
 # app.include_router(marks_router, tags=["marks"])
 

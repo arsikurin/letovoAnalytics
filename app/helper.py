@@ -4,8 +4,6 @@ import asyncio
 import logging as log
 
 import aiohttp
-import requests as rq
-from requests_futures.sessions import FuturesSession
 
 import essential  # noqa
 from app.dependencies import Web, Database, Firebase, UnauthorizedError, NothingFoundError
@@ -18,10 +16,11 @@ async def main():
 
     log.info("Updating tokens in Firebase")
     async with aiohttp.ClientSession() as session:
+        web = Web(session)
         async for user in await Firebase.get_users():
             log.info(user)
             try:
-                token = await Web.receive_token(session=session, sender_id=user.id)
+                token = await web.receive_token(sender_id=user.id)
             except (NothingFoundError, UnauthorizedError, aiohttp.ClientConnectionError):
                 continue
 
