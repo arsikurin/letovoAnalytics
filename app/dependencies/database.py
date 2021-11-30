@@ -4,6 +4,7 @@ import logging as log
 import typing
 
 import psycopg
+from psycopg.rows import class_row
 
 from app.schemas import AnalyticsResponse
 from config import settings
@@ -19,9 +20,19 @@ class Database:
     def __init__(self):
         self.connection: psycopg.AsyncConnection = ...
 
+    @property
+    def connection(self) -> psycopg.AsyncConnection[typing.Any]:
+        return self._connection
+
+    @connection.setter
+    def connection(self, value: psycopg.AsyncConnection[typing.Any]):
+        self._connection = value
+
     @staticmethod
     async def create() -> Database:
-        """Factory"""
+        """
+        Factory
+        """
         self = Database()
         self.connection = await Database._connect()
         # self.connection = await psycopg.AsyncConnection.connect(
@@ -31,9 +42,12 @@ class Database:
 
     @staticmethod
     async def _connect() -> psycopg.AsyncConnection:
+        """
+        Connect to Postgres
+        """
         return await psycopg.AsyncConnection.connect(
             host=settings().SQL_HOST, user=settings().SQL_USER, dbname=settings().SQL_DBNAME,
-            password=settings().SQL_PASSWORD, sslmode="require"
+            password=settings().SQL_PASSWORD, sslmode="require"  # , row_factory=class_row(AnalyticsResponse)
         )
 
     async def get_users(self) -> list[tuple[str]]:
@@ -56,13 +70,8 @@ class Database:
                 "SELECT * FROM users WHERE sender_id = %s",
                 (sender_id,)
             )
-            resp = await cursor.fetchone()
-            return AnalyticsResponse.parse_obj({
-                "sender_id": resp[0], "message_id": resp[1], "schedule_counter": resp[2], "homework_counter": resp[3],
-                "marks_counter": resp[4], "holidays_counter": resp[5],
-                "clear_counter": resp[6], "options_counter": resp[7], "help_counter": resp[8],
-                "about_counter": resp[9], "inline_counter": resp[10]
-            })
+            cursor.row_factory = class_row(AnalyticsResponse)
+            return await cursor.fetchone()
         except psycopg.OperationalError as err:
             log.error(err)
             if err == "the connection is lost":
@@ -248,11 +257,3 @@ class Database:
             "ALTER TABLE users ADD COLUMN schedule_counter INTEGER"
         )
         await self.connection.commit()
-
-    @property
-    def connection(self) -> psycopg.AsyncConnection[typing.Any]:
-        return self._connection
-
-    @connection.setter
-    def connection(self, value: psycopg.AsyncConnection[typing.Any]):
-        self._connection = value

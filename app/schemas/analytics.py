@@ -1,7 +1,8 @@
-from pydantic import BaseModel
+from dataclasses import dataclass
 
 
-class AnalyticsResponse(BaseModel):
+@dataclass(slots=True)
+class AnalyticsResponse:
     sender_id: str
     message_id: int
     schedule_counter: int

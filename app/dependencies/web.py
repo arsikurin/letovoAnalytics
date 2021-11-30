@@ -13,16 +13,33 @@ from config import settings
 @typing.final
 class Web:
     """
-    Class for working with web requests
+    Class for working with web API of s.letovo.ru
     """
+    __slots__ = ("_session",)
 
-    @staticmethod
+    def __init__(self, session):
+        self.session: aiohttp.ClientSession = session
+
+    @property
+    def session(self):
+        return self._session
+
+    @session.setter
+    def session(self, value):
+        self._session = value
+
     async def receive_token(
-            session: aiohttp.ClientSession, sender_id: str | None = None, login: str | None = None,
+            self, sender_id: str | None = None, login: str | None = None,
             password: str | None = None
     ) -> str:
         """
         Requires either a sender_id or (password and login)
+
+        :raise aiohttp.ClientConnectionError:
+        :raise UnauthorizedError:
+        :raise NothingFoundError:
+
+        :return: str
         """
         if None in (login, password):
             login, password = await asyncio.gather(
@@ -37,7 +54,7 @@ class Web:
             "password": password
         }
         try:
-            async with session.post(url=settings().URL_LOGIN_LETOVO, data=login_data) as resp:
+            async with self.session.post(url=settings().URL_LOGIN_LETOVO, data=login_data) as resp:
                 if resp.status != 200:
                     raise UnauthorizedError(f"Cannot get data from s.letovo.ru. Error {resp.status}")
                 resp_j = await resp.json(loads=orjson.loads)
@@ -45,9 +62,8 @@ class Web:
         except aiohttp.ClientConnectionError:
             raise aiohttp.ClientConnectionError("Cannot establish connection to s.letovo.ru")
 
-    @staticmethod
     async def receive_student_id(
-            session: aiohttp.ClientSession, sender_id: str = None, token: str = None
+            self, sender_id: str = None, token: str = None
     ) -> int:
         """
         Requires either a sender_id or token
@@ -67,7 +83,7 @@ class Web:
             "Authorization": token
         }
         try:
-            async with session.post(url="https://s-api.letovo.ru/api/me", headers=headers) as resp:
+            async with self.session.post(url="https://s-api.letovo.ru/api/me", headers=headers) as resp:
                 if resp.status != 200:
                     raise UnauthorizedError(f"Cannot get data from s.letovo.ru. Error {resp.status}")
 
@@ -76,9 +92,8 @@ class Web:
         except aiohttp.ClientConnectionError:
             raise aiohttp.ClientConnectionError("Cannot establish connection to s.letovo.ru")
 
-    @staticmethod
     async def receive_hw_n_schedule(
-            session: aiohttp.ClientSession, sender_id: str
+            self, sender_id: str
     ) -> bytes:
         """
         Receive homework & schedule
@@ -105,7 +120,7 @@ class Web:
         }
 
         try:
-            async with session.get(url=url, headers=headers) as resp:
+            async with self.session.get(url=url, headers=headers) as resp:
                 if resp.status != 200:
                     raise UnauthorizedError(f"Cannot get data from s.letovo.ru. Error {resp.status}")
                 return await resp.content.read()
@@ -114,9 +129,8 @@ class Web:
             log.error(err)
             raise aiohttp.ClientConnectionError("Cannot establish connection to s.letovo.ru")
 
-    @staticmethod
     async def receive_marks(
-            session: aiohttp.ClientSession, sender_id: str
+            self, sender_id: str
     ) -> bytes:
         """
         Receive marks
@@ -142,7 +156,7 @@ class Web:
         }
 
         try:
-            async with session.get(url=url, headers=headers) as resp:
+            async with self.session.get(url=url, headers=headers) as resp:
                 if resp.status != 200:
                     raise UnauthorizedError(f"Cannot get data from s.letovo.ru. Error {resp.status}")
                 # return await resp.json()

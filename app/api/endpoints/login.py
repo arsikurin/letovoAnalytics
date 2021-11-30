@@ -9,7 +9,7 @@ from app.dependencies import Firebase, Web, UnauthorizedError
 from config import settings
 
 router = APIRouter(prefix="/login")
-session: aiohttp.ClientSession = ...
+web: Web = ...
 
 
 async def send_email(analytics_login: str):
@@ -23,13 +23,13 @@ async def send_email(analytics_login: str):
 
 @router.on_event("startup")
 async def on_startup():
-    global session
-    session = aiohttp.ClientSession()
+    global web
+    web = Web(aiohttp.ClientSession())
 
 
 @router.on_event("shutdown")
 async def on_shutdown():
-    await session.close()
+    await web.session.close()
 
 
 @router.post("/")
@@ -52,7 +52,7 @@ async def login_api(request: Request, bg: BackgroundTasks):
         "password": analytics_password
     }
     try:
-        async with session.post(url=settings().URL_LOGIN_LETOVO, data=login_data) as resp:
+        async with web.session.post(url=settings().URL_LOGIN_LETOVO, data=login_data) as resp:
             if resp.status != 200:
                 raise HTTPException(
                     status_code=401, detail="Possibly wrong credentials provided or your account is blocked",
@@ -65,7 +65,7 @@ async def login_api(request: Request, bg: BackgroundTasks):
         ) from err
 
     try:
-        token = await Web.receive_token(session=session, login=analytics_login, password=analytics_password)
+        token = await web.receive_token(login=analytics_login, password=analytics_password)
     except UnauthorizedError as err:
         log.error(err)
         raise HTTPException(
@@ -79,7 +79,7 @@ async def login_api(request: Request, bg: BackgroundTasks):
         )
 
     try:
-        student_id = await Web.receive_student_id(session=session, token=token)
+        student_id = await web.receive_student_id(token=token)
     except UnauthorizedError as err:
         log.error(err)
         raise HTTPException(

@@ -1,9 +1,10 @@
 import asyncio
+import typing
 
 import aiohttp
 from telethon import Button, events, TelegramClient
 
-from app.dependencies import Weekdays, MarkTypes, NothingFoundError, UnauthorizedError, Firebase, Web
+from app.dependencies import Weekdays, MarkTypes, NothingFoundError, UnauthorizedError, Firebase, Web, Database
 from app.schemas import MarksResponse, ScheduleResponse, HomeworkResponse
 from config import settings
 
@@ -129,11 +130,27 @@ class CallbackQueryEventEditors:
 
 
 class CallbackQuerySenders:
-    __slots__ = ("client", "session")
+    __slots__ = ("_client", "__web")
 
     def __init__(self, client: TelegramClient, session: aiohttp.ClientSession):
         self.client: TelegramClient = client
-        self.session: aiohttp.ClientSession = session
+        self._web: Web = Web(session)
+
+    @property
+    def client(self) -> TelegramClient:
+        return self._client
+
+    @client.setter
+    def client(self, value: TelegramClient):
+        self._client = value
+
+    @property
+    def _web(self) -> Web:
+        return self.__web
+
+    @_web.setter
+    def _web(self, value: Web):
+        self.__web = value
 
     async def send_greeting(self, sender):
         payload = f'{fn if (fn := sender.first_name) else ""} {ln if (ln := sender.last_name) else ""}'.strip()  # NOSONAR
@@ -162,15 +179,13 @@ class CallbackQuerySenders:
             ]
         )
 
-    async def send_stats(self, sender, db):
+    async def send_stats(self, sender, db: Database):
         for user in await db.get_users():
-            _ = ("sender_id", "message_id", "schedule_counter", "homework_counter", "marks_counter",
-                 "holidays_counter", "clear_counter", "options_counter", "help_counter", "about_counter",
-                 "inline_counter")
             resp = await db.get_analytics(user[0])
-            if not any((resp.schedule_counter, resp.homework_counter, resp.marks_counter, resp.holidays_counter,
-                        resp.options_counter, resp.help_counter, resp.about_counter)):
-                continue
+            if not any((
+                    resp.schedule_counter, resp.homework_counter, resp.marks_counter, resp.holidays_counter,
+                    resp.options_counter, resp.help_counter, resp.about_counter
+            )): continue  # noqa
 
             name, surname = await asyncio.gather(
                 Firebase.get_name(resp.sender_id),
@@ -300,7 +315,7 @@ class CallbackQuerySenders:
             return await event.answer("Congrats! It's Sunday, no lessons", alert=False)
 
         try:
-            schedule_resp = await Web.receive_hw_n_schedule(self.session, str(event.sender_id))
+            schedule_resp = await self._web.receive_hw_n_schedule(str(event.sender_id))
         except UnauthorizedError as err:
             return await event.answer(f"[✘] {err}", alert=True)
         except NothingFoundError as err:
@@ -369,7 +384,7 @@ class CallbackQuerySenders:
             return await event.answer("Congrats! Tomorrow's Sunday, no hw", alert=False)
 
         try:
-            homework_resp = await Web.receive_hw_n_schedule(self.session, str(event.sender_id))
+            homework_resp = await self._web.receive_hw_n_schedule(str(event.sender_id))
         except UnauthorizedError as err:
             return await event.answer(f"[✘] {err}", alert=True)
         except NothingFoundError as err:
@@ -428,7 +443,7 @@ class CallbackQuerySenders:
         """
 
         try:
-            marks_resp = await Web.receive_marks(self.session, str(event.sender_id))
+            marks_resp = await self._web.receive_marks(str(event.sender_id))
         except UnauthorizedError as err:
             return await event.answer(f"[✘] {err}", alert=True)
         except NothingFoundError as err:
@@ -558,6 +573,7 @@ class CallbackQuerySenders:
         await event.answer()
 
 
+@typing.final
 class CallbackQuery(CallbackQueryEventEditors, CallbackQuerySenders):
     """
     Class for working with callback query

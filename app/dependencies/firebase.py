@@ -93,13 +93,11 @@ class FirebaseGetters:
     @staticmethod
     async def is_inited(sender_id: str) -> bool:
         docs = firestore.collection("users").stream()
-        return sender_id in (doc.id async for doc in docs)
-        # return sender_id in [doc.id async for doc in docs]
+        return sender_id in [doc.id async for doc in docs]
 
     @staticmethod
     async def get_users() -> typing.AsyncIterator[DocumentSnapshot]:
-        docs = firestore.collection("users").stream()
-        return docs
+        return firestore.collection("users").stream()
         # return [doc.id async for doc in docs]
 
     @staticmethod
@@ -163,6 +161,7 @@ class FirebaseGetters:
             return NothingFoundError
 
 
+@typing.final
 class Firebase(FirebaseGetters, FirebaseSetters):
     """
     Class for working with Google Firebase

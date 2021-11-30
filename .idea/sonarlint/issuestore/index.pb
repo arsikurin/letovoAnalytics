@@ -12,18 +12,10 @@ F
 app/schemas/.gitignore,8/8/88ce74f85589b62041a5372cc1959a251f89f34c
 L
 app/api/endpoints/.gitignore,9/7/9767dca58e8d28c9a6af8aac431699a6bb7d0a35
-I
-app/dependencies/enums.py,8/8/88aee371d24b5668f56f477281ff07926ee46000
-L
-app/dependencies/database.py,e/f/efd82d6b5893028ad00dca7d1540f837ac7f56e5
 J
 app/dependencies/errors.py,2/3/23cb45a7ed3c7410b0737d8fcf73c476f0fa392a
 G
 app/schemas/__init__.py,7/5/7501a9306d02b3a60f7536482442b11b2a950344
-H
-app/schemas/analytics.py,e/8/e85f9647059e0564be73961843e19c34744d7168
-J
-app/api/endpoints/login.py,5/f/5f23380c3ed4f43ac54ad5d9388e709171f1d7f8
 @
 app/essential.py,9/e/9e913b2e7e335ecf82b791bfc4924f020c7d8b81
 @
@@ -42,3 +34,19 @@ J
 app/api/endpoints/marks.py,f/d/fd845415776e3d6a2c74ba8364d6c63867afae25
 8
 debug.py,6/4/64048a6fc0a63a6690d6a2a235f2b7e2d1bd07a4
+M
+app/api/endpoints/schedule.py,e/0/e0286033dd6d1c7d36856a075a6d7da06a993a99
+8
+Procfile,b/c/bc3c68e880d1a01632bce79f69dd1387c7ba9c54
+>
+pyproject.toml,5/d/5d07e7d72637aa0d59c89d381fe6dc4cf46e2491
+;
+poetry.lock,0/0/0068a1506b061a8948c37d78b0dd5697211558d3
+=
+app/worker.py,d/2/d216086892a7b219636bede73a8b14a6d212e792
+9
+	config.py,1/a/1a1b9769344cb239f2e540e1e6ee1efa2d3034ea
+I
+app/dependencies/enums.py,8/8/88aee371d24b5668f56f477281ff07926ee46000
+I
+app/dependencies/utils.py,6/4/64aa3860a93bfe6dcd4e04b26e95503044aad6b2
