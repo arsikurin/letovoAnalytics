@@ -46,7 +46,7 @@ class Database:
         Connect to Postgres
         """
         return await psycopg.AsyncConnection.connect(
-            conninfo=settings().SQL_CREDS, sslmode="require"  # , row_factory=class_row(AnalyticsResponse)
+            conninfo=settings().DATABASE_URL, sslmode="require"  # , row_factory=class_row(AnalyticsResponse)
         )
 
     async def get_users(self) -> list[tuple[str]]:
