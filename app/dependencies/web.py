@@ -86,7 +86,6 @@ class Web:
             async with self.session.post(url="https://s-api.letovo.ru/api/me", headers=headers) as resp:
                 if resp.status != 200:
                     raise UnauthorizedError(f"Cannot get data from s.letovo.ru. Error {resp.status}")
-
                 resp_j = await resp.json(loads=orjson.loads)
                 return int(resp_j["data"]["user"]["student_id"])
         except aiohttp.ClientConnectionError:
@@ -124,7 +123,6 @@ class Web:
                 if resp.status != 200:
                     raise UnauthorizedError(f"Cannot get data from s.letovo.ru. Error {resp.status}")
                 return await resp.content.read()
-                # return await resp.json()
         except aiohttp.ClientConnectionError as err:
             log.error(err)
             raise aiohttp.ClientConnectionError("Cannot establish connection to s.letovo.ru")
@@ -159,7 +157,6 @@ class Web:
             async with self.session.get(url=url, headers=headers) as resp:
                 if resp.status != 200:
                     raise UnauthorizedError(f"Cannot get data from s.letovo.ru. Error {resp.status}")
-                # return await resp.json()
                 return await resp.content.read()
         except aiohttp.ClientConnectionError as err:
             log.error(err)

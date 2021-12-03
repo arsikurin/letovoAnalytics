@@ -168,7 +168,7 @@ class Firebase(FirebaseGetters, FirebaseSetters):
     """
 
     @staticmethod
-    async def send_email(email):
+    async def send_email(email: str):
         api_url: str = (
             "https://www.googleapis.com/identitytoolkit/v3/relyingparty/getOobConfirmationCode?key="
             f"{settings().GOOGLE_API_KEY}"
@@ -180,4 +180,4 @@ class Firebase(FirebaseGetters, FirebaseSetters):
 
         async with aiohttp.ClientSession() as session:
             async with session.post(url=api_url, headers=headers, data=data) as resp:
-                return await resp.json()
+                return await resp.content.read()

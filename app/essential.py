@@ -30,9 +30,9 @@ else:
     log.basicConfig(
         format=f"{Style.Bold}(%(levelname)s) {Fg.Green}%(asctime)s{Fg.Reset} {Style.Bold}%(message)s{Style.Reset}"
                f"\n[%(name)s]\n",
-        level=log.INFO
+        level=log.DEBUG
     )
-    log.getLogger("telethon.network.mtprotosender").disabled = True
-    log.getLogger("telethon.extensions.messagepacker").disabled = True
-    log.getLogger("urllib3.connectionpool").disabled = True
-    log.getLogger("multipart.multipart").disabled = True
+    log.getLogger("telethon.network.mtprotosender").level = log.INFO
+    log.getLogger("telethon.extensions.messagepacker").level = log.INFO
+    # log.getLogger("urllib3.connectionpool").disabled = True
+    # log.getLogger("multipart.multipart").disabled = True

@@ -153,7 +153,7 @@ class CallbackQuerySenders:
         self.__web = value
 
     async def send_greeting(self, sender):
-        payload = f'{fn if (fn := sender.first_name) else ""} {ln if (ln := sender.last_name) else ""}'.strip()  # NOSONAR
+        payload = f'{fn if (fn := sender.first_name) else ""} {ln if (ln := sender.last_name) else ""}'.strip()
         await self.client.send_message(
             entity=sender,
             message=f"Greetings, **{payload}**!",
@@ -165,7 +165,7 @@ class CallbackQuerySenders:
             ]
         )
 
-    async def send_start(self, sender):
+    async def send_start_page(self, sender):
         await asyncio.sleep(0.05)
         await self.client.send_message(
             entity=sender,
@@ -175,11 +175,54 @@ class CallbackQuerySenders:
                     "__After logging into your account, click **Options** button__",
             parse_mode="md",
             buttons=[
-                Button.url(text="Click here to log in", url=f'{settings().URL_LOGIN_LOCAL}?chat_id={sender.id}')
+                Button.url(text="Click here to log in", url=f"{settings().URL_LOGIN_LOCAL}?chat_id={sender.id}")
             ]
         )
 
-    async def send_stats(self, sender, db: Database):
+    async def send_help_page(self, sender):
+        await asyncio.sleep(0.05)
+        await self.client.send_message(
+            entity=sender,
+            message="I can help you access s.letovo.ru resources via Telegram.\n"
+                    "If you're new here, please see the [Terms of Use](https://example.com) and "
+                    "provide your **school** credentials **__(Button below the message)__** "
+                    "to begin enjoying the service, i. e. login and password\n"
+                    "\n"
+                    "**You can control me by sending these commands**\n"
+                    "\n"
+                    "Common:\n"
+                    "**/start** — restart bot. You'll get a welcome message\n"
+                    "**/about** — get info about the bot developers\n"
+                    "**/options** — get a menu of options that the bot can serve\n"
+                    "**/help** — get this manual page\n"
+                    "\n"
+                    "School info:\n"
+                    "**/options » schedule » __day__** — get schedule\n"
+                    "**/options » marks** — get marks\n"
+                    "**/options » homework » __day__ ** — get homework **[beta]**\n"
+                    "\n"
+                    "\n"
+                    "**Bot Settings**\n"
+                    "__coming soon__\n"
+                    "\n"
+                    "\n"
+                    "**Marks UI**\n"
+                    "From **0** to **8** followed by criterion:\n"
+                    "**A**, **B**, **C** or **D** — Summative marks\n"
+                    "**F** — Formative marks\n"
+                    "\n"
+                    "__For example:__\n"
+                    "• **7A** means **7** for Summative **A**\n"
+                    "• **5B** means **5** for Summative **B**\n"
+                    "• **6F** means **6** for Formative\n",
+            buttons=[
+                Button.url(text="Click here to log in", url=f"{settings().URL_LOGIN_LOCAL}?chat_id={sender.id}")
+            ],
+            parse_mode="md",
+            link_preview=False
+        )
+
+    async def send_stats_page(self, sender, db: Database):
         for user in await db.get_users():
             resp = await db.get_analytics(user[0])
             if not any((
@@ -195,14 +238,19 @@ class CallbackQuerySenders:
             surname = surname if surname is not NothingFoundError else ""
             await self.client.send_message(
                 entity=sender,
-                message=f"ID: {resp.sender_id}\nName: {name} {surname}\nSchedule: {resp.schedule_counter}\n"
-                        f"Homework {resp.homework_counter}\nMarks: {resp.marks_counter}\n"
-                        f"Holidays: {resp.holidays_counter}\nOptions: {resp.options_counter}\n"
-                        f"Help: {resp.help_counter}\nAbout: {resp.about_counter}",
+                message=f"ID: {resp.sender_id}\n"
+                        f"Name: {name} {surname}\n"
+                        f"Schedule: {resp.schedule_counter}\n"
+                        f"Homework {resp.homework_counter}\n"
+                        f"Marks: {resp.marks_counter}\n"
+                        f"Holidays: {resp.holidays_counter}\n"
+                        f"Options: {resp.options_counter}\n"
+                        f"Help: {resp.help_counter}\n"
+                        f"About: {resp.about_counter}",
                 parse_mode="md"
             )
 
-    async def send_about(self, sender):
+    async def send_about_page(self, sender):
         await asyncio.sleep(0.05)
         await self.client.send_message(
             entity=sender,
@@ -211,37 +259,6 @@ class CallbackQuerySenders:
                     "• [Github](https://github.com/arsikurin)\n"
                     "• [Telegram](https://t.me/arsikurin)\n",
             parse_mode="md"
-        )
-
-    async def send_help(self, sender):
-        await asyncio.sleep(0.05)
-        await self.client.send_message(
-            entity=sender,
-            message="I can help you access s.letovo.ru resources via Telegram. "
-                    "If you're new here, please see the [Terms of Use](https://example.com).\n"
-                    "\n"
-                    "**You can control me by sending these commands:**\n"
-                    "\n"
-                    "**/start** - restart bot. You'll get a welcome message\n"
-                    "**/about** - get info about the bot developers\n"
-                    "**/options** - get a menu of options that the bot can serve\n"
-                    "**/help** - get this manual page\n"
-                    "**/schedule** - get schedule from s.letovo.ru\n"
-                    "**/marks** - get marks from s.letovo.ru\n"
-                    "**/homework** - get homework from s.letovo.ru **[beta]**\n"
-                    "\n"
-                    "\n"
-                    "**Bot Settings**\n"
-                    "__coming soon__\n"
-                    "\n"
-                    "**Marks UI**\n"
-                    "**0..8**A — Summative A\n"
-                    "**0..8**B — Summative B\n"
-                    "**0..8**C — Summative C\n"
-                    "**0..8**D — Summative D\n"
-                    "**0..8**F — Formative\n",
-            parse_mode="md",
-            link_preview=False
         )
 
     async def send_main_page(self, sender):
@@ -441,7 +458,6 @@ class CallbackQuerySenders:
         :param event: a return object of CallbackQuery
         :param specific: all, sum, recent
         """
-
         try:
             marks_resp = await self._web.receive_marks(str(event.sender_id))
         except UnauthorizedError as err:
@@ -502,7 +518,16 @@ class CallbackQuerySenders:
                     mark_d_avg = round(mark_d_avg)
                 else:
                     mark_d_avg = round(mark_d_avg, 1)
-                payload += f" | __avg:__ **{mark_a_avg}**A **{mark_b_avg}**B **{mark_c_avg}**C **{mark_d_avg}**D"
+
+                payload += f" | __avg:__ "
+                if mark_a_avg > 0:
+                    payload += f"**{mark_a_avg}**A "
+                if mark_b_avg > 0:
+                    payload += f"**{mark_b_avg}**B "
+                if mark_c_avg > 0:
+                    payload += f"**{mark_c_avg}**C "
+                if mark_d_avg > 0:
+                    payload += f"**{mark_d_avg}**D "
                 await self.client.send_message(
                     entity=await event.get_sender(),
                     message=payload,

@@ -37,7 +37,7 @@ async def include_handlers(session: aiohttp.ClientSession):
         )
 
         if not ii:
-            await cbQuery.send_start(sender=sender)
+            await cbQuery.send_start_page(sender=sender)
 
             if not await db.is_inited(sender_id=sender_id):
                 await asyncio.gather(
@@ -64,7 +64,7 @@ async def include_handlers(session: aiohttp.ClientSession):
         sender_id = str(sender.id)
         await asyncio.gather(
             cbQuery.send_greeting(sender=sender),
-            cbQuery.send_start(sender=sender),
+            cbQuery.send_help_page(sender=sender),
             Firebase.update_data(sender_id=sender_id, lang=sender.lang_code),
             Firebase.update_name(sender_id=sender_id, first_name=sender.first_name, last_name=sender.last_name),
         )
@@ -75,7 +75,7 @@ async def include_handlers(session: aiohttp.ClientSession):
     @client.on(events.CallbackQuery(data=b"stats"))
     async def _stats(event: events.CallbackQuery.Event):
         sender = await event.get_sender()
-        await cbQuery.send_stats(sender=sender, db=db)
+        await cbQuery.send_stats_page(sender=sender, db=db)
         await event.answer()
         raise events.StopPropagation
 
@@ -204,7 +204,7 @@ async def include_handlers(session: aiohttp.ClientSession):
 
         await asyncio.gather(
             cbQuery.send_greeting(sender=sender),
-            cbQuery.send_about(sender=sender)
+            cbQuery.send_about_page(sender=sender)
         )
 
         raise events.StopPropagation
@@ -219,7 +219,7 @@ async def include_handlers(session: aiohttp.ClientSession):
         await asyncio.gather(
             cbQuery.send_greeting(sender=sender),
             db.increase_help_counter(sender_id=sender_id),
-            cbQuery.send_help(sender=sender)
+            cbQuery.send_help_page(sender=sender)
         )
         raise events.StopPropagation
 
