@@ -28,12 +28,8 @@ class AppSettings(BaseSettings):
     TG_API_ID: int
     TG_API_HASH: str
     TG_BOT_TOKEN: str
-    SQL_HOST: str
-    SQL_PORT: int = 5432
-    SQL_USER: str
-    SQL_DBNAME: str
-    SQL_PASSWORD: str
-    debug: bool = True
+    DATABASE_URL: str
+    debug: bool = False
     title: str = "Letovo Analytics Bot API"
     favicon_path: str = "app/static/images/icons/api-icon.png"
 
