@@ -20,8 +20,6 @@ G
 app/api/utils.py,3/5/352060e690e20468709e6ce67711a906e70ebc0b
 G
 app/schemas/homework.py,f/e/fe385611280d51e2c7c55772578a271602771c33
-?
-app/main_bot.py,3/0/302adff66845dbeb55156260e5eca7cd67859b2a
 C
 app/bot/__init__.py,e/9/e9f6b277e939d65a41b31370495c48afd7ea6e31
 >
@@ -44,3 +42,11 @@ H
 	README.md,8/e/8ec9a00bfd09b3190ac6b22251dbb1aa95a0579d
 @
 app/essential.py,9/e/9e913b2e7e335ecf82b791bfc4924f020c7d8b81
+9
+	config.py,1/a/1a1b9769344cb239f2e540e1e6ee1efa2d3034ea
+;
+poetry.lock,0/0/0068a1506b061a8948c37d78b0dd5697211558d3
+G
+app/dependencies/web.py,2/2/2285712a844bafccc48ea239e067136cadf2ed18
+?
+app/main_api.py,1/4/142ed3d04270118b10adefd8fe93f6eeb1123f67

@@ -37,7 +37,7 @@ async def include_handlers(session: aiohttp.ClientSession):
         )
 
         if not ii:
-            await cbQuery.send_start_page(sender=sender)
+            await cbQuery.send_help_page(sender=sender)
 
             if not await db.is_inited(sender_id=sender_id):
                 await asyncio.gather(
@@ -76,11 +76,11 @@ async def include_handlers(session: aiohttp.ClientSession):
     async def _stats(event: events.CallbackQuery.Event):
         sender = await event.get_sender()
         await cbQuery.send_stats_page(sender=sender, db=db)
-        await event.answer()
+        await event.answer("Done")
         raise events.StopPropagation
 
     @client.on(events.CallbackQuery(data=b"tokens"))
-    async def _stats(event: events.CallbackQuery.Event):
+    async def _tokens(event: events.CallbackQuery.Event):
         sender = await event.get_sender()
         sender_id = str(sender.id)
         if sender_id not in ("606336225",):
