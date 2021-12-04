@@ -4,8 +4,6 @@
 .gitignore,a/5/a5cc2925ca8258af241be7e5b0381edf30266302
 ?
 app/__init__.py,6/b/6b5a07a517e9a3845a279675e888c81b77b9d712
-N
-app/api/endpoints/login_old.py,a/8/a884264cd2fb6b02c2d362567277237742f16534
 G
 app/schemas/schedule.py,9/6/96c011d5ff1bf463e51c727c7749b4decd5aa48f
 F
@@ -30,8 +28,6 @@ J
 app/api/endpoints/marks.py,f/d/fd845415776e3d6a2c74ba8364d6c63867afae25
 M
 app/api/endpoints/schedule.py,e/0/e0286033dd6d1c7d36856a075a6d7da06a993a99
-8
-Procfile,b/c/bc3c68e880d1a01632bce79f69dd1387c7ba9c54
 I
 app/dependencies/enums.py,8/8/88aee371d24b5668f56f477281ff07926ee46000
 I
@@ -42,8 +38,6 @@ H
 	README.md,8/e/8ec9a00bfd09b3190ac6b22251dbb1aa95a0579d
 @
 app/essential.py,9/e/9e913b2e7e335ecf82b791bfc4924f020c7d8b81
-9
-	config.py,1/a/1a1b9769344cb239f2e540e1e6ee1efa2d3034ea
 ;
 poetry.lock,0/0/0068a1506b061a8948c37d78b0dd5697211558d3
 G
