@@ -35,9 +35,6 @@ class Database:
         """
         self = Database()
         self.connection = await Database._connect()
-        # self.connection = await psycopg.AsyncConnection.connect(
-        #     host=HOST_SQL, user=USER_SQL, dbname=DATABASE_SQL, password=PASSWORD_SQL, sslmode="require"
-        # )
         return self
 
     @staticmethod

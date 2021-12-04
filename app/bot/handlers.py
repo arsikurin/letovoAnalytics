@@ -79,6 +79,17 @@ async def include_handlers(session: aiohttp.ClientSession):
         await event.answer()
         raise events.StopPropagation
 
+    @client.on(events.CallbackQuery(data=b"tokens"))
+    async def _stats(event: events.CallbackQuery.Event):
+        sender = await event.get_sender()
+        sender_id = str(sender.id)
+        if sender_id not in ("606336225",):
+            raise events.StopPropagation
+        from app.helper import main
+        await main()
+        await event.answer("Tokens updated in the Database")
+        raise events.StopPropagation
+
     @client.on(events.CallbackQuery(data=b"main_page"))
     async def _main_page(event: events.CallbackQuery.Event):
         await cbQuery.to_main_page(event=event)

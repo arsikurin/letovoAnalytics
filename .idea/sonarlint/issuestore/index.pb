@@ -38,11 +38,9 @@ I
 app/dependencies/enums.py,8/8/88aee371d24b5668f56f477281ff07926ee46000
 I
 app/dependencies/utils.py,6/4/64aa3860a93bfe6dcd4e04b26e95503044aad6b2
-?
-app/main_api.py,1/4/142ed3d04270118b10adefd8fe93f6eeb1123f67
-=
-app/helper.py,0/6/06a2a9cefed22737d2d1fd7e2c591eb7412996ba
 H
 app/schemas/analytics.py,e/8/e85f9647059e0564be73961843e19c34744d7168
 9
 	README.md,8/e/8ec9a00bfd09b3190ac6b22251dbb1aa95a0579d
+@
+app/essential.py,9/e/9e913b2e7e335ecf82b791bfc4924f020c7d8b81

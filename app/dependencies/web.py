@@ -21,11 +21,11 @@ class Web:
         self.session: aiohttp.ClientSession = session
 
     @property
-    def session(self):
+    def session(self) -> aiohttp.ClientSession:
         return self._session
 
     @session.setter
-    def session(self, value):
+    def session(self, value: aiohttp.ClientSession):
         self._session = value
 
     async def receive_token(

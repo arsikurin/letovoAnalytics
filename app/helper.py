@@ -18,7 +18,7 @@ async def main():
     async with aiohttp.ClientSession() as session:
         web = Web(session)
         async for user in await Firebase.get_users():
-            log.info(user)
+            log.info(user.id)
             try:
                 token = await web.receive_token(sender_id=user.id)
             except (NothingFoundError, UnauthorizedError, aiohttp.ClientConnectionError):

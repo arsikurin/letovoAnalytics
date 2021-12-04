@@ -4,7 +4,7 @@ import aiohttp
 from fastapi import FastAPI
 from fastapi.exceptions import HTTPException, StarletteHTTPException, ValidationError
 from fastapi.requests import Request
-from fastapi.responses import ORJSONResponse, HTMLResponse  # FileResponse
+from fastapi.responses import ORJSONResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -20,8 +20,9 @@ app = FastAPI(
 app.mount("/static", StaticFiles(directory="./app/static"), name="static")
 templates = Jinja2Templates(directory="./app/templates")
 
-
 app.include_router(login_router, tags=["login"])
+
+
 # app.include_router(schedule_router, tags=["schedule"])
 # app.include_router(marks_router, tags=["marks"])
 
@@ -249,7 +250,8 @@ if __name__ == "__main__":
     import sys
 
     c = uvicorn.Config(
-        app=app, host="0.0.0.0", port=int(sys.argv[1]), workers=4, http="httptools", loop="uvloop",
+        app=app, host="0.0.0.0", port=int(sys.argv[1]), workers=settings().WEB_CONCURRENCY, http="httptools",
+        loop="uvloop"
     )  # limit_concurrency
 
     uvicorn.Server(config=c).run()
