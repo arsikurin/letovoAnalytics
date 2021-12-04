@@ -491,7 +491,7 @@ class CallbackQuerySenders:
                         mark_d[1] += 1
                     payload += f"**{mark[0]}**{mark[1]} "
 
-                if mark_a[1] == 0:
+                if mark_a[1] == 0:  # refactor
                     mark_a[1] = 1
                 if mark_b[1] == 0:
                     mark_b[1] = 1

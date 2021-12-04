@@ -918,17 +918,6 @@ socks = ["PySocks (>=1.5.6,!=1.5.7)", "win-inet-pton"]
 use_chardet_on_py3 = ["chardet (>=3.0.2,<5)"]
 
 [[package]]
-name = "requests-futures"
-version = "1.0.0"
-description = "Asynchronous Python HTTP for Humans."
-category = "main"
-optional = false
-python-versions = "*"
-
-[package.dependencies]
-requests = ">=1.2.0"
-
-[[package]]
 name = "roundrobin"
 version = "0.0.2"
 description = "Collection of roundrobin utilities"
@@ -1140,7 +1129,7 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "1.1"
 python-versions = "3.10.0"
-content-hash = "b8f58e0b8e4770e7b9a1d047df8485ca08dafda4c3ea582cfd179dcc4349bb71"
+content-hash = "6c7b20e8898a3f117ad757c9e35ae0b9c82c4ca4ff1971a49f713e7b95713b50"
 
 [metadata.files]
 aiofiles = [
@@ -2283,10 +2272,6 @@ pyzmq = [
 requests = [
     {file = "requests-2.26.0-py2.py3-none-any.whl", hash = "sha256:6c1246513ecd5ecd4528a0906f910e8f0f9c6b8ec72030dc9fd154dc1a6efd24"},
     {file = "requests-2.26.0.tar.gz", hash = "sha256:b8aa58f8cf793ffd8782d3d8cb19e66ef36f7aba4353eec859e74678b01b07a7"},
-]
-requests-futures = [
-    {file = "requests-futures-1.0.0.tar.gz", hash = "sha256:35547502bf1958044716a03a2f47092a89efe8f9789ab0c4c528d9c9c30bc148"},
-    {file = "requests_futures-1.0.0-py2.py3-none-any.whl", hash = "sha256:633804c773b960cef009efe2a5585483443c6eac3c39cc64beba2884013bcdd9"},
 ]
 roundrobin = [
     {file = "roundrobin-0.0.2.tar.gz", hash = "sha256:ac30cb78570a36bb0ce0db7b907af9394ec7a5610ece2ede072280e8dd867caa"},

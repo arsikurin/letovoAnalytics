@@ -7,7 +7,7 @@ try:
     include_secrets()
 except ImportError:
     include_secrets = typing.Any
-from pydantic import BaseSettings, HttpUrl
+from pydantic import BaseSettings, HttpUrl, PostgresDsn
 
 
 # import os
@@ -28,7 +28,8 @@ class AppSettings(BaseSettings):
     TG_API_ID: int
     TG_API_HASH: str
     TG_BOT_TOKEN: str
-    DATABASE_URL: str
+    DATABASE_URL: PostgresDsn
+    WEB_CONCURRENCY: int = 4
     debug: bool = False
     title: str = "Letovo Analytics Bot API"
     favicon_path: str = "app/static/images/icons/api-icon.png"
