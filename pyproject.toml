@@ -1,6 +1,6 @@
 [tool.poetry]
-name = "letovoanalyticsapi"
-version = "0.5.0"
+name = "letovoanalytics"
+version = "0.7.0"
 description = ""
 authors = ["arsikurin <arseny.kurin@gmail.com>"]
 
