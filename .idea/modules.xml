@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/letovoAnalyticsAPI.iml" filepath="$PROJECT_DIR$/.idea/letovoAnalyticsAPI.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/letovoAnalytics.iml" filepath="$PROJECT_DIR$/.idea/letovoAnalytics.iml" />
     </modules>
   </component>
 </project>
