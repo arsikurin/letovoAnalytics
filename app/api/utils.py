@@ -1,3 +1,4 @@
+import functools as ft
 import logging as log
 from asyncio import iscoroutinefunction
 from asyncio.coroutines import _is_coroutine  # noqa
@@ -54,6 +55,8 @@ class AcceptContent:
         raise HTTPException(406)
 
     def accept(self, accept_content):
+
+        @ft.wraps(accept_content)
         def wrapper(func):
             self.routes[accept_content] = func
             return self
