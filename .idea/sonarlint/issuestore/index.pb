@@ -30,12 +30,8 @@ H
 	README.md,8/e/8ec9a00bfd09b3190ac6b22251dbb1aa95a0579d
 @
 app/essential.py,9/e/9e913b2e7e335ecf82b791bfc4924f020c7d8b81
-;
-poetry.lock,0/0/0068a1506b061a8948c37d78b0dd5697211558d3
 G
 app/dependencies/web.py,2/2/2285712a844bafccc48ea239e067136cadf2ed18
-?
-app/main_api.py,1/4/142ed3d04270118b10adefd8fe93f6eeb1123f67
 Q
 !app/templates/email_template.html,e/7/e72d170ba42e1a3dc87f542761eda1014711eec7
 P
@@ -56,5 +52,3 @@ M
 app/api/endpoints/__init__.py,5/3/53f74166a0a52796a7e4b699d309f3f15ff1001d
 J
 app/api/endpoints/login.py,5/f/5f23380c3ed4f43ac54ad5d9388e709171f1d7f8
->
-pyproject.toml,5/d/5d07e7d72637aa0d59c89d381fe6dc4cf46e2491

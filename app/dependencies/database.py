@@ -43,7 +43,7 @@ class Database:
         Connect to Postgres
         """
         return await psycopg.AsyncConnection.connect(
-            conninfo=settings().DATABASE_URL, sslmode="require"  # , row_factory=class_row(AnalyticsResponse)
+            conninfo=settings().DATABASE_URL, sslmode="require"  # , row_factory=class_row(`class`)
         )
 
     async def get_users(self) -> list[tuple[str]]:
@@ -230,26 +230,3 @@ class Database:
                 await self.connection.close()
                 self.connection = await Database._connect()
                 await self.increase_inline_counter(sender_id)
-
-    async def create_table(self):
-        await self.connection.execute(
-            "CREATE TABLE users ("
-            "sender_id VARCHAR(255) PRIMARY KEY,"  # TODO change to integer
-            "message_id INTEGER,"
-            "schedule_counter INTEGER,"
-            "homework_counter INTEGER,"
-            "marks_counter INTEGER,"
-            "holidays_counter INTEGER,"
-            "clear_counter INTEGER,"
-            "options_counter INTEGER,"
-            "help_counter INTEGER,"
-            "about_counter INTEGER,"
-            "inline_counter INTEGER"
-            ");")
-        await self.connection.commit()
-
-    async def add_column(self):
-        await self.connection.execute(
-            "ALTER TABLE users ADD COLUMN schedule_counter INTEGER"
-        )
-        await self.connection.commit()
