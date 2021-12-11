@@ -326,7 +326,7 @@ class CallbackQuerySenders:
         parse & send specific day(s) from schedule
 
         :param event: a return object of CallbackQuery
-        :param specific_day: day number or -10 to send entire schedule
+        :param specific_day: day of the week represented by Weekdays enum
         """
         if specific_day == Weekdays.Sunday:
             return await event.answer("Congrats! It's Sunday, no lessons", alert=False)
@@ -394,7 +394,7 @@ class CallbackQuerySenders:
         parse & send specific day(s) from homework
 
         :param event: a return object of CallbackQuery
-        :param specific_day: day number or -10 to send all homework
+        :param specific_day: day of the week represented by Weekdays enum
         """
 
         if specific_day == Weekdays.SundayHW:
