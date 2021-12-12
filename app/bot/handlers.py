@@ -199,7 +199,9 @@ async def include_handlers(session: aiohttp.ClientSession):
             case b"all_marks":
                 await send_marks(specific=MarkTypes.ALL)
             case b"summative_marks":
-                await send_marks(specific=MarkTypes.ONLY_SUMMATIVE)
+                await send_marks(specific=MarkTypes.SUMMATIVE)
+            case b"final_marks":
+                await send_marks(specific=MarkTypes.FINAL)
             case b"recent_marks":
                 await event.answer("Under development")
                 # await send_marks(specific=MarkTypes.RECENT)
