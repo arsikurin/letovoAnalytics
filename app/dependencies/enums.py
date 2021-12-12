@@ -4,7 +4,8 @@ from enum import Enum
 
 class MarkTypes(Enum):
     RECENT = 1
-    ONLY_SUMMATIVE = 2
+    SUMMATIVE = 2
+    FINAL = 3
     ALL = -10
 
 

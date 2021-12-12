@@ -5,7 +5,7 @@ import aiohttp
 from telethon import Button, events, TelegramClient
 
 from app.dependencies import Weekdays, MarkTypes, NothingFoundError, UnauthorizedError, Firebase, Web, Database
-from app.schemas import MarksResponse, ScheduleResponse, HomeworkResponse
+from app.schemas import MarksResponse, MarksDataList, ScheduleResponse, HomeworkResponse
 from config import settings
 
 
@@ -77,9 +77,10 @@ class CallbackQueryEventEditors:
                 [
                     Button.inline("All marks", b"all_marks")
                 ], [
-                    Button.inline("For Summatives", b"summative_marks"),
-                ], [
                     Button.inline("Recent marks", b"recent_marks"),
+                ], [
+                    Button.inline("Summatives", b"summative_marks"),
+                    Button.inline("Finals", b"final_marks"),
                 ], [
                     Button.inline("« Back", b"main_page")
                 ]
@@ -130,11 +131,12 @@ class CallbackQueryEventEditors:
 
 
 class CallbackQuerySenders:
-    __slots__ = ("_client", "__web")
+    __slots__ = ("_client", "__web", "__payload")
 
     def __init__(self, client: TelegramClient, session: aiohttp.ClientSession):
         self.client: TelegramClient = client
         self._web: Web = Web(session)
+        self._payload = ""
 
     @property
     def client(self) -> TelegramClient:
@@ -151,6 +153,18 @@ class CallbackQuerySenders:
     @_web.setter
     def _web(self, value: Web):
         self.__web = value
+
+    @property
+    def _payload(self) -> str:
+        return self.__payload
+
+    @_payload.setter
+    def _payload(self, value: str):
+        self.__payload = value
+
+    @_payload.deleter
+    def _payload(self):
+        self.__payload = ""
 
     async def send_greeting(self, sender):
         payload = f'{fn if (fn := sender.first_name) else ""} {ln if (ln := sender.last_name) else ""}'.strip()
@@ -449,6 +463,55 @@ class CallbackQuerySenders:
                 )
         await event.answer()
 
+    def summative_marks(self, subject: MarksDataList):
+        """
+        Parse summative marks
+        """
+        marks = [(mark.mark_value, mark.mark_criterion) for mark in subject.summative_list]
+        mark_a, mark_b, mark_c, mark_d = [0, 0], [0, 0], [0, 0], [0, 0]
+        for mark in marks:
+            if mark[1] == "A" and mark[0].isdigit():
+                mark_a[0] += int(mark[0])
+                mark_a[1] += 1
+            elif mark[1] == "B" and mark[0].isdigit():
+                mark_b[0] += int(mark[0])
+                mark_b[1] += 1
+            elif mark[1] == "C" and mark[0].isdigit():
+                mark_c[0] += int(mark[0])
+                mark_c[1] += 1
+            elif mark[1] == "D" and mark[0].isdigit():
+                mark_d[0] += int(mark[0])
+                mark_d[1] += 1
+            self._payload += f"**{mark[0]}**{mark[1]} "
+
+        if mark_a[1] == 0:  # refactor
+            mark_a[1] = 1
+        if mark_b[1] == 0:
+            mark_b[1] = 1
+        if mark_c[1] == 0:
+            mark_c[1] = 1
+        if mark_d[1] == 0:
+            mark_d[1] = 1
+
+        mark_a_avg, mark_b_avg = mark_a[0] / mark_a[1], mark_b[0] / mark_b[1]
+        mark_c_avg, mark_d_avg = mark_c[0] / mark_c[1], mark_d[0] / mark_d[1]
+
+        round_mark = lambda avg: round(avg) if abs(avg % 1) < settings().EPS else round(avg, 1)
+        mark_a_avg = round_mark(mark_a_avg)
+        mark_b_avg = round_mark(mark_b_avg)
+        mark_c_avg = round_mark(mark_c_avg)
+        mark_d_avg = round_mark(mark_d_avg)
+
+        self._payload += f" | __avg:__ "
+        if mark_a_avg > 0:
+            self._payload += f"**{mark_a_avg}**A "
+        if mark_b_avg > 0:
+            self._payload += f"**{mark_b_avg}**B "
+        if mark_c_avg > 0:
+            self._payload += f"**{mark_c_avg}**C "
+        if mark_d_avg > 0:
+            self._payload += f"**{mark_d_avg}**D "
+
     async def send_marks(
             self, event: events.CallbackQuery.Event, specific: MarkTypes
     ):
@@ -471,130 +534,51 @@ class CallbackQuerySenders:
         # TODO recent marks
         marks_response = MarksResponse.parse_raw(marks_resp)
         for subject in marks_response.data:
-            if specific == MarkTypes.ONLY_SUMMATIVE and subject.summative_list:
-                payload = f"**{subject.group.subject.subject_name_eng}**\n"
-
-                marks = [(mark.mark_value, mark.mark_criterion) for mark in subject.summative_list]
-                mark_a, mark_b, mark_c, mark_d = [0, 0], [0, 0], [0, 0], [0, 0]
-                for mark in marks:
-                    if mark[1] == "A" and mark[0].isdigit():
-                        mark_a[0] += int(mark[0])
-                        mark_a[1] += 1
-                    elif mark[1] == "B" and mark[0].isdigit():
-                        mark_b[0] += int(mark[0])
-                        mark_b[1] += 1
-                    elif mark[1] == "C" and mark[0].isdigit():
-                        mark_c[0] += int(mark[0])
-                        mark_c[1] += 1
-                    elif mark[1] == "D" and mark[0].isdigit():
-                        mark_d[0] += int(mark[0])
-                        mark_d[1] += 1
-                    payload += f"**{mark[0]}**{mark[1]} "
-
-                if mark_a[1] == 0:  # refactor
-                    mark_a[1] = 1
-                if mark_b[1] == 0:
-                    mark_b[1] = 1
-                if mark_c[1] == 0:
-                    mark_c[1] = 1
-                if mark_d[1] == 0:
-                    mark_d[1] = 1
-
-                mark_a_avg, mark_b_avg = mark_a[0] / mark_a[1], mark_b[0] / mark_b[1]
-                mark_c_avg, mark_d_avg = mark_c[0] / mark_c[1], mark_d[0] / mark_d[1]
-                if abs(mark_a_avg % 1) < settings().EPS:
-                    mark_a_avg = round(mark_a_avg)
-                else:
-                    mark_a_avg = round(mark_a_avg, 1)
-                if abs(mark_b_avg % 1) < settings().EPS:
-                    mark_b_avg = round(mark_b_avg)
-                else:
-                    mark_b_avg = round(mark_b_avg, 1)
-                if abs(mark_c_avg % 1) < settings().EPS:
-                    mark_c_avg = round(mark_c_avg)
-                else:
-                    mark_c_avg = round(mark_c_avg, 1)
-                if abs(mark_d_avg % 1) < settings().EPS:
-                    mark_d_avg = round(mark_d_avg)
-                else:
-                    mark_d_avg = round(mark_d_avg, 1)
-
-                payload += f" | __avg:__ "
-                if mark_a_avg > 0:
-                    payload += f"**{mark_a_avg}**A "
-                if mark_b_avg > 0:
-                    payload += f"**{mark_b_avg}**B "
-                if mark_c_avg > 0:
-                    payload += f"**{mark_c_avg}**C "
-                if mark_d_avg > 0:
-                    payload += f"**{mark_d_avg}**D "
+            if specific == MarkTypes.SUMMATIVE and subject.summative_list:
+                self._payload = f"**{subject.group.subject.subject_name_eng}**\n"
+                self.summative_marks(subject)
                 await self.client.send_message(
                     entity=await event.get_sender(),
-                    message=payload,
+                    message=self._payload,
                     parse_mode="md",
                     silent=True
                 )
 
-            elif specific == MarkTypes.ALL:
-                payload = f"**{subject.group.subject.subject_name_eng}**\n "
-                if subject.formative_list:
-                    for mark in subject.formative_list:
-                        payload += f"**{mark.mark_value}**F "
+            elif specific == MarkTypes.FINAL:
+                self._payload = f"**{subject.group.subject.subject_name_eng}**\n"
+                if subject.final_mark_list:
+                    for mark in subject.final_mark_list:
+                        self._payload += f"**{mark.final_value}**{mark.final_criterion} "
+                    if subject.result_final_mark:
+                        self._payload += f" | __final:__ **{subject.result_final_mark}**"
 
-                if subject.summative_list:
-                    marks = [(mark.mark_value, mark.mark_criterion) for mark in subject.summative_list]
-                    mark_a, mark_b, mark_c, mark_d = [0, 0], [0, 0], [0, 0], [0, 0]
-                    for mark in marks:
-                        if mark[1] == "A" and mark[0].isdigit():
-                            mark_a[0] += int(mark[0])
-                            mark_a[1] += 1
-                        elif mark[1] == "B" and mark[0].isdigit():
-                            mark_b[0] += int(mark[0])
-                            mark_b[1] += 1
-                        elif mark[1] == "C" and mark[0].isdigit():
-                            mark_c[0] += int(mark[0])
-                            mark_c[1] += 1
-                        elif mark[1] == "D" and mark[0].isdigit():
-                            mark_d[0] += int(mark[0])
-                            mark_d[1] += 1
-                        payload += f"**{mark[0]}**{mark[1]} "
-
-                    if mark_a[1] == 0:
-                        mark_a[1] = 1
-                    if mark_b[1] == 0:
-                        mark_b[1] = 1
-                    if mark_c[1] == 0:
-                        mark_c[1] = 1
-                    if mark_d[1] == 0:
-                        mark_d[1] = 1
-
-                    mark_a_avg, mark_b_avg = mark_a[0] / mark_a[1], mark_b[0] / mark_b[1]
-                    mark_c_avg, mark_d_avg = mark_c[0] / mark_c[1], mark_d[0] / mark_d[1]
-                    if abs(mark_a_avg % 1) < settings().EPS:
-                        mark_a_avg = round(mark_a_avg)
-                    else:
-                        mark_a_avg = round(mark_a_avg, 1)
-                    if abs(mark_b_avg % 1) < settings().EPS:
-                        mark_b_avg = round(mark_b_avg)
-                    else:
-                        mark_b_avg = round(mark_b_avg, 1)
-                    if abs(mark_c_avg % 1) < settings().EPS:
-                        mark_c_avg = round(mark_c_avg)
-                    else:
-                        mark_c_avg = round(mark_c_avg, 1)
-                    if abs(mark_d_avg % 1) < settings().EPS:
-                        mark_d_avg = round(mark_d_avg)
-                    else:
-                        mark_d_avg = round(mark_d_avg, 1)
-                    payload += f" | __avg:__ **{mark_a_avg}**A **{mark_b_avg}**B **{mark_c_avg}**C **{mark_d_avg}**D"
-                if subject.summative_list or subject.formative_list:
+                    if subject.group_avg_mark:
+                        self._payload += f" | __group:__ **{subject.group_avg_mark}**"
                     await self.client.send_message(
                         entity=await event.get_sender(),
-                        message=payload,
+                        message=self._payload,
                         parse_mode="md",
                         silent=True,
                         link_preview=False
                     )
+            elif specific == MarkTypes.ALL:
+                self._payload = f"**{subject.group.subject.subject_name_eng}**\n"
+                if subject.formative_list:
+                    for mark in subject.formative_list:
+                        self._payload += f"**{mark.mark_value}**F "
+
+                if subject.summative_list:
+                    self.summative_marks(subject)
+
+                if subject.summative_list or subject.formative_list:
+                    await self.client.send_message(
+                        entity=await event.get_sender(),
+                        message=self._payload,
+                        parse_mode="md",
+                        silent=True,
+                        link_preview=False
+                    )
+        del self._payload
         await event.answer()
 
 
