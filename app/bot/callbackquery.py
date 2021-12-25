@@ -199,10 +199,11 @@ class CallbackQuerySenders:
             entity=sender,
             message="I can help you access s.letovo.ru resources via Telegram.\n"
                     "If you're new here, please see the [Terms of Use](https://example.com) and "
-                    "provide your **school** credentials **__(Button below the message)__** "
-                    "to begin enjoying the service, i. e. login and password\n"
+                    "provide your **school** credentials, i. e. login and password,"
+                    " **__(Button below the message)__** to begin enjoying the service\n"
                     "\n"
-                    "**You can control me by sending these commands**\n"
+                    "\n"
+                    "**You can control the bot by sending these commands**\n"
                     "\n"
                     "Common:\n"
                     "**/start** — restart bot. You'll get a welcome message\n"
@@ -221,7 +222,7 @@ class CallbackQuerySenders:
                     "\n"
                     "\n"
                     "**Marks UI**\n"
-                    "From **0** to **8** followed by criterion:\n"
+                    "From **0** to **8** following by a criterion:\n"
                     "**A**, **B**, **C** or **D** — Summative marks\n"
                     "**F** — Formative marks\n"
                     "\n"
@@ -244,16 +245,19 @@ class CallbackQuerySenders:
                     resp.options_counter, resp.help_counter, resp.about_counter
             )): continue  # noqa
 
-            name, surname = await asyncio.gather(
+            name, surname, login = await asyncio.gather(
                 Firebase.get_name(resp.sender_id),
-                Firebase.get_surname(resp.sender_id)
+                Firebase.get_surname(resp.sender_id),
+                Firebase.get_login(resp.sender_id),
             )
             name = name if name is not NothingFoundError else ""
             surname = surname if surname is not NothingFoundError else ""
+            login = login if login is not NothingFoundError else ""
             await self.client.send_message(
                 entity=sender,
                 message=f"ID: {resp.sender_id}\n"
                         f"Name: {name} {surname}\n"
+                        f"Login: {login}\n"
                         f"Schedule: {resp.schedule_counter}\n"
                         f"Homework {resp.homework_counter}\n"
                         f"Marks: {resp.marks_counter}\n"
