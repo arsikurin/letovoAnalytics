@@ -14,18 +14,17 @@ from config import settings
 
 session: aiohttp.ClientSession = ...
 app = FastAPI(
-    title=settings().title
+    title=settings().title,
 )
 
 app.mount("/static", StaticFiles(directory="./app/static"), name="static")
 templates = Jinja2Templates(directory="./app/templates")
 
-app.include_router(login_router, tags=["login"])
+app.include_router(login_router, tags=["login"], prefix="/api")
 
 
 # app.include_router(schedule_router, tags=["schedule"])
-# app.include_router(marks_router, tags=["marks"])
-
+# app.include_router(marks_router, tags=["marks"], prefix="/api")
 
 @app.on_event("startup")
 async def on_startup():
