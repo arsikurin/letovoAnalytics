@@ -4,7 +4,7 @@ import typing
 import aiohttp
 from telethon import Button, events, TelegramClient
 
-from app.dependencies import Weekdays, MarkTypes, NothingFoundError, UnauthorizedError, Firebase, Web, Database
+from app.dependencies import Weekdays, MarkTypes, NothingFoundError, UnauthorizedError, Firestore, Web, AnalyticsDatabase
 from app.schemas import MarksResponse, MarksDataList, ScheduleResponse, HomeworkResponse
 from config import settings
 
@@ -136,7 +136,7 @@ class CallbackQuerySenders:
     def __init__(self, client: TelegramClient, session: aiohttp.ClientSession):
         self.client: TelegramClient = client
         self._web: Web = Web(session)
-        self._payload = ""
+        self._payload: str = ""
 
     @property
     def client(self) -> TelegramClient:
@@ -237,18 +237,18 @@ class CallbackQuerySenders:
             link_preview=False
         )
 
-    async def send_stats_page(self, sender, db: Database):
+    async def send_stats_page(self, sender, db: AnalyticsDatabase, fs: Firestore):
         for user in await db.get_users():
-            resp = await db.get_analytics(user[0])
+            resp = await db.get_analytics(user)
             if not any((
                     resp.schedule_counter, resp.homework_counter, resp.marks_counter, resp.holidays_counter,
                     resp.options_counter, resp.help_counter, resp.about_counter
             )): continue  # noqa
 
             name, surname, login = await asyncio.gather(
-                Firebase.get_name(resp.sender_id),
-                Firebase.get_surname(resp.sender_id),
-                Firebase.get_login(resp.sender_id),
+                fs.get_name(resp.sender_id),
+                fs.get_surname(resp.sender_id),
+                fs.get_login(resp.sender_id),
             )
             name = name if name is not NothingFoundError else ""
             surname = surname if surname is not NothingFoundError else ""
@@ -311,8 +311,10 @@ class CallbackQuerySenders:
             ]
         )
 
-    async def send_holidays(self, sender):
+    async def send_holidays(self, event: events.CallbackQuery.Event):
         # TODO receive holidays from API
+
+        sender = await event.get_sender()
         await self.client.send_message(
             entity=sender,
             message="__after__ **unit I**\n31.10.2021 — 07.11.2021",
@@ -338,11 +340,12 @@ class CallbackQuerySenders:
         )
 
     async def send_schedule(
-            self, event: events.CallbackQuery.Event, specific_day: Weekdays
+            self, event: events.CallbackQuery.Event, specific_day: Weekdays, fs: Firestore
     ):
         """
         parse & send specific day(s) from schedule
 
+        :param fs: firestore connection object
         :param event: a return object of CallbackQuery
         :param specific_day: day of the week represented by Weekdays enum
         """
@@ -350,7 +353,7 @@ class CallbackQuerySenders:
             return await event.answer("Congrats! It's Sunday, no lessons", alert=False)
 
         try:
-            schedule_resp = await self._web.receive_hw_n_schedule(str(event.sender_id))
+            schedule_resp = await self._web.receive_hw_n_schedule(sender_id=str(event.sender_id), fs=fs)
         except UnauthorizedError as err:
             return await event.answer(f"[✘] {err}", alert=True)
         except NothingFoundError as err:
@@ -406,11 +409,12 @@ class CallbackQuerySenders:
         await event.answer()
 
     async def send_homework(
-            self, event: events.CallbackQuery.Event, specific_day: Weekdays
+            self, event: events.CallbackQuery.Event, specific_day: Weekdays, fs: Firestore
     ):
         """
         parse & send specific day(s) from homework
 
+        :param fs: firestore connection object
         :param event: a return object of CallbackQuery
         :param specific_day: day of the week represented by Weekdays enum
         """
@@ -419,7 +423,7 @@ class CallbackQuerySenders:
             return await event.answer("Congrats! Tomorrow's Sunday, no hw", alert=False)
 
         try:
-            homework_resp = await self._web.receive_hw_n_schedule(str(event.sender_id))
+            homework_resp = await self._web.receive_hw_n_schedule(sender_id=str(event.sender_id), fs=fs)
         except UnauthorizedError as err:
             return await event.answer(f"[✘] {err}", alert=True)
         except NothingFoundError as err:
@@ -430,33 +434,36 @@ class CallbackQuerySenders:
 
         homework_response = HomeworkResponse.parse_raw(homework_resp)
         for day in homework_response.data:
-            if len(day.schedules) > 0 and specific_day.value in (int(day.period_num_day), -10):
+            if day.schedules and specific_day.value in (int(day.period_num_day), -10):
                 flag = False
                 payload = (
                     f'{day.period_name}: <strong>{day.schedules[0].group.subject.subject_name_eng} '
                     f'{day.schedules[0].group.group_name}</strong>\n'
                     f'{Weekdays(int(day.period_num_day)).name}, {day.date}\n'
                 )
-                if day.schedules[0].lessons[0].lesson_hw:
-                    payload += f'{day.schedules[0].lessons[0].lesson_hw}\n'
+                if day.schedules[0].lessons:
+                    if day.schedules[0].lessons[0].lesson_hw:
+                        payload += f'{day.schedules[0].lessons[0].lesson_hw}\n'
+                    else:
+                        payload += "<em>No homework</em>\n"
+
+                    if day.schedules[0].lessons[0].lesson_url:
+                        flag = True
+                        payload += f'<a href="{day.schedules[0].lessons[0].lesson_url}">Attached link</a>\n'
+
+                    if day.schedules[0].lessons[0].lesson_hw_url:
+                        flag = True
+                        payload += f'<a href="{day.schedules[0].lessons[0].lesson_hw_url}">Attached hw link</a>\n'
+
+                    if not flag:
+                        payload += "<em>No links attached</em>\n"
+
+                    if day.schedules[0].lessons[0].lesson_topic:
+                        payload += f'{day.schedules[0].lessons[0].lesson_topic}\n'
+                    else:
+                        payload += "<em>No topic</em>\n"
                 else:
-                    payload += "<em>No homework</em>\n"
-
-                if day.schedules[0].lessons[0].lesson_url:
-                    flag = True
-                    payload += f'<a href="{day.schedules[0].lessons[0].lesson_url}">Attached link</a>\n'
-
-                if day.schedules[0].lessons[0].lesson_hw_url:
-                    flag = True
-                    payload += f'<a href="{day.schedules[0].lessons[0].lesson_hw_url}">Attached hw link</a>\n'
-
-                if not flag:
-                    payload += "<em>No links attached</em>\n"
-
-                if day.schedules[0].lessons[0].lesson_topic:
-                    payload += f'{day.schedules[0].lessons[0].lesson_topic}\n'
-                else:
-                    payload += "<em>No topic</em>\n"
+                    payload += "Lessons not found\n"
 
                 await self.client.send_message(
                     entity=await event.get_sender(),
@@ -467,7 +474,7 @@ class CallbackQuerySenders:
                 )
         await event.answer()
 
-    def summative_marks(self, subject: MarksDataList):
+    def _summative_marks(self, subject: MarksDataList):
         """
         Parse summative marks
         """
@@ -517,16 +524,17 @@ class CallbackQuerySenders:
             self._payload += f"**{mark_d_avg}**D "
 
     async def send_marks(
-            self, event: events.CallbackQuery.Event, specific: MarkTypes
+            self, event: events.CallbackQuery.Event, specific: MarkTypes, fs: Firestore
     ):
         """
         parse & send marks
 
+        :param fs: firestore connection object
         :param event: a return object of CallbackQuery
         :param specific: all, sum, recent
         """
         try:
-            marks_resp = await self._web.receive_marks(str(event.sender_id))
+            marks_resp = await self._web.receive_marks(sender_id=str(event.sender_id), fs=fs)
         except UnauthorizedError as err:
             return await event.answer(f"[✘] {err}", alert=True)
         except NothingFoundError as err:
@@ -540,7 +548,7 @@ class CallbackQuerySenders:
         for subject in marks_response.data:
             if specific == MarkTypes.SUMMATIVE and subject.summative_list:
                 self._payload = f"**{subject.group.subject.subject_name_eng}**\n"
-                self.summative_marks(subject)
+                self._summative_marks(subject)
                 await self.client.send_message(
                     entity=await event.get_sender(),
                     message=self._payload,
@@ -572,7 +580,7 @@ class CallbackQuerySenders:
                         self._payload += f"**{mark.mark_value}**F "
 
                 if subject.summative_list:
-                    self.summative_marks(subject)
+                    self._summative_marks(subject)
 
                 if subject.summative_list or subject.formative_list:
                     await self.client.send_message(

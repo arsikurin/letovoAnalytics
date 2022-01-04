@@ -8,12 +8,13 @@ from telethon import events
 
 from app.bot import CallbackQuery, InlineQuery, client
 from app.dependencies import (
-    Weekdays, MarkTypes, PatternMatching, Database, Firebase
+    Weekdays, MarkTypes, PatternMatching, Postgresql, Firestore
 )
 
 
 async def include_handlers(session: aiohttp.ClientSession):
-    db = await Database.create()
+    db = await Postgresql.create()
+    fs = Firestore.create()
     cbQuery = CallbackQuery(client=client, session=session)
     iQuery = InlineQuery(s=session)
 
@@ -33,7 +34,7 @@ async def include_handlers(session: aiohttp.ClientSession):
         sender_id = str(sender.id)
         _, ii = await asyncio.gather(
             cbQuery.send_greeting(sender=sender),
-            Firebase.is_inited(sender_id=sender_id),
+            fs.is_inited(sender_id=sender_id),
         )
 
         if not ii:
@@ -65,8 +66,8 @@ async def include_handlers(session: aiohttp.ClientSession):
         await asyncio.gather(
             cbQuery.send_greeting(sender=sender),
             cbQuery.send_help_page(sender=sender),
-            Firebase.update_data(sender_id=sender_id, lang=sender.lang_code),
-            Firebase.update_name(sender_id=sender_id, first_name=sender.first_name, last_name=sender.last_name),
+            fs.update_data(sender_id=sender_id, lang=sender.lang_code),
+            fs.update_name(sender_id=sender_id, first_name=sender.first_name, last_name=sender.last_name),
         )
         if not await db.is_inited(sender_id=sender_id):
             await db.init_user(sender_id=sender_id)
@@ -75,7 +76,7 @@ async def include_handlers(session: aiohttp.ClientSession):
     @client.on(events.CallbackQuery(data=b"stats"))
     async def _stats(event: events.CallbackQuery.Event):
         sender = await event.get_sender()
-        await cbQuery.send_stats_page(sender=sender, db=db)
+        await cbQuery.send_stats_page(sender=sender, db=db, fs=fs)
         await event.answer("Done")
         raise events.StopPropagation
 
@@ -126,7 +127,7 @@ async def include_handlers(session: aiohttp.ClientSession):
         sender_id = str(sender.id)
         await asyncio.gather(
             event.answer(),
-            cbQuery.send_holidays(sender=await event.get_sender()),
+            cbQuery.send_holidays(event=event),
             db.increase_holidays_counter(sender_id=sender_id)
         )
         raise events.StopPropagation
@@ -137,7 +138,7 @@ async def include_handlers(session: aiohttp.ClientSession):
         sender_id = str(sender.id)
         send_schedule = ft.partial(
             cbQuery.send_schedule,
-            event=event
+            event=event, fs=fs
         )
         match event.data:
             case b"today_schedule":
@@ -165,7 +166,7 @@ async def include_handlers(session: aiohttp.ClientSession):
         sender_id = str(sender.id)
         send_homework = ft.partial(
             cbQuery.send_homework,
-            event=event
+            event=event, fs=fs
         )
         match event.data:
             case b"tomorrows_homework":
@@ -193,7 +194,7 @@ async def include_handlers(session: aiohttp.ClientSession):
         sender_id = str(sender.id)
         send_marks = ft.partial(
             cbQuery.send_marks,
-            event=event
+            event=event, fs=fs
         )
         match event.data:
             case b"all_marks":
@@ -245,13 +246,13 @@ async def include_handlers(session: aiohttp.ClientSession):
         sender = await event.get_sender()
         sender_id = str(sender.id)
 
-        if not await Firebase.is_inited(sender_id=sender_id):
+        if not await fs.is_inited(sender_id=sender_id):
             await event.answer(switch_pm="Log in", switch_pm_param="inlineMode")
             raise events.StopPropagation
 
         send_schedule = ft.partial(
             iQuery.send_schedule,
-            event=event
+            event=event, fs=fs
         )
         match PatternMatching(event.query.query):
             case PatternMatching(next=True):

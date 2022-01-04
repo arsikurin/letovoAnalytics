@@ -4,7 +4,7 @@ import typing
 import requests as rq
 from telethon import types, events
 
-from app.dependencies import NothingFoundError, UnauthorizedError, Weekdays, Web
+from app.dependencies import NothingFoundError, UnauthorizedError, Weekdays, Web, Firestore
 
 
 class InlineQueryEventEditors:
@@ -51,16 +51,17 @@ class InlineQuerySenders:
         self.session = s
 
     async def send_schedule(  # TODO
-            self, event: events.InlineQuery.Event, specific_day: int
+            self, event: events.InlineQuery.Event, specific_day: int, fs: Firestore
     ):
         """
         parse and send specific day(s) from schedule to inline query
 
+        :param fs: firestore connection object
         :param event: a return object of InlineQuery
         :param specific_day: day number or -10 to send entire schedule
         """
 
-        schedule_future = await Web.receive_hw_n_schedule(self.session, str(event.sender_id))
+        schedule_future = await Web.receive_hw_n_schedule(self.session, sender_id=str(event.sender_id), fs=fs)
         if schedule_future == UnauthorizedError:
             return await event.answer(
                 results=[

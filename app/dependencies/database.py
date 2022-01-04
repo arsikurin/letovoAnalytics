@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import itertools as it
 import logging as log
 import typing
 
@@ -9,9 +10,55 @@ from psycopg.rows import class_row
 from app.schemas import AnalyticsResponse
 from config import settings
 
+unknown_err = "the connection is lost"
+
+
+class AnalyticsDatabase(typing.Protocol):
+    """
+    Class for working with relational DB
+    """
+    __slots__ = ("_connection",)
+
+    @property
+    def connection(self) -> psycopg.AsyncConnection[typing.Any]:
+        return self._connection
+
+    @staticmethod
+    async def create() -> AnalyticsDatabase:
+        """
+        Factory initializing object
+        """
+
+    @staticmethod
+    async def _connect() -> psycopg.AsyncConnection: ...
+
+    async def get_users(self) -> typing.Iterator[str]: ...
+
+    async def get_analytics(self, sender_id: str) -> AnalyticsResponse: ...
+
+    async def is_inited(self, sender_id: str) -> bool: ...
+
+    async def init_user(self, sender_id: str): ...
+
+    async def reset_analytics(self): ...
+
+    async def increase_schedule_counter(self, sender_id: str): ...
+
+    async def increase_homework_counter(self, sender_id: str): ...
+
+    async def increase_marks_counter(self, sender_id: str): ...
+
+    async def increase_holidays_counter(self, sender_id: str): ...
+
+    async def increase_options_counter(self, sender_id: str): ...
+
+    async def increase_help_counter(self, sender_id: str): ...
+
+    async def increase_inline_counter(self, sender_id: str): ...
+
 
 @typing.final
-class Database:
+class Postgresql:
     """
     Class for working with relational DB
     """
@@ -29,12 +76,12 @@ class Database:
         self._connection = value
 
     @staticmethod
-    async def create() -> Database:
+    async def create() -> AnalyticsDatabase:
         """
-        Factory
+        Factory initializing object
         """
-        self = Database()
-        self.connection = await Database._connect()
+        self = Postgresql()
+        self.connection = await self._connect()
         return self
 
     @staticmethod
@@ -46,15 +93,15 @@ class Database:
             conninfo=settings().DATABASE_URL, sslmode="require"  # , row_factory=class_row(`class`)
         )
 
-    async def get_users(self) -> list[tuple[str]]:
+    async def get_users(self) -> typing.Iterator[str]:
         try:
             cursor = await self.connection.execute(
                 "SELECT sender_id FROM users"
             )
-            return await cursor.fetchall()
+            return it.chain.from_iterable(await cursor.fetchall())
         except psycopg.OperationalError as err:
             log.error(err)
-            if err == "the connection is lost":
+            if err == unknown_err:
                 log.info(f"Trying to fix `{err}` Error!")
                 await self.connection.close()
                 self.connection = await self._connect()
@@ -70,7 +117,7 @@ class Database:
             return await cursor.fetchone()
         except psycopg.OperationalError as err:
             log.error(err)
-            if err == "the connection is lost":
+            if err == unknown_err:
                 log.info(f"Trying to fix `{err}` Error!")
                 await self.connection.close()
                 self.connection = await self._connect()
@@ -85,7 +132,7 @@ class Database:
             return bool(await cursor.fetchone())
         except psycopg.OperationalError as err:
             log.error(err)
-            if err == "the connection is lost":
+            if err == unknown_err:
                 log.info(f"Trying to fix `{err}` Error!")
                 await self.connection.close()
                 self.connection = await self._connect()
@@ -103,10 +150,10 @@ class Database:
             await self.connection.commit()
         except psycopg.OperationalError as err:
             log.error(err)
-            if err == "the connection is lost":
+            if err == unknown_err:
                 log.info(f"Trying to fix `{err}` Error!")
                 await self.connection.close()
-                self.connection = await Database._connect()
+                self.connection = await self._connect()
                 await self.init_user(sender_id)
 
     async def reset_analytics(self):
@@ -120,10 +167,10 @@ class Database:
             await self.connection.commit()
         except psycopg.OperationalError as err:
             log.error(err)
-            if err == "the connection is lost":
+            if err == unknown_err:
                 log.info(f"Trying to fix `{err}` Error!")
                 await self.connection.close()
-                self.connection = await Database._connect()
+                self.connection = await self._connect()
                 await self.reset_analytics()
 
     async def increase_schedule_counter(self, sender_id: str):
@@ -135,10 +182,10 @@ class Database:
             await self.connection.commit()
         except psycopg.OperationalError as err:
             log.error(err)
-            if err == "the connection is lost":
+            if err == unknown_err:
                 log.info(f"Trying to fix `{err}` Error!")
                 await self.connection.close()
-                self.connection = await Database._connect()
+                self.connection = await self._connect()
                 await self.increase_schedule_counter(sender_id)
 
     async def increase_homework_counter(self, sender_id: str):
@@ -150,10 +197,10 @@ class Database:
             await self.connection.commit()
         except psycopg.OperationalError as err:
             log.error(err)
-            if err == "the connection is lost":
+            if err == unknown_err:
                 log.info(f"Trying to fix `{err}` Error!")
                 await self.connection.close()
-                self.connection = await Database._connect()
+                self.connection = await self._connect()
                 await self.increase_homework_counter(sender_id)
 
     async def increase_marks_counter(self, sender_id: str):
@@ -165,10 +212,10 @@ class Database:
             await self.connection.commit()
         except psycopg.OperationalError as err:
             log.error(err)
-            if err == "the connection is lost":
+            if err == unknown_err:
                 log.info(f"Trying to fix `{err}` Error!")
                 await self.connection.close()
-                self.connection = await Database._connect()
+                self.connection = await self._connect()
                 await self.increase_marks_counter(sender_id)
 
     async def increase_holidays_counter(self, sender_id: str):
@@ -180,10 +227,10 @@ class Database:
             await self.connection.commit()
         except psycopg.OperationalError as err:
             log.error(err)
-            if err == "the connection is lost":
+            if err == unknown_err:
                 log.info(f"Trying to fix `{err}` Error!")
                 await self.connection.close()
-                self.connection = await Database._connect()
+                self.connection = await self._connect()
                 await self.increase_holidays_counter(sender_id)
 
     async def increase_options_counter(self, sender_id: str):
@@ -195,10 +242,10 @@ class Database:
             await self.connection.commit()
         except psycopg.OperationalError as err:
             log.error(err)
-            if err == "the connection is lost":
+            if err == unknown_err:
                 log.info(f"Trying to fix `{err}` Error!")
                 await self.connection.close()
-                self.connection = await Database._connect()
+                self.connection = await self._connect()
                 await self.increase_options_counter(sender_id)
 
     async def increase_help_counter(self, sender_id: str):
@@ -210,10 +257,10 @@ class Database:
             await self.connection.commit()
         except psycopg.OperationalError as err:
             log.error(err)
-            if err == "the connection is lost":
+            if err == unknown_err:
                 log.info(f"Trying to fix `{err}` Error!")
                 await self.connection.close()
-                self.connection = await Database._connect()
+                self.connection = await self._connect()
                 await self.increase_help_counter(sender_id)
 
     async def increase_inline_counter(self, sender_id: str):
@@ -225,8 +272,8 @@ class Database:
             await self.connection.commit()
         except psycopg.OperationalError as err:
             log.error(err)
-            if err == "the connection is lost":
+            if err == unknown_err:
                 log.info(f"Trying to fix `{err}` Error!")
                 await self.connection.close()
-                self.connection = await Database._connect()
+                self.connection = await self._connect()
                 await self.increase_inline_counter(sender_id)
