@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import typing
 
 import aiohttp
@@ -9,14 +11,48 @@ from google.cloud.firestore_v1.async_client import AsyncClient, AsyncDocumentRef
 from app.dependencies import NothingFoundError
 from config import settings
 
-app = firebase_admin.initialize_app(
-    credentials.Certificate(yaml.full_load(settings().GOOGLE_FS_KEY)))
-firestore = AsyncClient(credentials=app.credential.get_credential(), project=app.project_id)
 
+@typing.final
+class Firestore:
+    """
+    Class for working with Google Firestore
+    """
+    __slots__ = ("__client",)
 
-class FirebaseSetters:
+    def __init__(self):
+        self._client: AsyncClient = ...
+        # app = firebase_admin.initialize_app(
+        #     credentials.Certificate(yaml.full_load(settings().GOOGLE_FS_KEY)))
+        # self._client: AsyncClient = AsyncClient(credentials=app.credential.get_credential(), project=app.project_id)
+
     @staticmethod
+    def create() -> Firestore:
+        """
+        Factory initializing object
+        """
+        self = Firestore()
+        self._client = self._connect()
+        return self
+
+    @staticmethod
+    def _connect() -> AsyncClient:
+        """
+        Connect to Firestore
+        """
+        app = firebase_admin.initialize_app(
+            credentials.Certificate(yaml.full_load(settings().GOOGLE_FS_KEY)))
+        return AsyncClient(credentials=app.credential.get_credential(), project=app.project_id)
+
+    @property
+    def _client(self):
+        return self.__client
+
+    @_client.setter
+    def _client(self, value):
+        self.__client = value
+
     async def update_data(
+            self,
             sender_id: str,
             student_id: int | None = None,
             mail_address: str | None = None,
@@ -57,11 +93,11 @@ class FirebaseSetters:
             '''}
         }'''
         )
-        doc_ref: AsyncDocumentReference = firestore.collection("users").document(sender_id)
+        doc_ref: AsyncDocumentReference = self._client.collection("users").document(sender_id)
         await doc_ref.set(yaml.full_load(request_payload), merge=True)
 
-    @staticmethod
     async def update_name(
+            self,
             sender_id: str,
             first_name: int | None = None,
             last_name: str | None = None,
@@ -85,24 +121,18 @@ class FirebaseSetters:
             '''}
         }'''
         )
-        doc_ref: AsyncDocumentReference = firestore.collection("names").document(sender_id)
+        doc_ref: AsyncDocumentReference = self._client.collection("names").document(sender_id)
         await doc_ref.set(yaml.full_load(request_payload), merge=True)
 
-
-class FirebaseGetters:
-    @staticmethod
-    async def is_inited(sender_id: str) -> bool:
-        docs = firestore.collection("users").stream()
+    async def is_inited(self, sender_id: str) -> bool:
+        docs = self._client.collection("users").stream()
         return sender_id in [doc.id async for doc in docs]
 
-    @staticmethod
-    async def get_users() -> typing.AsyncIterator[DocumentSnapshot]:
-        return firestore.collection("users").stream()
-        # return [doc.id async for doc in docs]
+    async def get_users(self) -> typing.AsyncIterator[DocumentSnapshot]:
+        return self._client.collection("users").stream()
 
-    @staticmethod
-    async def get_student_id(sender_id: str) -> int | typing.Type[NothingFoundError]:
-        doc: DocumentSnapshot = await firestore.collection("users").document(sender_id).get()
+    async def get_student_id(self, sender_id: str) -> int | typing.Type[NothingFoundError]:
+        doc: DocumentSnapshot = await self._client.collection("users").document(sender_id).get()
         try:
             if not doc.exists:
                 return NothingFoundError
@@ -110,9 +140,8 @@ class FirebaseGetters:
         except KeyError:
             return NothingFoundError
 
-    @staticmethod
-    async def get_token(sender_id: str) -> str | typing.Type[NothingFoundError]:
-        doc: DocumentSnapshot = await firestore.collection("users").document(sender_id).get()
+    async def get_token(self, sender_id: str) -> str | typing.Type[NothingFoundError]:
+        doc: DocumentSnapshot = await self._client.collection("users").document(sender_id).get()
         try:
             if not doc.exists:
                 return NothingFoundError
@@ -120,9 +149,8 @@ class FirebaseGetters:
         except KeyError:
             return NothingFoundError
 
-    @staticmethod
-    async def get_password(sender_id: str) -> str | typing.Type[NothingFoundError]:
-        doc: DocumentSnapshot = await firestore.collection("users").document(sender_id).get()
+    async def get_password(self, sender_id: str) -> str | typing.Type[NothingFoundError]:
+        doc: DocumentSnapshot = await self._client.collection("users").document(sender_id).get()
         try:
             if not doc.exists:
                 return NothingFoundError
@@ -130,9 +158,8 @@ class FirebaseGetters:
         except KeyError:
             return NothingFoundError
 
-    @staticmethod
-    async def get_login(sender_id: str) -> str | typing.Type[NothingFoundError]:
-        doc: DocumentSnapshot = await firestore.collection("users").document(sender_id).get()
+    async def get_login(self, sender_id: str) -> str | typing.Type[NothingFoundError]:
+        doc: DocumentSnapshot = await self._client.collection("users").document(sender_id).get()
         try:
             if not doc.exists:
                 return NothingFoundError
@@ -140,9 +167,8 @@ class FirebaseGetters:
         except KeyError:
             return NothingFoundError
 
-    @staticmethod
-    async def get_name(sender_id: str) -> str | typing.Type[NothingFoundError]:
-        doc: DocumentSnapshot = await firestore.collection("names").document(sender_id).get()
+    async def get_name(self, sender_id: str) -> str | typing.Type[NothingFoundError]:
+        doc: DocumentSnapshot = await self._client.collection("names").document(sender_id).get()
         try:
             if not doc.exists:
                 return NothingFoundError
@@ -150,22 +176,14 @@ class FirebaseGetters:
         except KeyError:
             return NothingFoundError
 
-    @staticmethod
-    async def get_surname(sender_id: str) -> str | typing.Type[NothingFoundError]:
-        doc: DocumentSnapshot = await firestore.collection("names").document(sender_id).get()
+    async def get_surname(self, sender_id: str) -> str | typing.Type[NothingFoundError]:
+        doc: DocumentSnapshot = await self._client.collection("names").document(sender_id).get()
         try:
             if not doc.exists:
                 return NothingFoundError
             return doc.get("data.last_name")
         except KeyError:
             return NothingFoundError
-
-
-@typing.final
-class Firebase(FirebaseGetters, FirebaseSetters):
-    """
-    Class for working with Google Firebase
-    """
 
     @staticmethod
     async def send_email(email: str):

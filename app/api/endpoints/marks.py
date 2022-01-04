@@ -6,19 +6,21 @@ from fastapi.requests import Request
 from fastapi.responses import ORJSONResponse  # HTMLResponse,
 
 from app.api.utils import accept
-from app.dependencies import Firebase, NothingFoundError
+from app.dependencies import Firestore, NothingFoundError
 from app.schemas import MarksResponse
 
 # from config import settings
 
 router = APIRouter(prefix="/marks")
 session: aiohttp.ClientSession = ...
+fs: Firestore = ...
 
 
 @router.on_event("startup")
 async def on_startup():
-    global session
+    global session, fs
     session = aiohttp.ClientSession()
+    fs = Firestore.create()
 
 
 @router.on_event("shutdown")
@@ -30,8 +32,8 @@ async def on_shutdown():
 @accept("application/json")
 async def read_marks(request: Request, sender_id=Header(...)):
     student_id, token = await asyncio.gather(
-        Firebase.get_student_id(sender_id=sender_id),
-        Firebase.get_token(sender_id=sender_id)
+        fs.get_student_id(sender_id=sender_id),
+        fs.get_token(sender_id=sender_id)
     )
     if NothingFoundError in (student_id, token):
         raise HTTPException(

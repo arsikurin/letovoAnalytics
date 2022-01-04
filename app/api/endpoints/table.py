@@ -13,6 +13,7 @@ router = APIRouter(prefix="/table")
 session: aiohttp.ClientSession = ...
 templates = Jinja2Templates(directory="./app/api/endpoints/")
 
+
 @router.on_event("startup")
 async def on_startup():
     global session

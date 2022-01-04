@@ -1,12 +1,12 @@
 import asyncio
-import datetime
+import time
 import logging as log
 import typing
 
 import aiohttp
 import orjson
 
-from app.dependencies import NothingFoundError, UnauthorizedError, Firebase
+from app.dependencies import NothingFoundError, UnauthorizedError, Firestore
 from config import settings
 
 
@@ -29,7 +29,7 @@ class Web:
         self._session = value
 
     async def receive_token(
-            self, sender_id: str | None = None, login: str | None = None,
+            self, fs: Firestore, sender_id: str | None = None, login: str | None = None,
             password: str | None = None
     ) -> str:
         """
@@ -43,8 +43,8 @@ class Web:
         """
         if None in (login, password):
             login, password = await asyncio.gather(
-                Firebase.get_login(sender_id=sender_id),
-                Firebase.get_password(sender_id=sender_id)
+                fs.get_login(sender_id=sender_id),
+                fs.get_password(sender_id=sender_id)
             )
             if NothingFoundError in (login, password):
                 raise NothingFoundError("Nothing found in the database for this user")
@@ -63,7 +63,7 @@ class Web:
             raise aiohttp.ClientConnectionError("Cannot establish connection to s.letovo.ru")
 
     async def receive_student_id(
-            self, sender_id: str = None, token: str = None
+            self, fs: Firestore, sender_id: str = None, token: str = None
     ) -> int:
         """
         Requires either a sender_id or token
@@ -75,7 +75,7 @@ class Web:
         :return: int
         """
         if token is None:
-            token = await Firebase.get_token(sender_id=sender_id)
+            token = await fs.get_token(sender_id=sender_id)
             if token is NothingFoundError:
                 raise NothingFoundError("Nothing found in the database for this user")
 
@@ -92,7 +92,7 @@ class Web:
             raise aiohttp.ClientConnectionError("Cannot establish connection to s.letovo.ru")
 
     async def receive_hw_n_schedule(
-            self, sender_id: str
+            self, sender_id: str, fs: Firestore
     ) -> bytes:
         """
         Receive homework & schedule
@@ -104,15 +104,15 @@ class Web:
         :return: bytes
         """
         student_id, token = await asyncio.gather(
-            Firebase.get_student_id(sender_id=sender_id),
-            Firebase.get_token(sender_id=sender_id)
+            fs.get_student_id(sender_id=sender_id),
+            fs.get_token(sender_id=sender_id)
         )
         if NothingFoundError in (student_id, token):
             raise NothingFoundError("Nothing found in the database for this user")
 
         url = (
             f"https://s-api.letovo.ru/api/schedule/{student_id}/week?schedule_date="
-            f"{datetime.datetime.now().date()}"
+            f"{time.strftime('%Y-%m-%d')}"
         )
         headers = {
             "Authorization": token,
@@ -128,7 +128,7 @@ class Web:
             raise aiohttp.ClientConnectionError("Cannot establish connection to s.letovo.ru")
 
     async def receive_marks(
-            self, sender_id: str
+            self, sender_id: str, fs: Firestore
     ) -> bytes:
         """
         Receive marks
@@ -140,14 +140,17 @@ class Web:
         :return: bytes
         """
         student_id, token = await asyncio.gather(
-            Firebase.get_student_id(sender_id=sender_id),
-            Firebase.get_token(sender_id=sender_id)
+            fs.get_student_id(sender_id=sender_id),
+            fs.get_token(sender_id=sender_id)
         )
         if NothingFoundError in (student_id, token):
             raise NothingFoundError("Nothing found in the database for this user")
 
-        # TODO period_num
-        url = f"https://s-api.letovo.ru/api/schoolprogress/{student_id}?period_num=1"
+        url = f"https://s-api.letovo.ru/api/schoolprogress/{student_id}?period_num="
+        if int(time.strftime("%m")) >= 9:
+            url += "1"
+        else:
+            url += "2"
 
         headers = {
             "Authorization": token,

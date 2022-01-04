@@ -6,25 +6,26 @@ import logging as log
 import aiohttp
 
 import essential  # noqa
-from app.dependencies import Web, Database, Firebase, UnauthorizedError, NothingFoundError
+from app.dependencies import Web, Postgresql, Firestore, UnauthorizedError, NothingFoundError
 
 
 async def main():
     log.debug("established connection to the Postgres")
-    db = await Database.create()
+    db = await Postgresql.create()
+    fs = Firestore.create()
     await db.reset_analytics()
 
     log.info("Updating tokens in Firebase")
     async with aiohttp.ClientSession() as session:
         web = Web(session)
-        async for user in await Firebase.get_users():
+        async for user in await fs.get_users():
             try:
-                token = await web.receive_token(sender_id=user.id)
+                token = await web.receive_token(sender_id=user.id, fs=fs)
             except (NothingFoundError, UnauthorizedError, aiohttp.ClientConnectionError):
                 log.info(f"Skipped {user.id}")
                 continue
 
-            await Firebase.update_data(sender_id=user.id, token=token)
+            await fs.update_data(sender_id=user.id, token=token)
             log.info(f"Updated {user.id}")
 
 
