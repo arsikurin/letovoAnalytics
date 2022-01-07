@@ -6,7 +6,7 @@ import typing
 import aiohttp
 import orjson
 
-from app.dependencies import NothingFoundError, UnauthorizedError, Firestore
+from app.dependencies import NothingFoundError, UnauthorizedError, Firestore, CredentialsDatabase
 from config import settings
 
 
@@ -29,7 +29,7 @@ class Web:
         self._session = value
 
     async def receive_token(
-            self, fs: Firestore, sender_id: str | None = None, login: str | None = None,
+            self, fs: CredentialsDatabase, sender_id: str | None = None, login: str | None = None,
             password: str | None = None
     ) -> str:
         """
@@ -63,7 +63,7 @@ class Web:
             raise aiohttp.ClientConnectionError("Cannot establish connection to s.letovo.ru")
 
     async def receive_student_id(
-            self, fs: Firestore, sender_id: str = None, token: str = None
+            self, fs: CredentialsDatabase, sender_id: str = None, token: str = None
     ) -> int:
         """
         Requires either a sender_id or token
@@ -92,7 +92,7 @@ class Web:
             raise aiohttp.ClientConnectionError("Cannot establish connection to s.letovo.ru")
 
     async def receive_hw_n_schedule(
-            self, sender_id: str, fs: Firestore
+            self, sender_id: str, fs: CredentialsDatabase
     ) -> bytes:
         """
         Receive homework & schedule
@@ -128,7 +128,7 @@ class Web:
             raise aiohttp.ClientConnectionError("Cannot establish connection to s.letovo.ru")
 
     async def receive_marks(
-            self, sender_id: str, fs: Firestore
+            self, sender_id: str, fs: CredentialsDatabase
     ) -> bytes:
         """
         Receive marks

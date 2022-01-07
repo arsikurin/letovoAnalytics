@@ -12,7 +12,7 @@ from app.dependencies import Web, Postgresql, Firestore, UnauthorizedError, Noth
 async def main():
     log.debug("established connection to the Postgres")
     db = await Postgresql.create()
-    fs = Firestore.create()
+    fs = await Firestore.create()
     await db.reset_analytics()
 
     log.info("Updating tokens in Firebase")

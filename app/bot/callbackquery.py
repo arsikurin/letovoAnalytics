@@ -4,9 +4,14 @@ import typing
 import aiohttp
 from telethon import Button, events, TelegramClient
 
-from app.dependencies import Weekdays, MarkTypes, NothingFoundError, UnauthorizedError, Firestore, Web, AnalyticsDatabase
+from app.dependencies import (
+    Weekdays, MarkTypes, NothingFoundError, UnauthorizedError, Web, AnalyticsDatabase, CredentialsDatabase
+)
 from app.schemas import MarksResponse, MarksDataList, ScheduleResponse, HomeworkResponse
 from config import settings
+
+choose_an_option_below = "Choose an option below ↴"
+back = "« Back"
 
 
 class CallbackQueryEventEditors:
@@ -17,7 +22,7 @@ class CallbackQueryEventEditors:
     @staticmethod
     async def to_main_page(event: events.CallbackQuery.Event):
         await event.edit(
-            "Choose an option below ↴",
+            choose_an_option_below,
             parse_mode="md",
             buttons=[
                 [
@@ -35,7 +40,7 @@ class CallbackQueryEventEditors:
     @staticmethod
     async def to_schedule_page(event: events.CallbackQuery.Event):
         await event.edit(
-            "Choose an option below ↴",
+            choose_an_option_below,
             parse_mode="md",
             buttons=[
                 [
@@ -45,7 +50,7 @@ class CallbackQueryEventEditors:
                 ], [
                     Button.inline("Specific day »", b"specific_day_schedule"),
                 ], [
-                    Button.inline("« Back", b"main_page")
+                    Button.inline(back, b"main_page")
                 ]
             ]
         )
@@ -53,7 +58,7 @@ class CallbackQueryEventEditors:
     @staticmethod
     async def to_homework_page(event: events.CallbackQuery.Event):
         await event.edit(
-            "Choose an option below ↴",
+            choose_an_option_below,
             parse_mode="md",
             buttons=[
                 [
@@ -63,7 +68,7 @@ class CallbackQueryEventEditors:
                 ], [
                     Button.inline("Specific day »", b"specific_day_homework"),
                 ], [
-                    Button.inline("« Back", b"main_page")
+                    Button.inline(back, b"main_page")
                 ]
             ]
         )
@@ -71,7 +76,7 @@ class CallbackQueryEventEditors:
     @staticmethod
     async def to_marks_page(event: events.CallbackQuery.Event):
         await event.edit(
-            "Choose an option below ↴",
+            choose_an_option_below,
             parse_mode="md",
             buttons=[
                 [
@@ -82,7 +87,7 @@ class CallbackQueryEventEditors:
                     Button.inline("Summatives", b"summative_marks"),
                     Button.inline("Finals", b"final_marks"),
                 ], [
-                    Button.inline("« Back", b"main_page")
+                    Button.inline(back, b"main_page")
                 ]
             ]
         )
@@ -103,7 +108,7 @@ class CallbackQueryEventEditors:
                     Button.inline("Friday", b"friday_schedule"),
                     Button.inline("Saturday", b"saturday_schedule")
                 ], [
-                    Button.inline("« Back", b"schedule_page")
+                    Button.inline(back, b"schedule_page")
                 ]
             ]
         )
@@ -124,7 +129,7 @@ class CallbackQueryEventEditors:
                     Button.inline("Friday", b"friday_homework"),
                     Button.inline("Saturday", b"saturday_homework")
                 ], [
-                    Button.inline("« Back", b"homework_page")
+                    Button.inline(back, b"homework_page")
                 ]
             ]
         )
@@ -180,7 +185,6 @@ class CallbackQuerySenders:
         )
 
     async def send_start_page(self, sender):
-        await asyncio.sleep(0.05)
         await self.client.send_message(
             entity=sender,
             message="I will help you access s.letovo.ru resources via Telegram.\n"
@@ -194,7 +198,6 @@ class CallbackQuerySenders:
         )
 
     async def send_help_page(self, sender):
-        await asyncio.sleep(0.05)
         await self.client.send_message(
             entity=sender,
             message="I can help you access s.letovo.ru resources via Telegram.\n"
@@ -237,7 +240,7 @@ class CallbackQuerySenders:
             link_preview=False
         )
 
-    async def send_stats_page(self, sender, db: AnalyticsDatabase, fs: Firestore):
+    async def send_stats_page(self, sender, db: AnalyticsDatabase, fs: CredentialsDatabase):
         for user in await db.get_users():
             resp = await db.get_analytics(user)
             if not any((
@@ -269,7 +272,6 @@ class CallbackQuerySenders:
             )
 
     async def send_about_page(self, sender):
-        await asyncio.sleep(0.05)
         await self.client.send_message(
             entity=sender,
             message="**Arseny Kurin**\n\n"
@@ -282,7 +284,7 @@ class CallbackQuerySenders:
     async def send_main_page(self, sender):
         await self.client.send_message(
             entity=sender,
-            message="Choose an option below ↴",
+            message=choose_an_option_below,
             parse_mode="md",
             buttons=[
                 [
@@ -300,7 +302,7 @@ class CallbackQuerySenders:
     async def send_dev_page(self, sender):
         await self.client.send_message(
             entity=sender,
-            message="Choose an option below ↴",
+            message=choose_an_option_below,
             parse_mode="md",
             buttons=[
                 [
@@ -340,7 +342,7 @@ class CallbackQuerySenders:
         )
 
     async def send_schedule(
-            self, event: events.CallbackQuery.Event, specific_day: Weekdays, fs: Firestore
+            self, event: events.CallbackQuery.Event, specific_day: Weekdays, fs: CredentialsDatabase
     ):
         """
         parse & send specific day(s) from schedule
@@ -409,7 +411,7 @@ class CallbackQuerySenders:
         await event.answer()
 
     async def send_homework(
-            self, event: events.CallbackQuery.Event, specific_day: Weekdays, fs: Firestore
+            self, event: events.CallbackQuery.Event, specific_day: Weekdays, fs: CredentialsDatabase
     ):
         """
         parse & send specific day(s) from homework
@@ -474,7 +476,7 @@ class CallbackQuerySenders:
                 )
         await event.answer()
 
-    def _summative_marks(self, subject: MarksDataList):
+    async def _summative_marks(self, subject: MarksDataList):
         """
         Parse summative marks
         """
@@ -524,7 +526,7 @@ class CallbackQuerySenders:
             self._payload += f"**{mark_d_avg}**D "
 
     async def send_marks(
-            self, event: events.CallbackQuery.Event, specific: MarkTypes, fs: Firestore
+            self, event: events.CallbackQuery.Event, specific: MarkTypes, fs: CredentialsDatabase
     ):
         """
         parse & send marks
@@ -548,7 +550,7 @@ class CallbackQuerySenders:
         for subject in marks_response.data:
             if specific == MarkTypes.SUMMATIVE and subject.summative_list:
                 self._payload = f"**{subject.group.subject.subject_name_eng}**\n"
-                self._summative_marks(subject)
+                await self._summative_marks(subject)
                 await self.client.send_message(
                     entity=await event.get_sender(),
                     message=self._payload,
@@ -580,7 +582,7 @@ class CallbackQuerySenders:
                         self._payload += f"**{mark.mark_value}**F "
 
                 if subject.summative_list:
-                    self._summative_marks(subject)
+                    await self._summative_marks(subject)
 
                 if subject.summative_list or subject.formative_list:
                     await self.client.send_message(

@@ -7,7 +7,7 @@ authors = ["arsikurin <arseny.kurin@gmail.com>"]
 [tool.poetry.dependencies]
 python = "3.10.1"
 orjson = "^3.6.4"
-fastapi = "^0.70.0"
+fastapi = "^0.71.0"
 requests = "^2.26.0"
 firebase-admin = "^5.1.0"
 colourlib = "^0.5.3"
@@ -19,7 +19,7 @@ python-multipart = "^0.0.5"
 uvloop = "^0.16.0"
 aiorun = "^2021.10.1"
 aiohttp = "^3.8.0"
-uvicorn = {extras = ["standard"], version = "^0.15.0"}
+uvicorn = {extras = ["standard"], version = "^0.16.0"}
 psycopg = {extras = ["c"], version = "^3.0.4"}
 Telethon = "^1.23.0"
 pydantic = "^1.8.2"

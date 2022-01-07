@@ -20,7 +20,7 @@ fs: Firestore = ...
 async def on_startup():
     global session, fs
     session = aiohttp.ClientSession()
-    fs = Firestore.create()
+    fs = await Firestore.create()
 
 
 @router.on_event("shutdown")
