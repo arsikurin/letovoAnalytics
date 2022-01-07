@@ -1,4 +1,3 @@
-import asyncio
 import datetime
 import functools as ft
 import logging as log
@@ -8,13 +7,15 @@ from telethon import events
 
 from app.bot import CallbackQuery, InlineQuery, client
 from app.dependencies import (
-    Weekdays, MarkTypes, PatternMatching, Postgresql, Firestore
+    Weekdays, MarkTypes, PatternMatching, run_sequence, run_parallel, AnalyticsDatabase, CredentialsDatabase
 )
 
+"""add client.add_event_handler, i.e. plugin architecture"""
 
-async def include_handlers(session: aiohttp.ClientSession):
-    db = await Postgresql.create()
-    fs = Firestore.create()
+
+# client.add_event_handler()
+
+async def include_handlers(session: aiohttp.ClientSession, db: AnalyticsDatabase, fs: CredentialsDatabase):
     cbQuery = CallbackQuery(client=client, session=session)
     iQuery = InlineQuery(s=session)
 
@@ -24,33 +25,32 @@ async def include_handlers(session: aiohttp.ClientSession):
         sender_id = str(sender.id)
         if sender_id not in ("606336225", "644775011", "1381048606", "757953400"):
             raise events.StopPropagation
-        await cbQuery.send_greeting(sender=sender)
-        await cbQuery.send_dev_page(sender=sender)
+        await run_sequence(
+            cbQuery.send_greeting(sender=sender),
+            cbQuery.send_dev_page(sender=sender)
+        )
         raise events.StopPropagation
 
     @client.on(events.NewMessage(pattern=r"(?i).*options"))
     async def _options(event: events.NewMessage.Event):
         sender = await event.get_sender()
         sender_id = str(sender.id)
-        _, ii = await asyncio.gather(
+        _, il = await run_parallel(
             cbQuery.send_greeting(sender=sender),
-            fs.is_inited(sender_id=sender_id),
+            fs.is_logged(sender_id=sender_id),
         )
+        if not il:
+            _, ii = await run_parallel(
+                cbQuery.send_help_page(sender=sender),
+                db.is_inited(sender_id=sender_id)
+            )
+            if not ii:
+                await db.init_user(sender_id=sender_id)
 
-        if not ii:
-            await cbQuery.send_help_page(sender=sender)
-
-            if not await db.is_inited(sender_id=sender_id):
-                await asyncio.gather(
-                    db.init_user(sender_id=sender_id),
-                    db.increase_options_counter(sender_id=sender_id)
-                )
+            await db.increase_options_counter(sender_id=sender_id)
             raise events.StopPropagation
 
-        if not await db.is_inited(sender_id=sender_id):
-            await db.init_user(sender_id=sender_id)
-
-        await asyncio.gather(
+        await run_parallel(
             cbQuery.send_main_page(sender=sender),
             db.increase_options_counter(sender_id=sender_id)
         )
@@ -63,9 +63,12 @@ async def include_handlers(session: aiohttp.ClientSession):
             log.info(auth_hash)  # TODO auth
         sender = await event.get_sender()
         sender_id = str(sender.id)
-        await asyncio.gather(
-            cbQuery.send_greeting(sender=sender),
-            cbQuery.send_help_page(sender=sender),
+
+        await run_parallel(
+            run_sequence(
+                cbQuery.send_greeting(sender=sender),
+                cbQuery.send_help_page(sender=sender),
+            ),
             fs.update_data(sender_id=sender_id, lang=sender.lang_code),
             fs.update_name(sender_id=sender_id, first_name=sender.first_name, last_name=sender.last_name),
         )
@@ -76,8 +79,10 @@ async def include_handlers(session: aiohttp.ClientSession):
     @client.on(events.CallbackQuery(data=b"stats"))
     async def _stats(event: events.CallbackQuery.Event):
         sender = await event.get_sender()
-        await cbQuery.send_stats_page(sender=sender, db=db, fs=fs)
-        await event.answer("Done")
+        await run_sequence(
+            cbQuery.send_stats_page(sender=sender, db=db, fs=fs),
+            event.answer("Done")
+        )
         raise events.StopPropagation
 
     @client.on(events.CallbackQuery(data=b"tokens"))
@@ -125,7 +130,7 @@ async def include_handlers(session: aiohttp.ClientSession):
     async def _holidays(event: events.CallbackQuery.Event):
         sender = await event.get_sender()
         sender_id = str(sender.id)
-        await asyncio.gather(
+        await run_parallel(
             event.answer(),
             cbQuery.send_holidays(event=event),
             db.increase_holidays_counter(sender_id=sender_id)
@@ -215,12 +220,10 @@ async def include_handlers(session: aiohttp.ClientSession):
         sender_id = str(sender.id)
         if not await db.is_inited(sender_id=sender_id):
             await db.init_user(sender_id=sender_id)
-
-        await asyncio.gather(
+        await run_sequence(
             cbQuery.send_greeting(sender=sender),
             cbQuery.send_about_page(sender=sender)
         )
-
         raise events.StopPropagation
 
     @client.on(events.NewMessage(pattern=r"(?i).*help"))
@@ -230,10 +233,12 @@ async def include_handlers(session: aiohttp.ClientSession):
         if not await db.is_inited(sender_id=sender_id):
             await db.init_user(sender_id=sender_id)
 
-        await asyncio.gather(
-            cbQuery.send_greeting(sender=sender),
-            db.increase_help_counter(sender_id=sender_id),
-            cbQuery.send_help_page(sender=sender)
+        await run_parallel(
+            run_sequence(
+                cbQuery.send_greeting(sender=sender),
+                cbQuery.send_help_page(sender=sender)
+            ),
+            db.increase_help_counter(sender_id=sender_id)
         )
         raise events.StopPropagation
 
@@ -241,7 +246,7 @@ async def include_handlers(session: aiohttp.ClientSession):
     async def _delete(event: events.NewMessage.Event):
         await event.delete()
 
-    @client.on(events.InlineQuery())
+    # @client.on(events.InlineQuery()) TODO NOT WORKING CURRENTLY
     async def _inline_query(event: events.InlineQuery.Event):
         sender = await event.get_sender()
         sender_id = str(sender.id)

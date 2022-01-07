@@ -1,8 +1,8 @@
 from .database import AnalyticsDatabase, Postgresql
 from .enums import Weekdays, MarkTypes, PatternMatching
 from .errors import NothingFoundError, UnauthorizedError
-from .firebase import Firestore
-from .utils import execute_immediately
+from .firebase import CredentialsDatabase, Firestore
+from .utils import run_immediately, run_parallel, run_sequence
 from .web import Web
 
 __all__ = (
@@ -13,7 +13,10 @@ __all__ = (
     "PatternMatching",
     "NothingFoundError",
     "UnauthorizedError",
+    "CredentialsDatabase",
     "Firestore",
     "Web",
-    "execute_immediately"
+    "run_immediately",
+    "run_parallel",
+    "run_sequence"
 )

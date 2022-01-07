@@ -26,7 +26,7 @@ async def send_email(analytics_login: str):
 async def on_startup():
     global web, fs
     web = Web(aiohttp.ClientSession())
-    fs = Firestore.create()
+    fs = await Firestore.create()
 
 
 @router.on_event("shutdown")
