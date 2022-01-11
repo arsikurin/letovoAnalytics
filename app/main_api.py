@@ -1,6 +1,5 @@
 #!/usr/bin/python3.10
 
-import aiohttp
 from fastapi import FastAPI
 from fastapi.exceptions import HTTPException, StarletteHTTPException, ValidationError
 from fastapi.requests import Request
@@ -12,7 +11,6 @@ import essential  # noqa
 from app.api.endpoints import login_router
 from config import settings
 
-session: aiohttp.ClientSession = ...
 app = FastAPI(
     title=settings().title,
 )
@@ -21,17 +19,6 @@ app.mount("/static", StaticFiles(directory="./app/static"), name="static")
 templates = Jinja2Templates(directory="./app/templates")
 
 app.include_router(login_router, tags=["login"], prefix="/api")
-
-
-@app.on_event("startup")
-async def on_startup():
-    global session
-    session = aiohttp.ClientSession()
-
-
-@app.on_event("shutdown")
-async def on_shutdown():
-    await session.close()
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -238,10 +225,11 @@ async def bad_request(request: Request, error: HTTPException) -> templates.Templ
 
 if __name__ == "__main__":
     import uvicorn
-    import sys
+    # import sys
 
+    # port = int(sys.argv[1]),
     c = uvicorn.Config(
-        app=app, host="0.0.0.0", port=int(sys.argv[1]), workers=settings().WEB_CONCURRENCY, http="httptools",
+        app=app, host="0.0.0.0", port=settings().PORT, workers=settings().WEB_CONCURRENCY, http="httptools",
         loop="uvloop"
     )  # limit_concurrency
 

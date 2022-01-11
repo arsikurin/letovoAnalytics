@@ -30,6 +30,7 @@ class AppSettings(BaseSettings):
     TG_BOT_TOKEN: str
     DATABASE_URL: PostgresDsn
     WEB_CONCURRENCY: int = 4
+    PORT: int = 8084
     debug: bool = False
     title: str = "Letovo Analytics Bot API"
     favicon_path: str = "app/static/images/icons/api-icon.png"
