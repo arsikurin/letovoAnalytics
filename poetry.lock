@@ -736,26 +736,26 @@ test = ["ipaddress", "mock", "unittest2", "enum34", "pywin32", "wmi"]
 
 [[package]]
 name = "psycopg"
-version = "3.0.7"
+version = "3.0.8"
 description = "PostgreSQL database adapter for Python"
 category = "main"
 optional = false
 python-versions = ">=3.6"
 
 [package.dependencies]
-psycopg-c = {version = "3.0.7", optional = true, markers = "extra == \"c\""}
+psycopg-c = {version = "3.0.8", optional = true, markers = "extra == \"c\""}
 
 [package.extras]
-binary = ["psycopg-binary (==3.0.7)"]
-c = ["psycopg-c (==3.0.7)"]
-dev = ["black", "dnspython (>=2.1.0,<2.2.0)", "flake8 (>=4.0.1,<4.1.0)", "mypy (>=0.910)", "pytest-mypy (>=0.8.1)", "types-setuptools (>=57.4.0)", "wheel"]
-docs = ["Sphinx (>=4.2.0,<4.3.0)", "docutils (>=0.17.0,<0.18.0)", "furo (>=2021.9.8)", "sphinx-autobuild (>=2021.3.14)", "sphinx-autodoc-typehints (>=1.12.0,<1.13.0)", "dnspython (>=2.1.0,<2.2.0)", "shapely (>=1.7.0,<1.8.0)"]
+binary = ["psycopg-binary (==3.0.8)"]
+c = ["psycopg-c (==3.0.8)"]
+dev = ["black (>=21.12b0)", "dnspython (>=2.1)", "flake8 (>=4.0)", "mypy (>=0.920,!=0.930,!=0.931)", "types-setuptools (>=57.4)", "wheel (>=0.36)"]
+docs = ["Sphinx (>=4.2)", "furo (==2021.11.23)", "sphinx-autobuild (>=2021.3.14)", "sphinx-autodoc-typehints (>=1.12)", "dnspython (>=2.1)", "shapely (>=1.7)"]
 pool = ["psycopg-pool"]
-test = ["mypy (>=0.910)", "pproxy (>=2.7.8,<2.8.0)", "pytest (>=6.2.5,<6.3.0)", "pytest-asyncio (>=0.16.0,<0.17.0)", "pytest-cov (>=3.0.0,<3.1.0)", "pytest-randomly (>=3.10.1,<3.11.0)", "tenacity (>=8.0.1,<8.1.0)"]
+test = ["mypy (>=0.920,!=0.930,!=0.931)", "pproxy (>=2.7)", "pytest (>=6.2.5)", "pytest-asyncio (>=0.16)", "pytest-cov (>=3.0)", "pytest-randomly (>=3.10)", "tenacity (>=8.0)"]
 
 [[package]]
 name = "psycopg-c"
-version = "3.0.7"
+version = "3.0.8"
 description = "PostgreSQL database adapter for Python -- C optimisation distribution"
 category = "main"
 optional = false
@@ -2135,11 +2135,11 @@ psutil = [
     {file = "psutil-5.9.0.tar.gz", hash = "sha256:869842dbd66bb80c3217158e629d6fceaecc3a3166d3d1faee515b05dd26ca25"},
 ]
 psycopg = [
-    {file = "psycopg-3.0.7-py3-none-any.whl", hash = "sha256:9a0e89937ad08e1e0af6ec97a5030ee02273bd651d4fb682e7d8facd80973fda"},
-    {file = "psycopg-3.0.7.tar.gz", hash = "sha256:54f3bbcb7ece702d0141a1669e4e46e6cd3b0635813fc8ad4887ce085902e354"},
+    {file = "psycopg-3.0.8-py3-none-any.whl", hash = "sha256:c2e4afbe71b77b101523b06707f2e2edf1ed801504dd6175efda11da31af8f12"},
+    {file = "psycopg-3.0.8.tar.gz", hash = "sha256:d803be0de54c26ee8c06fd73b6391f809efbcde6a5bbdc118a1a66c2fb4cf944"},
 ]
 psycopg-c = [
-    {file = "psycopg-c-3.0.7.tar.gz", hash = "sha256:ec15e2e0ad6ddf07e4671467f392d0e3925e7de931bf8a355e9a777fb5d6b0a3"},
+    {file = "psycopg-c-3.0.8.tar.gz", hash = "sha256:adb095ab0e0f9dc5584811558fa7584e70b4aeec7118f0e6640b8be9c5f895a0"},
 ]
 py = [
     {file = "py-1.11.0-py2.py3-none-any.whl", hash = "sha256:607c53218732647dff4acdfcd50cb62615cedf612e72d1724fb1a0cc6405b378"},

@@ -6,9 +6,11 @@ import sys
 import uvloop
 from colourlib import Fg, Style
 
-PROJECT_ROOT = os.path.abspath(os.path.join(
-    os.path.dirname(__file__),
-    os.pardir)
+PROJECT_ROOT = os.path.abspath(
+    os.path.join(
+        os.path.dirname(__file__),
+        os.pardir
+    )
 )
 sys.path.append(PROJECT_ROOT)
 
@@ -32,7 +34,8 @@ else:
                f"\n[%(name)s]\n",
         level=log.DEBUG
     )
-    log.getLogger("telethon.network.mtprotosender").level = log.INFO
-    log.getLogger("telethon.extensions.messagepacker").level = log.INFO
+    log.getLogger("telethon.network.mtprotosender").setLevel(log.INFO)
+    log.getLogger("telethon.extensions.messagepacker").setLevel(log.INFO)
+    log.getLogger("aiorun").setLevel(log.INFO)
     # log.getLogger("urllib3.connectionpool").disabled = True
     # log.getLogger("multipart.multipart").disabled = True

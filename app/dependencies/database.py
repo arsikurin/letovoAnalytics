@@ -3,7 +3,7 @@ from __future__ import annotations
 import itertools as it
 import logging as log
 import typing
-
+import types
 import psycopg
 from psycopg.rows import class_row
 
@@ -19,14 +19,17 @@ class AnalyticsDatabase(typing.Protocol):
     """
     __slots__ = ("__connection",)
 
+    async def __aenter__(self) -> AnalyticsDatabase: ...
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb): ...
+
     @property
-    def _connection(self) -> psycopg.AsyncConnection[typing.Any]:
-        return self.__connection
+    def _connection(self) -> psycopg.AsyncConnection[typing.Any]: ...
 
     @staticmethod
     async def create() -> AnalyticsDatabase:
         """
-        Factory initializing object
+        Factory
         """
 
     @staticmethod
@@ -69,6 +72,18 @@ class Postgresql:
     def __init__(self):
         self._connection: psycopg.AsyncConnection = ...
 
+    async def __aenter__(self) -> AnalyticsDatabase:
+        self._connection = await self._connect()
+        return self
+
+    async def __aexit__(
+            self,
+            exc_type: typing.Type[BaseException] | None,
+            exc_val: BaseException | None,
+            exc_tb: types.TracebackType | None,
+    ):
+        await self._connection.__aexit__(exc_type=exc_type, exc_val=exc_val, exc_tb=exc_tb)
+
     @property
     def _connection(self) -> psycopg.AsyncConnection[typing.Any]:
         return self.__connection
@@ -80,11 +95,11 @@ class Postgresql:
     @staticmethod
     async def create() -> AnalyticsDatabase:
         """
-        Factory initializing object
+        Factory
         """
-        self = Postgresql()
-        self._connection = await self._connect()
-        return self
+        self_ = Postgresql()
+        self_._connection = await self_._connect()
+        return self_
 
     @staticmethod
     async def _connect() -> psycopg.AsyncConnection:

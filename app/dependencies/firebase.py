@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import types
 import typing
 
 import aiohttp
@@ -18,14 +19,17 @@ class CredentialsDatabase(typing.Protocol):
     """
     __slots__ = ("__client",)
 
+    async def __aenter__(self) -> CredentialsDatabase: ...
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb): ...
+
     @property
-    def _client(self):
-        return self.__client
+    def _client(self) -> AsyncClient: ...
 
     @staticmethod
     async def create() -> CredentialsDatabase:
         """
-        Factory initializing object
+        Factory
         """
 
     @staticmethod
@@ -81,6 +85,18 @@ class Firestore:
     def __init__(self):
         self._client: AsyncClient = ...
 
+    async def __aenter__(self) -> CredentialsDatabase:
+        self._client = await self._connect()
+        return self
+
+    async def __aexit__(
+            self,
+            exc_type: typing.Type[BaseException] | None,
+            exc_val: BaseException | None,
+            exc_tb: types.TracebackType | None,
+    ):
+        self._client.close()
+
     @property
     def _client(self) -> AsyncClient:
         return self.__client
@@ -92,11 +108,11 @@ class Firestore:
     @staticmethod
     async def create() -> CredentialsDatabase:
         """
-        Factory initializing object
+        Factory
         """
-        self = Firestore()
-        self._client = await self._connect()
-        return self
+        self_ = Firestore()
+        self_._client = await self_._connect()
+        return self_
 
     @staticmethod
     async def _connect() -> AsyncClient:

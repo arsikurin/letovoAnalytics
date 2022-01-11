@@ -6,18 +6,18 @@ import typing
 import aiohttp
 import orjson
 
-from app.dependencies import NothingFoundError, UnauthorizedError, Firestore, CredentialsDatabase
+from app.dependencies import NothingFoundError, UnauthorizedError, CredentialsDatabase
 from config import settings
 
 
 @typing.final
 class Web:
     """
-    Class for working with web API of s.letovo.ru
+    Class for dealing with web API of s.letovo.ru
     """
     __slots__ = ("_session",)
 
-    def __init__(self, session):
+    def __init__(self, session: aiohttp.ClientSession):
         self.session: aiohttp.ClientSession = session
 
     @property
