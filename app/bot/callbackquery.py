@@ -137,11 +137,15 @@ class CallbackQueryEventEditors:
 
 
 class CallbackQuerySenders:
-    __slots__ = ("_client", "__web", "__payload")
+    __slots__ = ("_client", "__web", "__db", "__fs", "__payload")
 
-    def __init__(self, client: TelegramClient, session: aiohttp.ClientSession):
+    def __init__(
+            self, client: TelegramClient, session: aiohttp.ClientSession, db: AnalyticsDatabase, fs: CredentialsDatabase
+    ):
         self.client: TelegramClient = client
         self._web: Web = Web(session)
+        self._db: AnalyticsDatabase = db
+        self._fs: CredentialsDatabase = fs
         self._payload: str = ""
 
     @property
@@ -159,6 +163,22 @@ class CallbackQuerySenders:
     @_web.setter
     def _web(self, value: Web):
         self.__web = value
+
+    @property
+    def _db(self) -> AnalyticsDatabase:
+        return self.__db
+
+    @_db.setter
+    def _db(self, value: AnalyticsDatabase):
+        self.__db = value
+
+    @property
+    def _fs(self) -> CredentialsDatabase:
+        return self.__fs
+
+    @_fs.setter
+    def _fs(self, value: CredentialsDatabase):
+        self.__fs = value
 
     @property
     def _payload(self) -> str:
@@ -241,18 +261,18 @@ class CallbackQuerySenders:
             link_preview=False
         )
 
-    async def send_stats_page(self, sender: User, db: AnalyticsDatabase, fs: CredentialsDatabase):
-        for user in await db.get_users():
-            resp = await db.get_analytics(user)
+    async def send_stats_page(self, sender: User):
+        for user in await self._db.get_users():
+            resp = await self._db.get_analytics(user)
             if not any((
                     resp.schedule_counter, resp.homework_counter, resp.marks_counter, resp.holidays_counter,
                     resp.options_counter, resp.help_counter, resp.about_counter
             )): continue  # noqa
 
             name, surname, login = await asyncio.gather(
-                fs.get_name(resp.sender_id),
-                fs.get_surname(resp.sender_id),
-                fs.get_login(resp.sender_id),
+                self._fs.get_name(resp.sender_id),
+                self._fs.get_surname(resp.sender_id),
+                self._fs.get_login(resp.sender_id),
             )
             name = name if name is not NothingFoundError else ""
             surname = surname if surname is not NothingFoundError else ""
@@ -343,12 +363,11 @@ class CallbackQuerySenders:
         )
 
     async def send_schedule(
-            self, event: events.CallbackQuery.Event, specific_day: Weekdays, fs: CredentialsDatabase
+            self, event: events.CallbackQuery.Event, specific_day: Weekdays
     ):
         """
         parse & send specific day(s) from schedule
 
-        :param fs: firestore connection object
         :param event: a return object of CallbackQuery
         :param specific_day: day of the week represented by Weekdays enum
         """
@@ -356,7 +375,7 @@ class CallbackQuerySenders:
             return await event.answer("Congrats! It's Sunday, no lessons", alert=False)
         sender: User = await event.get_sender()
         try:
-            schedule_resp = await self._web.receive_hw_n_schedule(sender_id=str(sender.id), fs=fs)
+            schedule_resp = await self._web.receive_hw_n_schedule(sender_id=str(sender.id), fs=self._fs)
         except UnauthorizedError as err:
             return await event.answer(f"[✘] {err}", alert=True)
         except NothingFoundError as err:
@@ -412,12 +431,11 @@ class CallbackQuerySenders:
         await event.answer()
 
     async def send_homework(
-            self, event: events.CallbackQuery.Event, specific_day: Weekdays, fs: CredentialsDatabase
+            self, event: events.CallbackQuery.Event, specific_day: Weekdays
     ):
         """
         parse & send specific day(s) from homework
 
-        :param fs: firestore connection object
         :param event: a return object of CallbackQuery
         :param specific_day: day of the week represented by Weekdays enum
         """
@@ -426,7 +444,7 @@ class CallbackQuerySenders:
             return await event.answer("Congrats! Tomorrow's Sunday, no hw", alert=False)
         sender: User = await event.get_sender()
         try:
-            homework_resp = await self._web.receive_hw_n_schedule(sender_id=str(sender.id), fs=fs)
+            homework_resp = await self._web.receive_hw_n_schedule(sender_id=str(sender.id), fs=self._fs)
         except UnauthorizedError as err:
             return await event.answer(f"[✘] {err}", alert=True)
         except NothingFoundError as err:
@@ -527,18 +545,17 @@ class CallbackQuerySenders:
             self._payload += f"**{mark_d_avg}**D "
 
     async def send_marks(
-            self, event: events.CallbackQuery.Event, specific: MarkTypes, fs: CredentialsDatabase
+            self, event: events.CallbackQuery.Event, specific: MarkTypes
     ):
         """
         parse & send marks
 
-        :param fs: firestore connection object
         :param event: a return object of CallbackQuery
         :param specific: all, sum, recent
         """
         sender: User = await event.get_sender()
         try:
-            marks_resp = await self._web.receive_marks(sender_id=str(sender.id), fs=fs)
+            marks_resp = await self._web.receive_marks(sender_id=str(sender.id), fs=self._fs)
         except UnauthorizedError as err:
             return await event.answer(f"[✘] {err}", alert=True)
         except NothingFoundError as err:

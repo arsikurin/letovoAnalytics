@@ -1,18 +1,26 @@
 #!/usr/bin/python3.10
 import aiohttp
 import aiorun
+from telethon import TelegramClient
 
 import essential  # noqa
-from app.bot import handlers, client
+from app.bot import handlers, CallbackQuery, InlineQuery
 from app.dependencies import Postgresql, Firestore, run_sequence
 from config import settings
 
 
 async def main():
+    client = TelegramClient(
+        session="letovoAnalytics", api_id=settings().TG_API_ID, api_hash=settings().TG_API_HASH
+    )
+
     async with aiohttp.ClientSession() as session, Postgresql() as db, Firestore() as fs, client:
+        cbQuery = CallbackQuery(client=client, session=session, db=db, fs=fs)
+        iQuery = InlineQuery(s=session)
+
         await run_sequence(
-            handlers.include_handlers(session=session, db=db, fs=fs),
-            client.start(bot_token=settings().TG_BOT_TOKEN),
+            client.start(bot_token=settings().TG_BOT_TOKEN),  # ignore: `TelegramClient.start(...)` returns a coro
+            handlers.init(client=client, cbQuery=cbQuery, iQuery=iQuery, db=db, fs=fs),
             aiorun.shutdown_waits_for(client.run_until_disconnected())
         )
 

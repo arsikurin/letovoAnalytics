@@ -17,7 +17,8 @@ app = FastAPI(
 
 app.mount("/static", StaticFiles(directory="./app/static"), name="static")
 templates = Jinja2Templates(directory="./app/templates")
-
+application_json = "application/json"
+error_page_t = "pageError.html"
 app.include_router(login_router, tags=["login"], prefix="/api")
 
 
@@ -50,14 +51,14 @@ async def validation_error(request: Request, error: ValidationError):
 async def bad_gateway(request: Request, error: HTTPException):
     if error.headers is None:
         error.headers = {}
-    if request.headers.get("accept") == "application/json":
+    if request.headers.get("accept") == application_json:
         return ORJSONResponse(
             {"code": error.status_code, "status": "error", "detail": error.detail, "fix": error.headers.get("fix")},
             status_code=error.status_code
         )
     else:
         return templates.TemplateResponse(
-            "pageError.html",
+            error_page_t,
             context={"request": request,
                      "error": "502 Bad Gateway",
                      "detail": f"[{error.detail}]",
@@ -71,26 +72,26 @@ async def server_error(request: Request, error: HTTPException):
     if isinstance(error, HTTPException):
         if error.headers is None:
             error.headers = {}
-        if request.headers.get("accept") == "application/json":
+        if request.headers.get("accept") == application_json:
             return ORJSONResponse(
                 {"code": error.status_code, "status": "error", "detail": error.detail, "fix": error.headers.get("fix")},
                 status_code=error.status_code
             )
         else:
             return templates.TemplateResponse(
-                "pageError.html",
+                error_page_t,
                 context={"request": request,
                          "error": "500 Internal Server Error"},
                 status_code=500
             )
-    if request.headers.get("accept") == "application/json":
+    if request.headers.get("accept") == application_json:
         return ORJSONResponse(
             {"code": 500, "status": "error", "detail": error.__repr__(), "doc": error.__doc__},
             status_code=500
         )
     else:
         return templates.TemplateResponse(
-            "pageError.html",
+            error_page_t,
             context={"request": request,
                      "error": "500 Internal Server Error"},
             status_code=500
@@ -101,14 +102,14 @@ async def server_error(request: Request, error: HTTPException):
 async def unprocessable_entity(request: Request, error: HTTPException):
     if error.headers is None:
         error.headers = {}
-    if request.headers.get("accept") == "application/json":
+    if request.headers.get("accept") == application_json:
         return ORJSONResponse(
             {"code": error.status_code, "status": "error", "detail": error.detail, "fix": error.headers.get("fix")},
             status_code=error.status_code
         )
     else:
         return templates.TemplateResponse(
-            "pageError.html",
+            error_page_t,
             context={"request": request,
                      "error": "422 Unprocessable Entity",
                      "detail": f"[{error.detail}]",  # [Possibly missing query string parameters]
@@ -120,7 +121,7 @@ async def unprocessable_entity(request: Request, error: HTTPException):
 @app.exception_handler(418)
 async def im_a_teapot(request: Request, error: HTTPException):
     return templates.TemplateResponse(
-        "pageError.html",
+        error_page_t,
         context={"request": request,
                  "error": "418 I'm a teapot",
                  "detail": "[This server is a teapot, not a coffee machine]",
@@ -131,7 +132,7 @@ async def im_a_teapot(request: Request, error: HTTPException):
 
 @app.exception_handler(404)
 async def not_found(request: Request, error: HTTPException):
-    if request.headers.get("accept") == "application/json":
+    if request.headers.get("accept") == application_json:
         if hasattr(error, "headers"):
             return ORJSONResponse(
                 {"code": 404, "status": "error", "detail": error.detail, "fix": error.headers.get("fix")},
@@ -145,7 +146,7 @@ async def not_found(request: Request, error: HTTPException):
     else:
         if error.detail != "Not Found":
             return templates.TemplateResponse(
-                "pageError.html",
+                error_page_t,
                 context={"request": request,
                          "error": "404 Not Found",
                          "detail": f"[{error.detail}]"},
@@ -153,7 +154,7 @@ async def not_found(request: Request, error: HTTPException):
             )
         else:
             return templates.TemplateResponse(
-                "pageError.html",
+                error_page_t,
                 context={"request": request,
                          "error": "404 Not Found",
                          "detail": "[The page you are looking for does not exist]"},
@@ -165,14 +166,14 @@ async def not_found(request: Request, error: HTTPException):
 async def forbidden(request: Request, error: HTTPException) -> templates.TemplateResponse:
     if error.headers is None:
         error.headers = {}
-    if request.headers.get("accept") == "application/json":
+    if request.headers.get("accept") == application_json:
         return ORJSONResponse(
             {"code": error.status_code, "status": "error", "detail": error.detail, "fix": error.headers.get("fix")},
             status_code=error.status_code
         )
     else:
         return templates.TemplateResponse(
-            "pageError.html",
+            error_page_t,
             context={"request": request,
                      "error": "403 Forbidden",
                      "detail": f"[{error.detail}]",  # [You have no power here, Gandalf the Grey]
@@ -185,14 +186,14 @@ async def forbidden(request: Request, error: HTTPException) -> templates.Templat
 async def unauthorized(request: Request, error: HTTPException) -> templates.TemplateResponse:
     if error.headers is None:
         error.headers = {}
-    if request.headers.get("accept") == "application/json":
+    if request.headers.get("accept") == application_json:
         return ORJSONResponse(
             {"code": error.status_code, "status": "error", "detail": error.detail, "fix": error.headers.get("fix")},
             status_code=error.status_code
         )
     else:
         return templates.TemplateResponse(
-            "pageError.html",
+            error_page_t,
             context={"request": request,
                      "error": "401 Unauthorized",
                      "detail": f"[{error.detail}]",
@@ -207,14 +208,14 @@ async def unauthorized(request: Request, error: HTTPException) -> templates.Temp
 async def bad_request(request: Request, error: HTTPException) -> templates.TemplateResponse:
     if error.headers is None:
         error.headers = {}
-    if request.headers.get("accept") == "application/json":
+    if request.headers.get("accept") == application_json:
         return ORJSONResponse(
             {"code": error.status_code, "status": "error", "detail": error.detail, "fix": error.headers.get("fix")},
             status_code=error.status_code
         )
     else:
         return templates.TemplateResponse(
-            "pageError.html",
+            error_page_t,
             context={"request": request,
                      "error": "400 Bad Request",
                      "detail": f"[{error.detail}]",
@@ -225,6 +226,7 @@ async def bad_request(request: Request, error: HTTPException) -> templates.Templ
 
 if __name__ == "__main__":
     import uvicorn
+
     # import sys
 
     # port = int(sys.argv[1]),
