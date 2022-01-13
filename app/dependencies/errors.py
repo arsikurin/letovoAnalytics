@@ -1,9 +1,9 @@
 class NothingFoundError(Exception):
     """
-    Occurs when anything cannot by found in the database
+    Occurs when anything cannot be found in the database
     """
 
-    def __init__(self, detail: str = None):
+    def __init__(self, detail: str | None = None):
         if detail is None:
             super().__init__(
                 "The data you are looking for does not exist"
@@ -19,7 +19,7 @@ class UnauthorizedError(Exception):
     Occurs when anything cannot be obtained due to wrong credentials
     """
 
-    def __init__(self, detail: str = None, fix: str = None):
+    def __init__(self, detail: str | None = None, fix: str | None = None):
         if detail is None:
             super().__init__(
                 "The data you are looking cannot be obtained due to wrong credentials"

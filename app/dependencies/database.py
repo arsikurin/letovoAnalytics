@@ -15,13 +15,18 @@ unknown_err = "the connection is lost"
 
 class AnalyticsDatabase(typing.Protocol):
     """
-    Class for working with relational DB
+    Class for dealing with relational DB
     """
     __slots__ = ("__connection",)
 
     async def __aenter__(self) -> AnalyticsDatabase: ...
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb): ...
+    async def __aexit__(
+            self,
+            exc_type: typing.Type[BaseException] | None,
+            exc_val: BaseException | None,
+            exc_tb: types.TracebackType | None,
+    ): ...
 
     @property
     def _connection(self) -> psycopg.AsyncConnection[typing.Any]: ...
@@ -33,7 +38,7 @@ class AnalyticsDatabase(typing.Protocol):
         """
 
     @staticmethod
-    async def _connect() -> psycopg.AsyncConnection: ...
+    async def _connect() -> psycopg.AsyncConnection[typing.Any]: ...
 
     async def disconnect(self): ...
 
@@ -70,7 +75,7 @@ class Postgresql:
     __slots__ = ("__connection",)
 
     def __init__(self):
-        self._connection: psycopg.AsyncConnection = ...
+        self._connection: psycopg.AsyncConnection[typing.Any] = ...
 
     async def __aenter__(self) -> AnalyticsDatabase:
         self._connection = await self._connect()
@@ -102,7 +107,7 @@ class Postgresql:
         return self_
 
     @staticmethod
-    async def _connect() -> psycopg.AsyncConnection:
+    async def _connect() -> psycopg.AsyncConnection[typing.Any]:
         """
         Connect to Postgres
         """

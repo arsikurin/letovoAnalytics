@@ -2,7 +2,7 @@ import asyncio
 import typing
 
 
-def run_immediately(function: typing.Callable):
+def run_immediately(function: typing.Callable[..., typing.Any]):
     """
     Decorator used to execute asynchronous functions more conveniently
     """

@@ -21,7 +21,12 @@ class CredentialsDatabase(typing.Protocol):
 
     async def __aenter__(self) -> CredentialsDatabase: ...
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb): ...
+    async def __aexit__(
+            self,
+            exc_type: typing.Type[BaseException] | None,
+            exc_val: BaseException | None,
+            exc_tb: types.TracebackType | None,
+    ): ...
 
     @property
     def _client(self) -> AsyncClient: ...
