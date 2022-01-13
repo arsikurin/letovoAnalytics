@@ -228,7 +228,6 @@ if __name__ == "__main__":
     import uvicorn
 
     # import sys
-
     # port = int(sys.argv[1]),
     c = uvicorn.Config(
         app=app, host="0.0.0.0", port=settings().PORT, workers=settings().WEB_CONCURRENCY, http="httptools",
