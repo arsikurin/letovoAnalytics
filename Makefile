@@ -9,3 +9,6 @@ bot-prod:
 
 api-prod:
 	python3 ./app/main_api.py
+
+ping-api:
+	python3 ./app/pinger.py
