@@ -70,8 +70,6 @@ L
 app/bot/handlers/holidays.py,e/6/e6b1af50426bf5762ea2a03cb933f6cc7dcf0b44
 C
 app/bot/__init__.py,e/9/e9f6b277e939d65a41b31370495c48afd7ea6e31
-H
-app/bot/handlers/core.py,9/9/99950ab33bbbc51935b10bc3122252b854dbf1b8
 I
 app/dependencies/utils.py,6/4/64aa3860a93bfe6dcd4e04b26e95503044aad6b2
 L
