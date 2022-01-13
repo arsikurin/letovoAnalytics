@@ -214,7 +214,7 @@ class CallbackQuerySenders:
                     "__After logging into your account, click **Options** button__",
             parse_mode="md",
             buttons=[
-                Button.url(text="Click here to log in", url=f"{settings().URL_LOGIN_LOCAL}?chat_id={sender.id}")
+                Button.url(text="Click here to log in", url=f"{settings().URL_LOGIN_LOCAL}?sender_id={sender.id}")
             ]
         )
 
@@ -255,7 +255,7 @@ class CallbackQuerySenders:
                     "• **5B** means **5** for Summative **B**\n"
                     "• **6F** means **6** for Formative\n",
             buttons=[
-                Button.url(text="Click here to log in", url=f"{settings().URL_LOGIN_LOCAL}?chat_id={sender.id}")
+                Button.url(text="Click here to log in", url=f"{settings().URL_LOGIN_LOCAL}?sender_id={sender.id}")
             ],
             parse_mode="md",
             link_preview=False
