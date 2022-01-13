@@ -13,13 +13,13 @@ async def main():
     client = TelegramClient(
         session="letovoAnalytics", api_id=settings().TG_API_ID, api_hash=settings().TG_API_HASH
     )
+    await client.start(bot_token=settings().TG_BOT_TOKEN)  # ignore: `TelegramClient.start(...)` returns a coro
 
     async with aiohttp.ClientSession() as session, Postgresql() as db, Firestore() as fs, client:
         cbQuery = CallbackQuery(client=client, session=session, db=db, fs=fs)
         iQuery = InlineQuery(s=session)
 
         await run_sequence(
-            client.start(bot_token=settings().TG_BOT_TOKEN),  # ignore: `TelegramClient.start(...)` returns a coro
             handlers.init(client=client, cbQuery=cbQuery, iQuery=iQuery, db=db, fs=fs),
             aiorun.shutdown_waits_for(client.run_until_disconnected())
         )
