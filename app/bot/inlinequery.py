@@ -1,10 +1,9 @@
-#!/usr/bin/python3.10
 import typing
 
 import requests as rq
 from telethon import types, events
 
-from app.dependencies import NothingFoundError, UnauthorizedError, Weekdays, Web, CredentialsDatabase
+from app.dependencies import errors as errors_l, types as types_l, Web, CredentialsDatabase
 
 
 class InlineQueryEventEditors:
@@ -62,7 +61,7 @@ class InlineQuerySenders:
         """
 
         schedule_future = await Web.receive_hw_n_schedule(self.session, sender_id=str(event.sender_id), fs=fs)
-        if schedule_future == UnauthorizedError:
+        if schedule_future == errors_l.UnauthorizedError:
             return await event.answer(
                 results=[
                     event.builder.article(
@@ -72,7 +71,7 @@ class InlineQuerySenders:
                 ], switch_pm="Log in", switch_pm_param="inlineMode"
             )
 
-        if schedule_future == NothingFoundError:
+        if schedule_future == errors_l.NothingFoundError:
             return await event.answer(
                 results=[
                     event.builder.article(
@@ -102,11 +101,11 @@ class InlineQuerySenders:
         old_wd = 0
         schedule = schedule_future.result().json()["data"]
         date = schedule[0]["date"].split("-")
-        payload += f'<em>{Weekdays(specific_day).name}, {int(date[2]) + specific_day - 1}.{date[1]}.{date[0]}</em>\n'
+        payload += f'<em>{types_l.Weekdays(specific_day).name}, {int(date[2]) + specific_day - 1}.{date[1]}.{date[0]}</em>\n'
 
         for day in schedule:
             if len(day["schedules"]) > 0 and specific_day in (int(day["period_num_day"]), -10):
-                wd = Weekdays(int(day["period_num_day"])).name
+                wd = types_l.Weekdays(int(day["period_num_day"])).name
                 if specific_day == -10 and wd != old_wd:
                     payload += f'\n<strong>=={wd}==</strong>\n'
 
@@ -120,7 +119,7 @@ class InlineQuerySenders:
 
         await event.answer(
             results=[
-                event.builder.article(title=f'{Weekdays(specific_day).name} lessons', text=payload, parse_mode="html")
+                event.builder.article(title=f'{types_l.Weekdays(specific_day).name} lessons', text=payload, parse_mode="html")
             ], switch_pm="Log in", switch_pm_param="inlineMode"
         )
 

@@ -1,7 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="letovoAnalytics" uuid="9d18d225-334c-41df-8d53-5cf9f75d00bd">
+    <data-source source="LOCAL" name="Postgres Remote" uuid="c982c9b4-d9c7-453e-bfdf-93924047e2be">
+      <driver-ref>postgresql</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.postgresql.Driver</jdbc-driver>
+      <jdbc-url>jdbc:postgresql://ec2-52-209-171-51.eu-west-1.compute.amazonaws.com:5432/d8n3ler1pmrfqv</jdbc-url>
+      <working-dir>$ProjectFileDir$</working-dir>
+    </data-source>
+    <data-source source="LOCAL" name="letovoAnalytics" uuid="916f2b6b-1385-4cd4-95b6-c61ac00e362a">
       <driver-ref>sqlite.xerial</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
@@ -11,14 +18,10 @@
         <library>
           <url>file://$APPLICATION_CONFIG_DIR$/jdbc-drivers/Xerial SQLiteJDBC/3.34.0/sqlite-jdbc-3.34.0.jar</url>
         </library>
+        <library>
+          <url>file://$APPLICATION_CONFIG_DIR$/jdbc-drivers/Xerial SQLiteJDBC/3.34.0/sqlite-jdbc-3.34.0.jar</url>
+        </library>
       </libraries>
-    </data-source>
-    <data-source source="LOCAL" name="Postgres Remote" uuid="c982c9b4-d9c7-453e-bfdf-93924047e2be">
-      <driver-ref>postgresql</driver-ref>
-      <synchronize>true</synchronize>
-      <jdbc-driver>org.postgresql.Driver</jdbc-driver>
-      <jdbc-url>jdbc:postgresql://ec2-52-209-171-51.eu-west-1.compute.amazonaws.com:5432/d8n3ler1pmrfqv</jdbc-url>
-      <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
   </component>
 </project>

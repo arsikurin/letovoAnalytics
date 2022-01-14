@@ -1,4 +1,4 @@
-#!/usr/bin/python3.10
+#!/usr/bin/env python3
 import aiohttp
 import aiorun
 from telethon import TelegramClient
@@ -10,10 +10,10 @@ from config import settings
 
 
 async def main():
-    client = await TelegramClient(
+    client = await TelegramClient(  # noqa: `TelegramClient.start(...)` returns a coro
         session="letovoAnalytics", api_id=settings().TG_API_ID, api_hash=settings().TG_API_HASH
-    ).start(bot_token=settings().TG_BOT_TOKEN)  # ignore?: `TelegramClient.start(...)` returns a coro
-    # await client.start(bot_token=settings().TG_BOT_TOKEN)  # ignore?: `TelegramClient.start(...)` returns a coro
+    ).start(bot_token=settings().TG_BOT_TOKEN)
+    # await client.start(bot_token=settings().TG_BOT_TOKEN)  # ignore: `TelegramClient.start(...)` returns a coro
 
     async with aiohttp.ClientSession() as session, Postgresql() as db, Firestore() as fs, client:
         cbQuery = CallbackQuery(client=client, session=session, db=db, fs=fs)
@@ -26,4 +26,4 @@ async def main():
 
 
 if __name__ == "__main__":
-    aiorun.run(main(), use_uvloop=True)
+    aiorun.run(main(), use_uvloop=True, executor_workers=4)

@@ -7,7 +7,7 @@ import types
 import psycopg
 from psycopg.rows import class_row
 
-from app.schemas import AnalyticsResponse
+from app.dependencies import types as types_l
 from config import settings
 
 unknown_err = "the connection is lost"
@@ -44,7 +44,7 @@ class AnalyticsDatabase(typing.Protocol):
 
     async def get_users(self) -> typing.Iterator[str]: ...
 
-    async def get_analytics(self, sender_id: str) -> AnalyticsResponse: ...
+    async def get_analytics(self, sender_id: str) -> types_l.AnalyticsResponse: ...
 
     async def is_inited(self, sender_id: str) -> bool: ...
 
@@ -132,14 +132,14 @@ class Postgresql:
                 self._connection = await self._connect()
                 await self.get_users()
 
-    async def get_analytics(self, sender_id: str) -> AnalyticsResponse:
+    async def get_analytics(self, sender_id: str) -> types_l.AnalyticsResponse:
         # TODO refactor wildcard
         try:
             cursor = await self._connection.execute(
                 "SELECT * FROM users WHERE sender_id = %s",
                 (sender_id,)
             )
-            cursor.row_factory = class_row(AnalyticsResponse)
+            cursor.row_factory = class_row(types_l.AnalyticsResponse)
             return await cursor.fetchone()
         except psycopg.OperationalError as err:
             log.error(err)

@@ -6,7 +6,7 @@ import logging as log
 import aiohttp
 
 import essential  # noqa
-from app.dependencies import Web, Postgresql, Firestore, UnauthorizedError, NothingFoundError
+from app.dependencies import Web, Postgresql, Firestore, errors as errors_l
 
 
 async def main():
@@ -21,7 +21,7 @@ async def main():
         async for user in await fs.get_users():
             try:
                 token = await web.receive_token(sender_id=user.id, fs=fs)
-            except (NothingFoundError, UnauthorizedError, aiohttp.ClientConnectionError):
+            except (errors_l.NothingFoundError, errors_l.UnauthorizedError, aiohttp.ClientConnectionError):
                 log.info(f"Skipped {user.id}")
                 continue
 

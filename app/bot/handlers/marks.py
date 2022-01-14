@@ -1,10 +1,9 @@
 import functools as ft
 
-from telethon import events, TelegramClient
+from telethon import events, types, TelegramClient
 
 from app.bot import CallbackQuery
-from app.dependencies import MarkTypes, AnalyticsDatabase
-from app.schemas import User
+from app.dependencies import types as types_l, AnalyticsDatabase
 
 
 async def init(client: TelegramClient, cbQuery: CallbackQuery, db: AnalyticsDatabase):
@@ -15,7 +14,7 @@ async def init(client: TelegramClient, cbQuery: CallbackQuery, db: AnalyticsData
 
     @client.on(events.CallbackQuery(pattern=r"(?i).*marks"))
     async def _marks(event: events.CallbackQuery.Event):
-        sender: User = await event.get_sender()
+        sender: types.User = await event.get_sender()
         sender_id = str(sender.id)
         send_marks = ft.partial(
             cbQuery.send_marks,
@@ -23,11 +22,11 @@ async def init(client: TelegramClient, cbQuery: CallbackQuery, db: AnalyticsData
         )
         match event.data:
             case b"all_marks":
-                await send_marks(specific=MarkTypes.ALL)
+                await send_marks(specific=types_l.MarkTypes.ALL)
             case b"summative_marks":
-                await send_marks(specific=MarkTypes.SUMMATIVE)
+                await send_marks(specific=types_l.MarkTypes.SUMMATIVE)
             case b"final_marks":
-                await send_marks(specific=MarkTypes.FINAL)
+                await send_marks(specific=types_l.MarkTypes.FINAL)
             case b"recent_marks":
                 await event.answer("Under development")
                 # await send_marks(specific=MarkTypes.RECENT)

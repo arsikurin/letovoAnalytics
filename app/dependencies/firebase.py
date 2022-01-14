@@ -9,7 +9,7 @@ import yaml
 from firebase_admin import credentials
 from google.cloud.firestore_v1.async_client import AsyncClient, AsyncDocumentReference, DocumentSnapshot
 
-from app.dependencies import NothingFoundError
+from app.dependencies import errors as errors_l
 from config import settings
 
 
@@ -67,17 +67,17 @@ class CredentialsDatabase(typing.Protocol):
 
     async def get_users(self) -> typing.AsyncIterator[DocumentSnapshot]: ...
 
-    async def get_student_id(self, sender_id: str) -> int | typing.Type[NothingFoundError]: ...
+    async def get_student_id(self, sender_id: str) -> int | typing.Type[errors_l.NothingFoundError]: ...
 
-    async def get_token(self, sender_id: str) -> str | typing.Type[NothingFoundError]: ...
+    async def get_token(self, sender_id: str) -> str | typing.Type[errors_l.NothingFoundError]: ...
 
-    async def get_password(self, sender_id: str) -> str | typing.Type[NothingFoundError]: ...
+    async def get_password(self, sender_id: str) -> str | typing.Type[errors_l.NothingFoundError]: ...
 
-    async def get_login(self, sender_id: str) -> str | typing.Type[NothingFoundError]: ...
+    async def get_login(self, sender_id: str) -> str | typing.Type[errors_l.NothingFoundError]: ...
 
-    async def get_name(self, sender_id: str) -> str | typing.Type[NothingFoundError]: ...
+    async def get_name(self, sender_id: str) -> str | typing.Type[errors_l.NothingFoundError]: ...
 
-    async def get_surname(self, sender_id: str) -> str | typing.Type[NothingFoundError]: ...
+    async def get_surname(self, sender_id: str) -> str | typing.Type[errors_l.NothingFoundError]: ...
 
 
 @typing.final
@@ -234,56 +234,56 @@ class Firestore:
     async def get_users(self) -> typing.AsyncIterator[DocumentSnapshot]:
         return self._client.collection("users").stream()
 
-    async def get_student_id(self, sender_id: str) -> int | typing.Type[NothingFoundError]:
+    async def get_student_id(self, sender_id: str) -> int | typing.Type[errors_l.NothingFoundError]:
         doc: DocumentSnapshot = await self._client.collection("users").document(sender_id).get()
         try:
             if not doc.exists:
-                return NothingFoundError
+                return errors_l.NothingFoundError
             return doc.get("data.student_id")
         except KeyError:
-            return NothingFoundError
+            return errors_l.NothingFoundError
 
-    async def get_token(self, sender_id: str) -> str | typing.Type[NothingFoundError]:
+    async def get_token(self, sender_id: str) -> str | typing.Type[errors_l.NothingFoundError]:
         doc: DocumentSnapshot = await self._client.collection("users").document(sender_id).get()
         try:
             if not doc.exists:
-                return NothingFoundError
+                return errors_l.NothingFoundError
             return doc.get("data.token")
         except KeyError:
-            return NothingFoundError
+            return errors_l.NothingFoundError
 
-    async def get_password(self, sender_id: str) -> str | typing.Type[NothingFoundError]:
+    async def get_password(self, sender_id: str) -> str | typing.Type[errors_l.NothingFoundError]:
         doc: DocumentSnapshot = await self._client.collection("users").document(sender_id).get()
         try:
             if not doc.exists:
-                return NothingFoundError
+                return errors_l.NothingFoundError
             return doc.get("data.analytics_password")
         except KeyError:
-            return NothingFoundError
+            return errors_l.NothingFoundError
 
-    async def get_login(self, sender_id: str) -> str | typing.Type[NothingFoundError]:
+    async def get_login(self, sender_id: str) -> str | typing.Type[errors_l.NothingFoundError]:
         doc: DocumentSnapshot = await self._client.collection("users").document(sender_id).get()
         try:
             if not doc.exists:
-                return NothingFoundError
+                return errors_l.NothingFoundError
             return doc.get("data.analytics_login")
         except KeyError:
-            return NothingFoundError
+            return errors_l.NothingFoundError
 
-    async def get_name(self, sender_id: str) -> str | typing.Type[NothingFoundError]:
+    async def get_name(self, sender_id: str) -> str | typing.Type[errors_l.NothingFoundError]:
         doc: DocumentSnapshot = await self._client.collection("names").document(sender_id).get()
         try:
             if not doc.exists:
-                return NothingFoundError
+                return errors_l.NothingFoundError
             return doc.get("data.first_name")
         except KeyError:
-            return NothingFoundError
+            return errors_l.NothingFoundError
 
-    async def get_surname(self, sender_id: str) -> str | typing.Type[NothingFoundError]:
+    async def get_surname(self, sender_id: str) -> str | typing.Type[errors_l.NothingFoundError]:
         doc: DocumentSnapshot = await self._client.collection("names").document(sender_id).get()
         try:
             if not doc.exists:
-                return NothingFoundError
+                return errors_l.NothingFoundError
             return doc.get("data.last_name")
         except KeyError:
-            return NothingFoundError
+            return errors_l.NothingFoundError
