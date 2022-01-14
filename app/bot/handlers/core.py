@@ -1,16 +1,15 @@
 import logging as log
 
-from telethon import events, TelegramClient
+from telethon import events, types, TelegramClient
 
 from app.bot import CallbackQuery
 from app.dependencies import run_sequence, run_parallel, AnalyticsDatabase, CredentialsDatabase
-from app.schemas import User
 
 
 async def init(client: TelegramClient, cbQuery: CallbackQuery, db: AnalyticsDatabase, fs: CredentialsDatabase):
     @client.on(events.NewMessage(pattern=r"(?i).*options"))
     async def _options(event: events.NewMessage.Event):
-        sender: User = await event.get_sender()
+        sender: types.User = await event.get_sender()
         sender_id = str(sender.id)
         _, il = await run_parallel(
             cbQuery.send_greeting(sender=sender),
@@ -38,7 +37,7 @@ async def init(client: TelegramClient, cbQuery: CallbackQuery, db: AnalyticsData
         if len(event.message.message.split()) == 2:
             auth_hash = event.message.message.split()[1]
             log.info(auth_hash)  # TODO auth
-        sender: User = await event.get_sender()
+        sender: types.User = await event.get_sender()
         sender_id = str(sender.id)
 
         await run_parallel(
@@ -60,7 +59,7 @@ async def init(client: TelegramClient, cbQuery: CallbackQuery, db: AnalyticsData
 
     @client.on(events.NewMessage(pattern=r"(?i).*about"))
     async def _about(event: events.NewMessage.Event):
-        sender: User = await event.get_sender()
+        sender: types.User = await event.get_sender()
         sender_id = str(sender.id)
         if not await db.is_inited(sender_id=sender_id):
             await db.init_user(sender_id=sender_id)
@@ -72,7 +71,7 @@ async def init(client: TelegramClient, cbQuery: CallbackQuery, db: AnalyticsData
 
     @client.on(events.NewMessage(pattern=r"(?i).*help"))
     async def _help(event: events.NewMessage.Event):
-        sender: User = await event.get_sender()
+        sender: types.User = await event.get_sender()
         sender_id = str(sender.id)
         if not await db.is_inited(sender_id=sender_id):
             await db.init_user(sender_id=sender_id)

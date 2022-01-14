@@ -5,7 +5,7 @@ from fastapi import APIRouter, Request, HTTPException, BackgroundTasks
 from fastapi.responses import RedirectResponse  # , ORJSONResponse HTMLResponse,
 from firebase_admin import auth
 
-from app.dependencies import Firestore, Web, UnauthorizedError
+from app.dependencies import Firestore, Web, errors as errors_l
 from config import settings
 
 router = APIRouter(prefix="/login")
@@ -68,7 +68,7 @@ async def login_api(request: Request, bg: BackgroundTasks):
 
     try:
         token = await web.receive_token(login=analytics_login, password=analytics_password, fs=fs)
-    except UnauthorizedError as err:
+    except errors_l.UnauthorizedError as err:
         log.error(err)
         raise HTTPException(
             status_code=400, detail="Cannot get data from s.letovo.ru",
@@ -82,7 +82,7 @@ async def login_api(request: Request, bg: BackgroundTasks):
 
     try:
         student_id = await web.receive_student_id(token=token, fs=fs)
-    except UnauthorizedError as err:
+    except errors_l.UnauthorizedError as err:
         log.error(err)
         raise HTTPException(
             status_code=400, detail="Cannot get data from s.letovo.ru",

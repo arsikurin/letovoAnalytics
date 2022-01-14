@@ -2,11 +2,10 @@ import asyncio
 import typing
 
 import aiohttp
-from telethon import Button, events, TelegramClient
+from telethon import Button, events, TelegramClient, types
 
-from app.schemas import User
 from app.dependencies import (
-    Weekdays, MarkTypes, NothingFoundError, UnauthorizedError, Web, AnalyticsDatabase, CredentialsDatabase
+    types as types_l, errors as errors_l, Web, AnalyticsDatabase, CredentialsDatabase
 )
 from app.schemas import MarksResponse, MarksDataList, ScheduleResponse, HomeworkResponse
 from config import settings
@@ -192,7 +191,7 @@ class CallbackQuerySenders:
     def _payload(self):
         self.__payload = ""
 
-    async def send_greeting(self, sender: User):
+    async def send_greeting(self, sender: types.User):
         payload = f'{fn if (fn := sender.first_name) else ""} {ln if (ln := sender.last_name) else ""}'.strip()
         await self.client.send_message(
             entity=sender,
@@ -205,7 +204,7 @@ class CallbackQuerySenders:
             ]
         )
 
-    async def send_start_page(self, sender: User):
+    async def send_start_page(self, sender: types.User):
         await self.client.send_message(
             entity=sender,
             message="I will help you access s.letovo.ru resources via Telegram.\n"
@@ -218,7 +217,7 @@ class CallbackQuerySenders:
             ]
         )
 
-    async def send_help_page(self, sender: User):
+    async def send_help_page(self, sender: types.User):
         await self.client.send_message(
             entity=sender,
             message="I can help you access s.letovo.ru resources via Telegram.\n"
@@ -261,7 +260,7 @@ class CallbackQuerySenders:
             link_preview=False
         )
 
-    async def send_stats_page(self, sender: User):
+    async def send_stats_page(self, sender: types.User):
         for user in await self._db.get_users():
             resp = await self._db.get_analytics(user)
             if not any((
@@ -274,9 +273,9 @@ class CallbackQuerySenders:
                 self._fs.get_surname(resp.sender_id),
                 self._fs.get_login(resp.sender_id),
             )
-            name = name if name is not NothingFoundError else ""
-            surname = surname if surname is not NothingFoundError else ""
-            login = login if login is not NothingFoundError else ""
+            name = name if name is not errors_l.NothingFoundError else ""
+            surname = surname if surname is not errors_l.NothingFoundError else ""
+            login = login if login is not errors_l.NothingFoundError else ""
             await self.client.send_message(
                 entity=sender,
                 message=f"ID: {resp.sender_id}\n"
@@ -292,7 +291,7 @@ class CallbackQuerySenders:
                 parse_mode="md"
             )
 
-    async def send_about_page(self, sender: User):
+    async def send_about_page(self, sender: types.User):
         await self.client.send_message(
             entity=sender,
             message="**Arseny Kurin**\n\n"
@@ -302,7 +301,7 @@ class CallbackQuerySenders:
             parse_mode="md"
         )
 
-    async def send_main_page(self, sender: User):
+    async def send_main_page(self, sender: types.User):
         await self.client.send_message(
             entity=sender,
             message=choose_an_option_below,
@@ -320,7 +319,7 @@ class CallbackQuerySenders:
             ]
         )
 
-    async def send_dev_page(self, sender: User):
+    async def send_dev_page(self, sender: types.User):
         await self.client.send_message(
             entity=sender,
             message=choose_an_option_below,
@@ -337,7 +336,7 @@ class CallbackQuerySenders:
     async def send_holidays(self, event: events.CallbackQuery.Event):
         # TODO receive holidays from API
 
-        sender: User = await event.get_sender()
+        sender: types.User = await event.get_sender()
         await self.client.send_message(
             entity=sender,
             message="__after__ **unit I**\n31.10.2021 — 07.11.2021",
@@ -363,7 +362,7 @@ class CallbackQuerySenders:
         )
 
     async def send_schedule(
-            self, event: events.CallbackQuery.Event, specific_day: Weekdays
+            self, event: events.CallbackQuery.Event, specific_day: types_l.Weekdays
     ):
         """
         parse & send specific day(s) from schedule
@@ -371,14 +370,14 @@ class CallbackQuerySenders:
         :param event: a return object of CallbackQuery
         :param specific_day: day of the week represented by Weekdays enum
         """
-        if specific_day == Weekdays.Sunday:
+        if specific_day == types_l.Weekdays.Sunday:
             return await event.answer("Congrats! It's Sunday, no lessons", alert=False)
-        sender: User = await event.get_sender()
+        sender: types.User = await event.get_sender()
         try:
             schedule_resp = await self._web.receive_hw_n_schedule(sender_id=str(sender.id), fs=self._fs)
-        except UnauthorizedError as err:
+        except errors_l.UnauthorizedError as err:
             return await event.answer(f"[✘] {err}", alert=True)
-        except NothingFoundError as err:
+        except errors_l.NothingFoundError as err:
             # "[✘] Nothing found in database for this user.\nPlease enter /start and register"
             return await event.answer(f"[✘] {err}", alert=True)
         except aiohttp.ClientConnectionError as err:
@@ -397,7 +396,7 @@ class CallbackQuerySenders:
 
         for day in schedule_response.data:
             if day.schedules and specific_day.value in (int(day.period_num_day), -10):
-                wd = Weekdays(int(day.period_num_day)).name
+                wd = types_l.Weekdays(int(day.period_num_day)).name
                 if specific_day.value == -10 and wd != old_wd:
                     await self.client.send_message(
                         entity=sender,
@@ -431,7 +430,7 @@ class CallbackQuerySenders:
         await event.answer()
 
     async def send_homework(
-            self, event: events.CallbackQuery.Event, specific_day: Weekdays
+            self, event: events.CallbackQuery.Event, specific_day: types_l.Weekdays
     ):
         """
         parse & send specific day(s) from homework
@@ -440,14 +439,14 @@ class CallbackQuerySenders:
         :param specific_day: day of the week represented by Weekdays enum
         """
 
-        if specific_day == Weekdays.SundayHW:
+        if specific_day == types_l.Weekdays.SundayHW:
             return await event.answer("Congrats! Tomorrow's Sunday, no hw", alert=False)
-        sender: User = await event.get_sender()
+        sender: types.User = await event.get_sender()
         try:
             homework_resp = await self._web.receive_hw_n_schedule(sender_id=str(sender.id), fs=self._fs)
-        except UnauthorizedError as err:
+        except errors_l.UnauthorizedError as err:
             return await event.answer(f"[✘] {err}", alert=True)
-        except NothingFoundError as err:
+        except errors_l.NothingFoundError as err:
             # "[✘] Nothing found in database for this user.\nPlease enter /start and register"
             return await event.answer(f"[✘] {err}", alert=True)
         except aiohttp.ClientConnectionError as err:
@@ -460,7 +459,7 @@ class CallbackQuerySenders:
                 payload = (
                     f'{day.period_name}: <strong>{day.schedules[0].group.subject.subject_name_eng} '
                     f'{day.schedules[0].group.group_name}</strong>\n'
-                    f'{Weekdays(int(day.period_num_day)).name}, {day.date}\n'
+                    f'{types_l.Weekdays(int(day.period_num_day)).name}, {day.date}\n'
                 )
                 if day.schedules[0].lessons:
                     if day.schedules[0].lessons[0].lesson_hw:
@@ -545,7 +544,7 @@ class CallbackQuerySenders:
             self._payload += f"**{mark_d_avg}**D "
 
     async def send_marks(
-            self, event: events.CallbackQuery.Event, specific: MarkTypes
+            self, event: events.CallbackQuery.Event, specific: types_l.MarkTypes
     ):
         """
         parse & send marks
@@ -553,12 +552,12 @@ class CallbackQuerySenders:
         :param event: a return object of CallbackQuery
         :param specific: all, sum, recent
         """
-        sender: User = await event.get_sender()
+        sender: types.User = await event.get_sender()
         try:
             marks_resp = await self._web.receive_marks(sender_id=str(sender.id), fs=self._fs)
-        except UnauthorizedError as err:
+        except errors_l.UnauthorizedError as err:
             return await event.answer(f"[✘] {err}", alert=True)
-        except NothingFoundError as err:
+        except errors_l.NothingFoundError as err:
             # "[✘] Nothing found in database for this user.\nPlease enter /start and register"
             return await event.answer(f"[✘] {err}", alert=True)
         except aiohttp.ClientConnectionError as err:
@@ -567,7 +566,7 @@ class CallbackQuerySenders:
         # TODO recent marks
         marks_response = MarksResponse.parse_raw(marks_resp)
         for subject in marks_response.data:
-            if specific == MarkTypes.SUMMATIVE and subject.summative_list:
+            if specific == types_l.MarkTypes.SUMMATIVE and subject.summative_list:
                 self._payload = f"**{subject.group.subject.subject_name_eng}**\n"
                 await self._summative_marks(subject)
                 await self.client.send_message(
@@ -577,7 +576,7 @@ class CallbackQuerySenders:
                     silent=True
                 )
 
-            elif specific == MarkTypes.FINAL:
+            elif specific == types_l.MarkTypes.FINAL:
                 self._payload = f"**{subject.group.subject.subject_name_eng}**\n"
                 if subject.final_mark_list:
                     for mark in subject.final_mark_list:
@@ -594,7 +593,7 @@ class CallbackQuerySenders:
                         silent=True,
                         link_preview=False
                     )
-            elif specific == MarkTypes.ALL:
+            elif specific == types_l.MarkTypes.ALL:
                 self._payload = f"**{subject.group.subject.subject_name_eng}**\n"
                 if subject.formative_list:
                     for mark in subject.formative_list:

@@ -6,7 +6,7 @@ import typing
 import aiohttp
 import orjson
 
-from app.dependencies import NothingFoundError, UnauthorizedError, CredentialsDatabase
+from app.dependencies import errors as errors_l, CredentialsDatabase
 from config import settings
 
 
@@ -46,8 +46,8 @@ class Web:
                 fs.get_login(sender_id=sender_id),
                 fs.get_password(sender_id=sender_id)
             )
-            if NothingFoundError in (login, password):
-                raise NothingFoundError("Nothing found in the database for this user")
+            if errors_l.NothingFoundError in (login, password):
+                raise errors_l.NothingFoundError("Nothing found in the database for this user")
 
         login_data = {
             "login": login,
@@ -56,7 +56,7 @@ class Web:
         try:
             async with self.session.post(url=settings().URL_LOGIN_LETOVO, data=login_data) as resp:
                 if resp.status != 200:
-                    raise UnauthorizedError(f"Cannot get data from s.letovo.ru. Error {resp.status}")
+                    raise errors_l.UnauthorizedError(f"Cannot get data from s.letovo.ru. Error {resp.status}")
                 resp_j = await resp.json(loads=orjson.loads)
                 return f'{resp_j["data"]["token_type"]} {resp_j["data"]["token"]}'
         except aiohttp.ClientConnectionError:
@@ -76,8 +76,8 @@ class Web:
         """
         if token is None:
             token = await fs.get_token(sender_id=sender_id)
-            if token is NothingFoundError:
-                raise NothingFoundError("Nothing found in the database for this user")
+            if token is errors_l.NothingFoundError:
+                raise errors_l.NothingFoundError("Nothing found in the database for this user")
 
         headers = {
             "Authorization": token
@@ -85,7 +85,7 @@ class Web:
         try:
             async with self.session.post(url="https://s-api.letovo.ru/api/me", headers=headers) as resp:
                 if resp.status != 200:
-                    raise UnauthorizedError(f"Cannot get data from s.letovo.ru. Error {resp.status}")
+                    raise errors_l.UnauthorizedError(f"Cannot get data from s.letovo.ru. Error {resp.status}")
                 resp_j = await resp.json(loads=orjson.loads)
                 return int(resp_j["data"]["user"]["student_id"])
         except aiohttp.ClientConnectionError:
@@ -107,8 +107,8 @@ class Web:
             fs.get_student_id(sender_id=sender_id),
             fs.get_token(sender_id=sender_id)
         )
-        if NothingFoundError in (student_id, token):
-            raise NothingFoundError("Nothing found in the database for this user")
+        if errors_l.NothingFoundError in (student_id, token):
+            raise errors_l.NothingFoundError("Nothing found in the database for this user")
 
         url = (
             f"https://s-api.letovo.ru/api/schedule/{student_id}/week?schedule_date="
@@ -121,7 +121,7 @@ class Web:
         try:
             async with self.session.get(url=url, headers=headers) as resp:
                 if resp.status != 200:
-                    raise UnauthorizedError(f"Cannot get data from s.letovo.ru. Error {resp.status}")
+                    raise errors_l.UnauthorizedError(f"Cannot get data from s.letovo.ru. Error {resp.status}")
                 return await resp.content.read()
         except aiohttp.ClientConnectionError as err:
             log.error(err)
@@ -143,8 +143,8 @@ class Web:
             fs.get_student_id(sender_id=sender_id),
             fs.get_token(sender_id=sender_id)
         )
-        if NothingFoundError in (student_id, token):
-            raise NothingFoundError("Nothing found in the database for this user")
+        if errors_l.NothingFoundError in (student_id, token):
+            raise errors_l.NothingFoundError("Nothing found in the database for this user")
 
         url = f"https://s-api.letovo.ru/api/schoolprogress/{student_id}?period_num="
         if int(time.strftime("%m")) >= 9:
@@ -159,7 +159,7 @@ class Web:
         try:
             async with self.session.get(url=url, headers=headers) as resp:
                 if resp.status != 200:
-                    raise UnauthorizedError(f"Cannot get data from s.letovo.ru. Error {resp.status}")
+                    raise errors_l.UnauthorizedError(f"Cannot get data from s.letovo.ru. Error {resp.status}")
                 return await resp.content.read()
         except aiohttp.ClientConnectionError as err:
             log.error(err)
