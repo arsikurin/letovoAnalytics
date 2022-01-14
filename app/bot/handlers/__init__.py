@@ -66,8 +66,9 @@ async def _init_handler(handler, kwargs):
         await handler.init(**kwargs)
         took = datetime.timedelta(seconds=time.perf_counter() - start_time)
         log.info(f'Loaded handler {handler.__name__} (took {took.seconds}s {took.microseconds}ms)')
-    except Exception:
+    except Exception as err:
         log.exception(f'Failed to load handler {handler}')
+        log.error(err)
 
 
 async def start_handlers(client, handlers):

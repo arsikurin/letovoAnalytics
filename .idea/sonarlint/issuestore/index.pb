@@ -74,3 +74,15 @@ I
 app/dependencies/utils.py,6/4/64aa3860a93bfe6dcd4e04b26e95503044aad6b2
 L
 app/dependencies/firebase.py,6/b/6b1c4b59608a4b10fd367358fe9fd5a5ebe982a4
+G
+app/bot/handlers/dev.py,0/c/0c75044dc1b45b3d03b61b8ce46bd521a0e42b33
+@
+app/essential.py,9/e/9e913b2e7e335ecf82b791bfc4924f020c7d8b81
+J
+app/api/endpoints/login.py,5/f/5f23380c3ed4f43ac54ad5d9388e709171f1d7f8
+=
+app/helper.py,0/6/06a2a9cefed22737d2d1fd7e2c591eb7412996ba
+G
+app/dependencies/web.py,2/2/2285712a844bafccc48ea239e067136cadf2ed18
+?
+app/main_api.py,1/4/142ed3d04270118b10adefd8fe93f6eeb1123f67

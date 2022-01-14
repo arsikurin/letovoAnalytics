@@ -9,7 +9,7 @@ import essential  # noqa
 from config import settings
 
 
-async def main():
+async def main() -> bytes:
     async with aiohttp.ClientSession() as session:
         async with session.get(url=settings().URL_MAIN_API) as resp:
             if resp.status != 200:
