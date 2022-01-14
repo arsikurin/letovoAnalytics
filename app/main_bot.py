@@ -10,10 +10,10 @@ from config import settings
 
 
 async def main():
-    client = TelegramClient(
+    client = await TelegramClient(
         session="letovoAnalytics", api_id=settings().TG_API_ID, api_hash=settings().TG_API_HASH
-    )
-    await client.start(bot_token=settings().TG_BOT_TOKEN)  # ignore: `TelegramClient.start(...)` returns a coro
+    ).start(bot_token=settings().TG_BOT_TOKEN)  # ignore?: `TelegramClient.start(...)` returns a coro
+    # await client.start(bot_token=settings().TG_BOT_TOKEN)  # ignore?: `TelegramClient.start(...)` returns a coro
 
     async with aiohttp.ClientSession() as session, Postgresql() as db, Firestore() as fs, client:
         cbQuery = CallbackQuery(client=client, session=session, db=db, fs=fs)
