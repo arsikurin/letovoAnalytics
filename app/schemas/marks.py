@@ -11,7 +11,7 @@ class MarksList(BaseModel):
     # mark_work: int
     mark_value: str
     mark_criterion: Optional[str]
-    # created_at: str
+    created_at: str
     # deleted_at: Optional[str]
     # id_lesson: int
     # lesson_date: str

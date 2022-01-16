@@ -1,19 +1,22 @@
 import functools as ft
 import typing
 
+import orjson
+
 try:
     from debug import include_secrets
 
     include_secrets()
 except ImportError:
     include_secrets = typing.Any
-from pydantic import BaseSettings, HttpUrl, PostgresDsn
-
+from pydantic import BaseSettings, HttpUrl, PostgresDsn, BaseConfig
 
 # import os
 # import sys
 # fpath = os.path.join(os.path.dirname(__file__), 'utils')
 # sys.path.append(fpath)
+BaseConfig.json_loads = orjson.loads
+BaseConfig.json_dumps = orjson.dumps
 
 
 class AppSettings(BaseSettings):

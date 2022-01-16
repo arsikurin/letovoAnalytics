@@ -28,7 +28,6 @@ async def init(client: TelegramClient, cbQuery: CallbackQuery, db: AnalyticsData
             case b"final_marks":
                 await send_marks(specific=types_l.MarkTypes.FINAL)
             case b"recent_marks":
-                await event.answer("Under development")
-                # await send_marks(specific=MarkTypes.RECENT)
+                await send_marks(specific=types_l.MarkTypes.RECENT)
         await db.increase_marks_counter(sender_id=sender_id)
         raise events.StopPropagation

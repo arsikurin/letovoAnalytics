@@ -1,4 +1,5 @@
 import asyncio
+import datetime
 import typing
 
 import aiohttp
@@ -244,7 +245,7 @@ class CallbackQuerySenders:
                     "__coming soon__\n"
                     "\n"
                     "\n"
-                    "**Marks UI**\n"
+                    "**Marks CI**\n"
                     "From **0** to **8** following by a criterion:\n"
                     "**A**, **B**, **C** or **D** — Summative marks\n"
                     "**F** — Formative marks\n"
@@ -494,11 +495,12 @@ class CallbackQuerySenders:
                 )
         await event.answer()
 
-    async def _summative_marks(self, subject: MarksDataList):
+    async def _prepare_summative_marks(self, subject: MarksDataList, check_date: bool = False):
         """
         Parse summative marks
         """
-        marks = [(mark.mark_value, mark.mark_criterion) for mark in subject.summative_list]
+        marks = [(mark.mark_value, mark.mark_criterion, mark.created_at) for mark in subject.summative_list]
+
         mark_a, mark_b, mark_c, mark_d = [0, 0], [0, 0], [0, 0], [0, 0]
         for mark in marks:
             if mark[1] == "A" and mark[0].isdigit():
@@ -513,7 +515,8 @@ class CallbackQuerySenders:
             elif mark[1] == "D" and mark[0].isdigit():
                 mark_d[0] += int(mark[0])
                 mark_d[1] += 1
-            self._payload += f"**{mark[0]}**{mark[1]} "
+            if not check_date or (datetime.datetime.today() - datetime.datetime.fromisoformat(mark[2])).days < 7:
+                self._payload += f"**{mark[0]}**{mark[1]} "
 
         if mark_a[1] == 0:  # refactor
             mark_a[1] = 1
@@ -532,6 +535,9 @@ class CallbackQuerySenders:
         mark_b_avg = round_mark(mark_b_avg)
         mark_c_avg = round_mark(mark_c_avg)
         mark_d_avg = round_mark(mark_d_avg)
+
+        if self._payload[-2] == "*":
+            self._payload += "no recent marks"
 
         self._payload += f" | __avg:__ "
         if mark_a_avg > 0:
@@ -568,7 +574,7 @@ class CallbackQuerySenders:
         for subject in marks_response.data:
             if specific == types_l.MarkTypes.SUMMATIVE and subject.summative_list:
                 self._payload = f"**{subject.group.subject.subject_name_eng}**\n"
-                await self._summative_marks(subject)
+                await self._prepare_summative_marks(subject)
                 await self.client.send_message(
                     entity=sender,
                     message=self._payload,
@@ -593,6 +599,27 @@ class CallbackQuerySenders:
                         silent=True,
                         link_preview=False
                     )
+
+            elif specific == types_l.MarkTypes.RECENT:
+                self._payload = f"**{subject.group.subject.subject_name_eng}**\n"
+                if subject.formative_list:
+                    for mark in subject.formative_list:
+                        created_at = datetime.datetime.fromisoformat(mark.created_at)
+                        if (datetime.datetime.today() - created_at).days < 7:
+                            self._payload += f"**{mark.mark_value}**F "
+
+                if subject.summative_list:
+                    await self._prepare_summative_marks(subject, check_date=True)
+
+                if subject.summative_list or subject.formative_list:
+                    await self.client.send_message(
+                        entity=sender,
+                        message=self._payload,
+                        parse_mode="md",
+                        silent=True,
+                        link_preview=False
+                    )
+
             elif specific == types_l.MarkTypes.ALL:
                 self._payload = f"**{subject.group.subject.subject_name_eng}**\n"
                 if subject.formative_list:
@@ -600,7 +627,7 @@ class CallbackQuerySenders:
                         self._payload += f"**{mark.mark_value}**F "
 
                 if subject.summative_list:
-                    await self._summative_marks(subject)
+                    await self._prepare_summative_marks(subject)
 
                 if subject.summative_list or subject.formative_list:
                     await self.client.send_message(
