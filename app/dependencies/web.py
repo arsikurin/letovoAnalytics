@@ -1,5 +1,5 @@
 import asyncio
-import time
+import datetime
 import logging as log
 import typing
 
@@ -110,10 +110,13 @@ class Web:
         if errors_l.NothingFoundError in (student_id, token):
             raise errors_l.NothingFoundError("Nothing found in the database for this user")
 
-        url = (
-            f"https://s-api.letovo.ru/api/schedule/{student_id}/week?schedule_date="
-            f"{time.strftime('%Y-%m-%d')}"
-        )
+        if datetime.datetime.today().strftime("%a") == "Sun":
+            date = (datetime.datetime.today() + datetime.timedelta(1)).strftime("%Y-%m-%d")
+        else:
+            date = datetime.datetime.today().strftime("%Y-%m-%d")
+
+        url = f"https://s-api.letovo.ru/api/schedule/{student_id}/week?schedule_date={date}"
+
         headers = {
             "Authorization": token,
         }
@@ -146,11 +149,12 @@ class Web:
         if errors_l.NothingFoundError in (student_id, token):
             raise errors_l.NothingFoundError("Nothing found in the database for this user")
 
-        url = f"https://s-api.letovo.ru/api/schoolprogress/{student_id}?period_num="
-        if int(time.strftime("%m")) >= 9:
-            url += "1"
+        if int(datetime.datetime.today().strftime("%m")) >= 9:
+            period_num = "1"
         else:
-            url += "2"
+            period_num = "2"
+
+        url = f"https://s-api.letovo.ru/api/schoolprogress/{student_id}?period_num={period_num}"
 
         headers = {
             "Authorization": token,

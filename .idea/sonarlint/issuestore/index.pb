@@ -14,8 +14,6 @@ C
 SQL/create.sql,d/d/dd4cbd5bae2856080323f378773a8754a7afc8fb
 9
 	README.md,8/e/8ec9a00bfd09b3190ac6b22251dbb1aa95a0579d
-D
-app/schemas/marks.py,9/7/97fbf3327d40eabbec68aaacbf6136cde8685bd8
 J
 app/api/endpoints/marks.py,f/d/fd845415776e3d6a2c74ba8364d6c63867afae25
 M
@@ -44,8 +42,6 @@ G
 app/bot/handlers_old.py,6/d/6d526a4e6a0de75cb4a161331cb4568085eefb84
 C
 app/bot/__init__.py,e/9/e9f6b277e939d65a41b31370495c48afd7ea6e31
-9
-	config.py,1/a/1a1b9769344cb239f2e540e1e6ee1efa2d3034ea
 @
 .deepsource.toml,f/7/f7fdb5a735547cbe989626708a7eab7e182a2c6f
 H
@@ -58,7 +54,31 @@ J
 app/dependencies/errors.py,2/3/23cb45a7ed3c7410b0737d8fcf73c476f0fa392a
 G
 app/schemas/homework.py,f/e/fe385611280d51e2c7c55772578a271602771c33
-@
-app/essential.py,9/e/9e913b2e7e335ecf82b791bfc4924f020c7d8b81
 ?
 app/main_api.py,1/4/142ed3d04270118b10adefd8fe93f6eeb1123f67
+S
+#app/dependencies/types/analytics.py,2/4/24153e35cbb1893c93ebb2494a2e3dbd8f400804
+G
+app/schemas/__init__.py,7/5/7501a9306d02b3a60f7536482442b11b2a950344
+G
+app/bot/handlers/dev.py,0/c/0c75044dc1b45b3d03b61b8ce46bd521a0e42b33
+L
+app/dependencies/__init__.py,9/1/91dc6134e15a04bd1249542b12e858a7500c0f77
+O
+app/dependencies/types/enums.py,a/d/add192dd5900bbc6abb219898117113ab4898b5b
+L
+app/dependencies/database.py,e/f/efd82d6b5893028ad00dca7d1540f837ac7f56e5
+L
+app/dependencies/firebase.py,6/b/6b1c4b59608a4b10fd367358fe9fd5a5ebe982a4
+=
+app/helper.py,0/6/06a2a9cefed22737d2d1fd7e2c591eb7412996ba
+R
+"app/dependencies/types/__init__.py,8/7/87837dddac4617928ecedd08a5fc7eeb710ece5a
+J
+app/api/endpoints/login.py,5/f/5f23380c3ed4f43ac54ad5d9388e709171f1d7f8
+F
+app/bot/inlinequery.py,6/b/6b4f48e076da4edc40a2c1d7a121a47d8cf4618c
+L
+app/bot/handlers/holidays.py,e/6/e6b1af50426bf5762ea2a03cb933f6cc7dcf0b44
+H
+app/bot/handlers/core.py,9/9/99950ab33bbbc51935b10bc3122252b854dbf1b8
