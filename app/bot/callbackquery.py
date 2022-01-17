@@ -515,7 +515,7 @@ class CallbackQuerySenders:
             elif mark[1] == "D" and mark[0].isdigit():
                 mark_d[0] += int(mark[0])
                 mark_d[1] += 1
-            if not check_date or (datetime.datetime.today() - datetime.datetime.fromisoformat(mark[2])).days < 7:
+            if not check_date or (datetime.datetime.today() - datetime.datetime.fromisoformat(mark[2])).days < 8:
                 self._payload += f"**{mark[0]}**{mark[1]} "
 
         if mark_a[1] == 0:  # refactor
@@ -556,7 +556,7 @@ class CallbackQuerySenders:
         parse & send marks
 
         :param event: a return object of CallbackQuery
-        :param specific: all, sum, recent
+        :param specific: ALL, SUMMATIVE, FINAL, RECENT
         """
         sender: types.User = await event.get_sender()
         try:
@@ -569,7 +569,6 @@ class CallbackQuerySenders:
         except aiohttp.ClientConnectionError as err:
             return await event.answer(f"[✘] {err}", alert=True)
 
-        # TODO recent marks
         marks_response = MarksResponse.parse_raw(marks_resp)
         for subject in marks_response.data:
             if specific == types_l.MarkTypes.SUMMATIVE and subject.summative_list:
@@ -605,7 +604,7 @@ class CallbackQuerySenders:
                 if subject.formative_list:
                     for mark in subject.formative_list:
                         created_at = datetime.datetime.fromisoformat(mark.created_at)
-                        if (datetime.datetime.today() - created_at).days < 7:
+                        if (datetime.datetime.today() - created_at).days < 8:
                             self._payload += f"**{mark.mark_value}**F "
 
                 if subject.summative_list:

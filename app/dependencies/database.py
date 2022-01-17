@@ -66,6 +66,9 @@ class AnalyticsDatabase(typing.Protocol):
 
     async def increase_inline_counter(self, sender_id: str): ...
 
+    async def increase_about_counter(self, sender_id: str): ...
+
+
 
 @typing.final
 class Postgresql:
@@ -303,3 +306,18 @@ class Postgresql:
                 await self._connection.close()
                 self._connection = await self._connect()
                 await self.increase_inline_counter(sender_id)
+
+    async def increase_about_counter(self, sender_id: str):
+        try:
+            await self._connection.execute(
+                "UPDATE users SET about_counter = inline_counter + 1 WHERE sender_id = %s",
+                (sender_id,)
+            )
+            await self._connection.commit()
+        except psycopg.OperationalError as err:
+            log.error(err)
+            if err == unknown_err:
+                log.info(f"Trying to fix `{err}` Error!")
+                await self._connection.close()
+                self._connection = await self._connect()
+                await self.increase_about_counter(sender_id)

@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+import logging
+import os
+
 import aiohttp
 import aiorun
 from telethon import TelegramClient
@@ -26,4 +29,5 @@ async def main():
 
 
 if __name__ == "__main__":
-    aiorun.run(main(), use_uvloop=True, executor_workers=4)
+    logging.critical(os.cpu_count())
+    aiorun.run(main(), use_uvloop=True)
