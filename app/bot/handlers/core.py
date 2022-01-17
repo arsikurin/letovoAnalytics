@@ -63,10 +63,14 @@ async def init(client: TelegramClient, cbQuery: CallbackQuery, db: AnalyticsData
         sender_id = str(sender.id)
         if not await db.is_inited(sender_id=sender_id):
             await db.init_user(sender_id=sender_id)
-        await run_sequence(
-            cbQuery.send_greeting(sender=sender),
-            cbQuery.send_about_page(sender=sender)
+        await run_parallel(
+            run_sequence(
+                cbQuery.send_greeting(sender=sender),
+                cbQuery.send_about_page(sender=sender)
+            ),
+            db.increase_about_counter(sender_id=sender_id)
         )
+
         raise events.StopPropagation
 
     @client.on(events.NewMessage(pattern=r"(?i).*help"))

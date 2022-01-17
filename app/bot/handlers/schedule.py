@@ -28,7 +28,7 @@ async def init(client: TelegramClient, cbQuery: CallbackQuery, db: AnalyticsData
         )
         match event.data:
             case b"today_schedule":
-                await send_schedule(specific_day=types_l.Weekdays(int(datetime.datetime.now().strftime("%w"))))
+                await send_schedule(specific_day=types_l.Weekdays(int(datetime.datetime.today().strftime("%w"))))
             case b"entire_schedule":
                 await send_schedule(specific_day=types_l.Weekdays.ALL)
             case b"monday_schedule":

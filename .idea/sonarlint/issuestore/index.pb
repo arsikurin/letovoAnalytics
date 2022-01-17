@@ -38,8 +38,6 @@ K
 app/templates/indexAPI.html,e/0/e063c146061d66ef7609cc5651c7613c5702b63d
 8
 debug.py,6/4/64048a6fc0a63a6690d6a2a235f2b7e2d1bd07a4
-G
-app/bot/handlers_old.py,6/d/6d526a4e6a0de75cb4a161331cb4568085eefb84
 C
 app/bot/__init__.py,e/9/e9f6b277e939d65a41b31370495c48afd7ea6e31
 @
@@ -62,12 +60,8 @@ G
 app/schemas/__init__.py,7/5/7501a9306d02b3a60f7536482442b11b2a950344
 G
 app/bot/handlers/dev.py,0/c/0c75044dc1b45b3d03b61b8ce46bd521a0e42b33
-L
-app/dependencies/__init__.py,9/1/91dc6134e15a04bd1249542b12e858a7500c0f77
 O
 app/dependencies/types/enums.py,a/d/add192dd5900bbc6abb219898117113ab4898b5b
-L
-app/dependencies/database.py,e/f/efd82d6b5893028ad00dca7d1540f837ac7f56e5
 L
 app/dependencies/firebase.py,6/b/6b1c4b59608a4b10fd367358fe9fd5a5ebe982a4
 =
@@ -76,9 +70,5 @@ R
 "app/dependencies/types/__init__.py,8/7/87837dddac4617928ecedd08a5fc7eeb710ece5a
 J
 app/api/endpoints/login.py,5/f/5f23380c3ed4f43ac54ad5d9388e709171f1d7f8
-F
-app/bot/inlinequery.py,6/b/6b4f48e076da4edc40a2c1d7a121a47d8cf4618c
 L
 app/bot/handlers/holidays.py,e/6/e6b1af50426bf5762ea2a03cb933f6cc7dcf0b44
-H
-app/bot/handlers/core.py,9/9/99950ab33bbbc51935b10bc3122252b854dbf1b8
