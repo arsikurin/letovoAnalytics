@@ -42,8 +42,6 @@ C
 app/bot/__init__.py,e/9/e9f6b277e939d65a41b31370495c48afd7ea6e31
 @
 .deepsource.toml,f/7/f7fdb5a735547cbe989626708a7eab7e182a2c6f
-H
-app/bot/handlers/ping.py,f/c/fc15b542d5103c17a192d0e6d1bd4e21f8f331a6
 @
 app/api/utils.py,3/5/352060e690e20468709e6ce67711a906e70ebc0b
 M
@@ -58,8 +56,6 @@ S
 #app/dependencies/types/analytics.py,2/4/24153e35cbb1893c93ebb2494a2e3dbd8f400804
 G
 app/schemas/__init__.py,7/5/7501a9306d02b3a60f7536482442b11b2a950344
-G
-app/bot/handlers/dev.py,0/c/0c75044dc1b45b3d03b61b8ce46bd521a0e42b33
 O
 app/dependencies/types/enums.py,a/d/add192dd5900bbc6abb219898117113ab4898b5b
 L

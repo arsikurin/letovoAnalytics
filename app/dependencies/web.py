@@ -47,8 +47,9 @@ class Web:
                 fs.get_password(sender_id=sender_id)
             )
             if errors_l.NothingFoundError in (login, password):
-                raise errors_l.NothingFoundError("Nothing found in the database for this user")
-
+                raise errors_l.NothingFoundError(
+                    "Credentials not found in the database.\nConsider entering /start and registering afterwards"
+                )
         login_data = {
             "login": login,
             "password": password
@@ -63,7 +64,7 @@ class Web:
             raise aiohttp.ClientConnectionError("Cannot establish connection to s.letovo.ru")
 
     async def receive_student_id(
-            self, fs: CredentialsDatabase, sender_id: str = None, token: str = None
+            self, fs: CredentialsDatabase, sender_id: str | None = None, token: str | None = None
     ) -> int:
         """
         Requires either a sender_id or token
@@ -77,8 +78,9 @@ class Web:
         if token is None:
             token = await fs.get_token(sender_id=sender_id)
             if token is errors_l.NothingFoundError:
-                raise errors_l.NothingFoundError("Nothing found in the database for this user")
-
+                raise errors_l.NothingFoundError(
+                    "Credentials not found in the database.\nConsider entering /start and registering afterwards"
+                )
         headers = {
             "Authorization": token
         }
@@ -108,12 +110,14 @@ class Web:
             fs.get_token(sender_id=sender_id)
         )
         if errors_l.NothingFoundError in (student_id, token):
-            raise errors_l.NothingFoundError("Nothing found in the database for this user")
+            raise errors_l.NothingFoundError(
+                "Credentials not found in the database.\nConsider entering /start and registering afterwards"
+            )
 
-        if datetime.datetime.today().strftime("%a") == "Sun":
-            date = (datetime.datetime.today() + datetime.timedelta(1)).strftime("%Y-%m-%d")
+        if datetime.datetime.now(tz=settings().timezone).strftime("%a") == "Sun":
+            date = (datetime.datetime.now(tz=settings().timezone) + datetime.timedelta(1)).strftime("%Y-%m-%d")
         else:
-            date = datetime.datetime.today().strftime("%Y-%m-%d")
+            date = datetime.datetime.now(tz=settings().timezone).strftime("%Y-%m-%d")
 
         url = f"https://s-api.letovo.ru/api/schedule/{student_id}/week?schedule_date={date}"
 
@@ -147,9 +151,10 @@ class Web:
             fs.get_token(sender_id=sender_id)
         )
         if errors_l.NothingFoundError in (student_id, token):
-            raise errors_l.NothingFoundError("Nothing found in the database for this user")
-
-        if int(datetime.datetime.today().strftime("%m")) >= 9:
+            raise errors_l.NothingFoundError(
+                "Credentials not found in the database.\nConsider entering /start and registering afterwards"
+            )
+        if int(datetime.datetime.now(tz=settings().timezone).strftime("%m")) >= 9:
             period_num = "1"
         else:
             period_num = "2"

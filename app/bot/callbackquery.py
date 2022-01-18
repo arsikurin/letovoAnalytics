@@ -192,9 +192,9 @@ class CallbackQuerySenders:
     def _payload(self):
         self.__payload = ""
 
-    async def send_greeting(self, sender: types.User):
+    async def send_greeting(self, sender: types.User) -> types.Message:
         payload = f'{fn if (fn := sender.first_name) else ""} {ln if (ln := sender.last_name) else ""}'.strip()
-        await self.client.send_message(
+        return await self.client.send_message(
             entity=sender,
             message=f"Greetings, **{payload}**!",
             parse_mode="md",
@@ -205,8 +205,8 @@ class CallbackQuerySenders:
             ]
         )
 
-    async def send_start_page(self, sender: types.User):
-        await self.client.send_message(
+    async def send_start_page(self, sender: types.User) -> types.Message:
+        return await self.client.send_message(
             entity=sender,
             message="I will help you access s.letovo.ru resources via Telegram.\n"
                     "  Initially, you should provide your **school** credentials.\n"
@@ -218,8 +218,8 @@ class CallbackQuerySenders:
             ]
         )
 
-    async def send_help_page(self, sender: types.User):
-        await self.client.send_message(
+    async def send_help_page(self, sender: types.User) -> types.Message:
+        return await self.client.send_message(
             entity=sender,
             message="I can help you access s.letovo.ru resources via Telegram.\n"
                     "If you're new here, please see the [Terms of Use](https://example.com) and "
@@ -238,7 +238,8 @@ class CallbackQuerySenders:
                     "School info:\n"
                     "**/options » schedule » __day__** — get schedule\n"
                     "**/options » marks** — get marks\n"
-                    "**/options » homework » __day__ ** — get homework **[beta]**\n"
+                    "**/options » homework » __day__ ** — get homework\n"
+                    "__***homework** might not be displayed properly currently as it is in beta__\n"
                     "\n"
                     "\n"
                     "**Bot Settings**\n"
@@ -255,13 +256,13 @@ class CallbackQuerySenders:
                     "• **5B** means **5** for Summative **B**\n"
                     "• **6F** means **6** for Formative\n",
             buttons=[
-                Button.url(text="Click here to log in", url=f"{settings().URL_LOGIN_LOCAL}?sender_id={sender.id}")
+                Button.url(text="Click here to register", url=f"{settings().URL_LOGIN_LOCAL}?sender_id={sender.id}")
             ],
             parse_mode="md",
             link_preview=False
         )
 
-    async def send_stats_page(self, sender: types.User):
+    async def send_stats(self, sender: types.User) -> types.Message:
         for user in await self._db.get_users():
             resp = await self._db.get_analytics(user)
             if not any((
@@ -277,7 +278,7 @@ class CallbackQuerySenders:
             name = name if name is not errors_l.NothingFoundError else ""
             surname = surname if surname is not errors_l.NothingFoundError else ""
             login = login if login is not errors_l.NothingFoundError else ""
-            await self.client.send_message(
+            return await self.client.send_message(
                 entity=sender,
                 message=f"ID: {resp.sender_id}\n"
                         f"Name: {name} {surname}\n"
@@ -292,8 +293,8 @@ class CallbackQuerySenders:
                 parse_mode="md"
             )
 
-    async def send_about_page(self, sender: types.User):
-        await self.client.send_message(
+    async def send_about_page(self, sender: types.User) -> types.Message:
+        return await self.client.send_message(
             entity=sender,
             message="**Arseny Kurin**\n\n"
                     "• 2024kurin.av@student.letovo.ru\n"
@@ -302,8 +303,18 @@ class CallbackQuerySenders:
             parse_mode="md"
         )
 
-    async def send_main_page(self, sender: types.User):
-        await self.client.send_message(
+    async def send_common_page(self, sender: types.User) -> types.Message:
+        return await self.client.send_message(
+            entity=sender,
+            message="**What you can do:**\n"
+                    "\n"
+                    "• Enter **/options** or click the **Options** button below\n"
+                    "• Enter **/help** to view the manual",
+            parse_mode="md"
+        )
+
+    async def send_main_page(self, sender: types.User) -> types.Message:
+        return await self.client.send_message(
             entity=sender,
             message=choose_an_option_below,
             parse_mode="md",
@@ -320,8 +331,8 @@ class CallbackQuerySenders:
             ]
         )
 
-    async def send_dev_page(self, sender: types.User):
-        await self.client.send_message(
+    async def send_dev_page(self, sender: types.User) -> types.Message:
+        return await self.client.send_message(
             entity=sender,
             message=choose_an_option_below,
             parse_mode="md",
@@ -346,7 +357,7 @@ class CallbackQuerySenders:
 
         await self.client.send_message(
             entity=sender,
-            message="__after__ **unit II**\n26.12.2021 — 09.01.2022",
+            message="__after__ **unit II**\n26.12.2021 — 12.01.2022",
             parse_mode="md"
         )
 
@@ -453,14 +464,30 @@ class CallbackQuerySenders:
         except aiohttp.ClientConnectionError as err:
             return await event.answer(f"[✘] {err}", alert=True)
 
+        old_wd = 0
         homework_response = HomeworkResponse.parse_raw(homework_resp)
+        if specific_day.value != -10:
+            date = homework_response.data[0].date.split("-")
+            await self.client.send_message(
+                entity=sender,
+                message=f"__{specific_day.name}, {int(date[2]) + specific_day.value - 1}.{date[1]}.{date[0]}__\n",
+                parse_mode="md",
+                silent=True
+            )
+
         for day in homework_response.data:
             if day.schedules and specific_day.value in (int(day.period_num_day), -10):
                 flag = False
+                wd = types_l.Weekdays(int(day.period_num_day)).name
+                if specific_day.value == -10 and wd != old_wd:
+                    await self.client.send_message(
+                        entity=sender,
+                        message=f"\n**=={wd}==**\n",
+                        parse_mode="md",
+                        silent=True
+                    )
                 payload = (
-                    f'{day.period_name}: <strong>{day.schedules[0].group.subject.subject_name_eng} '
-                    f'{day.schedules[0].group.group_name}</strong>\n'
-                    f'{types_l.Weekdays(int(day.period_num_day)).name}, {day.date}\n'
+                    f'{day.period_name}: <strong>{day.schedules[0].group.subject.subject_name_eng}</strong>\n'
                 )
                 if day.schedules[0].lessons:
                     if day.schedules[0].lessons[0].lesson_hw:
@@ -493,12 +520,14 @@ class CallbackQuerySenders:
                     silent=True,
                     link_preview=False
                 )
-        await event.answer()
+                old_wd = wd
+        await event.answer("Homework might not be displayed properly currently as it is in beta", alert=True)
 
     async def _prepare_summative_marks(self, subject: MarksDataList, check_date: bool = False):
         """
         Parse summative marks
         """
+        # TODO refactor
         marks = [(mark.mark_value, mark.mark_criterion, mark.created_at) for mark in subject.summative_list]
 
         mark_a, mark_b, mark_c, mark_d = [0, 0], [0, 0], [0, 0], [0, 0]
@@ -515,10 +544,13 @@ class CallbackQuerySenders:
             elif mark[1] == "D" and mark[0].isdigit():
                 mark_d[0] += int(mark[0])
                 mark_d[1] += 1
-            if not check_date or (datetime.datetime.today() - datetime.datetime.fromisoformat(mark[2])).days < 8:
+            if not check_date or (
+                    datetime.datetime.now(tz=settings().timezone) -
+                    datetime.datetime.fromisoformat(mark[2]).replace(tzinfo=settings().timezone)
+            ).days < 8:
                 self._payload += f"**{mark[0]}**{mark[1]} "
 
-        if mark_a[1] == 0:  # refactor
+        if mark_a[1] == 0:
             mark_a[1] = 1
         if mark_b[1] == 0:
             mark_b[1] = 1
@@ -590,7 +622,7 @@ class CallbackQuerySenders:
                         self._payload += f" | __final:__ **{subject.result_final_mark}**"
 
                     if subject.group_avg_mark:
-                        self._payload += f" | __group:__ **{subject.group_avg_mark}**"
+                        self._payload += f" | __group_avg:__ **{subject.group_avg_mark}**"
                     await self.client.send_message(
                         entity=sender,
                         message=self._payload,
@@ -604,7 +636,8 @@ class CallbackQuerySenders:
                 if subject.formative_list:
                     for mark in subject.formative_list:
                         created_at = datetime.datetime.fromisoformat(mark.created_at)
-                        if (datetime.datetime.today() - created_at).days < 8:
+                        now = datetime.datetime.now(tz=settings().timezone)
+                        if (now - created_at.replace(tzinfo=settings().timezone)).days < 8:
                             self._payload += f"**{mark.mark_value}**F "
 
                 if subject.summative_list:
