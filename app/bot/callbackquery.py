@@ -521,7 +521,7 @@ class CallbackQuerySenders:
                     link_preview=False
                 )
                 old_wd = wd
-        await event.answer("Homework might not be displayed properly currently as it is in beta", alert=True)
+        await event.answer("Homework might not be displayed properly as it is in beta", alert=True)
 
     async def _prepare_summative_marks(self, subject: MarksDataList, check_date: bool = False):
         """
