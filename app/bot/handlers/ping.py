@@ -10,6 +10,6 @@ async def init(client):
         s = time.time()
         message = await event.reply('Pong!')
         d = time.time() - s
-        await message.edit(f'Pong! __(reply took {d:.2f}s)__')
+        await message.edit(f"Pong! __(reply took {d:.2f}s)__")
         await asyncio.sleep(5)
         await message.delete()

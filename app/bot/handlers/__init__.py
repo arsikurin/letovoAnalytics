@@ -6,10 +6,10 @@ import logging as log
 import os
 import time
 
-from telethon import TelegramClient, events
+from telethon import TelegramClient, events, types
 
 from app.bot import CallbackQuery, InlineQuery
-from app.dependencies import AnalyticsDatabase, CredentialsDatabase
+from app.dependencies import AnalyticsDatabase, CredentialsDatabase, run_parallel
 
 
 async def init(
@@ -24,11 +24,11 @@ async def init(
         for file in os.listdir(os.path.dirname(__file__))
 
         # If they start with a letter and are Python files
-        if file[0].isalpha() and file.endswith('.py')
+        if file[0].isalpha() and file.endswith(".py")
     ]
 
     # Keep a mapping of module name to module for easy access inside the handlers
-    modules = {m.__name__.split('.')[-1]: m for m in handlers}
+    modules = {m.__name__.split(".")[-1]: m for m in handlers}
 
     # All kwargs provided to get_init_args are those that handlers may access
     to_init = (get_init_coro(handler, client=client, cbQuery=cbQuery, iQuery=iQuery, db=db, fs=fs, modules=modules) for
@@ -39,11 +39,18 @@ async def init(
 
     @client.on(events.NewMessage())
     async def _delete(event: events.NewMessage.Event):
-        await event.delete()
+        sender: types.User = await event.get_sender()
+        message, _, = await run_parallel(
+            cbQuery.send_common_page(sender=sender),
+            event.delete()
+        )
+        await asyncio.sleep(7)
+        await message.delete()  # TODO discussable
+        raise events.StopPropagation
 
 
 def get_init_coro(handler, **kwargs):
-    p_init = getattr(handler, 'init', None)
+    p_init = getattr(handler, "init", None)
     if not callable(p_init):
         return
 
@@ -53,7 +60,7 @@ def get_init_coro(handler, **kwargs):
         if param in kwargs:
             result_kwargs[param] = kwargs[param]
         else:
-            log.error('Handler %s has unknown init parameter %s', handler.__name__, param)
+            log.error("Handler %s has unknown init parameter %s", handler.__name__, param)
             return
 
     return _init_handler(handler, result_kwargs)
@@ -61,13 +68,13 @@ def get_init_coro(handler, **kwargs):
 
 async def _init_handler(handler, kwargs):
     try:
-        # log.debug(f'Loading handler {handler.__name__}…')
+        # log.debug(f"Loading handler {handler.__name__}…")
         start_time = time.perf_counter()
         await handler.init(**kwargs)
         took = datetime.timedelta(seconds=time.perf_counter() - start_time)
-        log.info(f'Loaded handler {handler.__name__} (took {took.seconds}s {took.microseconds}ms)')
+        log.info(f"Loaded handler {handler.__name__} (took {took.seconds}s {took.microseconds}ms)")
     except Exception as err:
-        log.exception(f'Failed to load handler {handler}')
+        log.exception(f"Failed to load handler {handler}")
         log.error(err)
 
 

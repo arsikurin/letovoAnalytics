@@ -18,7 +18,7 @@ async def init(client: TelegramClient, cbQuery: CallbackQuery):
     async def _stats(event: events.CallbackQuery.Event):
         sender: types.User = await event.get_sender()
         await run_sequence(
-            cbQuery.send_stats_page(sender=sender),
+            cbQuery.send_stats(sender=sender),
             event.answer("Done")
         )
         raise events.StopPropagation

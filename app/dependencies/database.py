@@ -316,7 +316,7 @@ class Postgresql:
             await self._connection.commit()
         except psycopg.OperationalError as err:
             log.error(err)
-            if err == unknown_err:
+            if err.__str__() == unknown_err:
                 log.info(f"Trying to fix `{err}` Error!")
                 await self._connection.close()
                 self._connection = await self._connect()

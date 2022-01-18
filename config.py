@@ -1,9 +1,11 @@
 import functools as ft
 import typing
+from zoneinfo import ZoneInfo
 
 import orjson
 
 try:
+    # set environment variables if on local machine
     from debug import include_secrets
 
     include_secrets()
@@ -11,8 +13,6 @@ except ImportError:
     include_secrets = typing.Any
 from pydantic import BaseSettings, HttpUrl, PostgresDsn, BaseConfig
 
-# import os
-# import sys
 # fpath = os.path.join(os.path.dirname(__file__), 'utils')
 # sys.path.append(fpath)
 BaseConfig.json_loads = orjson.loads
@@ -37,6 +37,7 @@ class AppSettings(BaseSettings):
     debug: bool = False
     title: str = "Letovo Analytics Bot API"
     favicon_path: str = "app/static/images/icons/api-icon.png"
+    timezone: ZoneInfo = ZoneInfo("Europe/Moscow")
 
     class Config:
         # validate_assignment
