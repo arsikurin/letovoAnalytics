@@ -5,6 +5,7 @@ from telethon import events, TelegramClient, types
 
 from app.bot import CallbackQuery
 from app.dependencies import AnalyticsDatabase, types as types_l
+from config import settings
 
 
 async def init(client: TelegramClient, cbQuery: CallbackQuery, db: AnalyticsDatabase):
@@ -28,7 +29,9 @@ async def init(client: TelegramClient, cbQuery: CallbackQuery, db: AnalyticsData
         )
         match event.data:
             case b"today_schedule":
-                await send_schedule(specific_day=types_l.Weekdays(int(datetime.datetime.today().strftime("%w"))))
+                await send_schedule(
+                    specific_day=types_l.Weekdays(int(datetime.datetime.now(tz=settings().timezone).strftime("%w")))
+                )
             case b"entire_schedule":
                 await send_schedule(specific_day=types_l.Weekdays.ALL)
             case b"monday_schedule":
