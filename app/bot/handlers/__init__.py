@@ -44,8 +44,8 @@ async def init(
             cbQuery.send_common_page(sender=sender),
             event.delete()
         )
-        await asyncio.sleep(7)
-        await message.delete()  # TODO discussable
+        # await asyncio.sleep(7)
+        # await message.delete()  # TODO discussable
         raise events.StopPropagation
 
 

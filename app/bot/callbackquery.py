@@ -262,7 +262,7 @@ class CallbackQuerySenders:
             link_preview=False
         )
 
-    async def send_stats(self, sender: types.User) -> types.Message:
+    async def send_stats(self, sender: types.User):
         for user in await self._db.get_users():
             resp = await self._db.get_analytics(user)
             if not any((
@@ -278,7 +278,7 @@ class CallbackQuerySenders:
             name = name if name is not errors_l.NothingFoundError else ""
             surname = surname if surname is not errors_l.NothingFoundError else ""
             login = login if login is not errors_l.NothingFoundError else ""
-            return await self.client.send_message(
+            await self.client.send_message(
                 entity=sender,
                 message=f"ID: {resp.sender_id}\n"
                         f"Name: {name} {surname}\n"
