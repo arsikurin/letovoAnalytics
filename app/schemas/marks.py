@@ -11,7 +11,7 @@ class MarksList(BaseModel):
     # mark_work: int
     mark_value: str
     mark_criterion: Optional[str]
-    # created_at: str
+    created_at: str
     # deleted_at: Optional[str]
     # id_lesson: int
     # lesson_date: str
@@ -22,6 +22,19 @@ class MarksList(BaseModel):
     form_description: Optional[str]
     # form_description_eng: Optional[str]
     # comment_list: list
+
+
+class FinalMarkList(BaseModel):
+    # if_final: int
+    # final_period: int
+    # final_student: int
+    # final_group: int
+    final_value: str
+    final_criterion: str
+    # final_create: str
+    # final_create_user: int
+    # final_delete: Optional[str]
+    # final_delete_user: Optional[int]
 
 
 class MarksSubject(BaseModel):
@@ -48,14 +61,14 @@ class MarksDataList(BaseModel):
     formative_avg_value: Optional[int]
     summative_avg_value: Optional[int]
     # criterions_summative_mark_list: list
-    formative_list: list[Optional[MarksList]]
+    formative_list: list[MarksList]
     # formative_dynamic_status: str
-    summative_list: list[Optional[MarksList]]
+    summative_list: list[MarksList]
     # summative_dynamic_status: str
     group_avg_mark: Optional[str]
     # target_mark: Optional[int]
-    # final_mark_list: list
-    # result_final_mark: Union[None, str, int]
+    final_mark_list: list[FinalMarkList]
+    result_final_mark: Optional[str]
     group: MarksGroup
 
 

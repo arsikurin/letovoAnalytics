@@ -5,11 +5,12 @@ from fastapi import APIRouter, Request, HTTPException, BackgroundTasks
 from fastapi.responses import RedirectResponse  # , ORJSONResponse HTMLResponse,
 from firebase_admin import auth
 
-from app.dependencies import Firebase, Web, UnauthorizedError
+from app.dependencies import Firestore, Web, errors as errors_l
 from config import settings
 
 router = APIRouter(prefix="/login")
 web: Web = ...
+fs: Firestore = ...
 
 
 async def send_email(analytics_login: str):
@@ -17,14 +18,15 @@ async def send_email(analytics_login: str):
         auth.create_user(email=f"{analytics_login}@student.letovo.ru")
     except auth.EmailAlreadyExistsError:
         pass
-    await Firebase.send_email(email=f"{analytics_login}@student.letovo.ru")
+    await fs.send_email(email=f"{analytics_login}@student.letovo.ru")
     return True
 
 
 @router.on_event("startup")
 async def on_startup():
-    global web
+    global web, fs
     web = Web(aiohttp.ClientSession())
+    fs = await Firestore.create()
 
 
 @router.on_event("shutdown")
@@ -65,8 +67,8 @@ async def login_api(request: Request, bg: BackgroundTasks):
         ) from err
 
     try:
-        token = await web.receive_token(login=analytics_login, password=analytics_password)
-    except UnauthorizedError as err:
+        token = await web.receive_token(login=analytics_login, password=analytics_password, fs=fs)
+    except errors_l.UnauthorizedError as err:
         log.error(err)
         raise HTTPException(
             status_code=400, detail="Cannot get data from s.letovo.ru",
@@ -79,8 +81,8 @@ async def login_api(request: Request, bg: BackgroundTasks):
         )
 
     try:
-        student_id = await web.receive_student_id(token=token)
-    except UnauthorizedError as err:
+        student_id = await web.receive_student_id(token=token, fs=fs)
+    except errors_l.UnauthorizedError as err:
         log.error(err)
         raise HTTPException(
             status_code=400, detail="Cannot get data from s.letovo.ru",
@@ -93,7 +95,7 @@ async def login_api(request: Request, bg: BackgroundTasks):
             headers={"fix": ""}
         )
 
-    await Firebase.update_data(
+    await fs.update_data(
         token=token, student_id=student_id,
         analytics_login=analytics_login, analytics_password=analytics_password, sender_id=sender_id,
         lang="en"
