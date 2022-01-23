@@ -1,3 +1,4 @@
 tests
+my_sum
 templates/email_template.html
 backend_pre_start.py

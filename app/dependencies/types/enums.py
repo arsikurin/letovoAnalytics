@@ -4,7 +4,8 @@ from enum import Enum
 
 class MarkTypes(Enum):
     RECENT = 1
-    ONLY_SUMMATIVE = 2
+    SUMMATIVE = 2
+    FINAL = 3
     ALL = -10
 
 
@@ -21,7 +22,7 @@ class Weekdays(Enum):
 
 
 class PatternMatching:
-    def __init__(self, s):
+    def __init__(self, s: str):
         self.today = bool(re.match(r"to", s))
         self.next = bool(re.match(r"ne", s))
         self.monday = bool(re.match(r"mo", s))
