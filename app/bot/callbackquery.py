@@ -310,7 +310,12 @@ class CallbackQuerySenders:
                     "\n"
                     "• Enter **/options** or click the **Options** button below\n"
                     "• Enter **/help** to view the manual",
-            parse_mode="md"
+            parse_mode="md",
+            buttons=[
+                [
+                    Button.text("Options", resize=True, single_use=False)
+                ]
+            ]
         )
 
     async def send_main_page(self, sender: types.User) -> types.Message:
