@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "letovo-analytics"
-version = "0.7.0"
-description = ""
+version = "2022.01.24"
+description = "Letovo Analytics bot helps letovians access s.letovo.ru resources via Telegram"
 authors = ["arsikurin <arseny.kurin@gmail.com>"]
 
 [tool.poetry.dependencies]
@@ -19,10 +19,11 @@ python-multipart = "^0.0.5"
 uvloop = "^0.16.0"
 aiorun = "^2021.10.1"
 aiohttp = "^3.8.0"
-uvicorn = {extras = ["standard"], version = "^0.17.0"}
-psycopg = {extras = ["c"], version = "^3.0.4"}
+uvicorn = { extras = ["standard"], version = "^0.17.0" }
+psycopg = { extras = ["c"], version = "^3.0.4" }
 Telethon = "^1.23.0"
 pydantic = "^1.8.2"
+python-dotenv = "^0.19.2"
 
 [tool.poetry.dev-dependencies]
 pylint = "^2.11.1"
