@@ -8,12 +8,12 @@ services:
       - PIP_DISABLE_PIP_VERSION_CHECK=1
       - PIP_NO_CACHE_DIR=1
       - PYTHONUNBUFFERED=1
-      - DATABASE_URL=${DATABASE_URL}
-      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
-      - GOOGLE_FS_KEY=${GOOGLE_FS_KEY}
-      - TG_API_HASH=${TG_API_HASH}
-      - TG_API_ID=${TG_API_ID}
-      - TG_BOT_TOKEN=${TG_BOT_TOKEN}
+      - DATABASE_URL=$DATABASE_URL
+      - GOOGLE_API_KEY=$GOOGLE_API_KEY
+      - GOOGLE_FS_KEY=$GOOGLE_FS_KEY
+      - TG_API_HASH=$TG_API_HASH
+      - TG_API_ID=$TG_API_ID
+      - TG_BOT_TOKEN=$TG_BOT_TOKEN
       #- POETRY_VERSION=1.0.5
     build:
       dockerfile: Dockerfile.bot
