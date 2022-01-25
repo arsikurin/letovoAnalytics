@@ -25,8 +25,6 @@ E
 .vscode/settings.json,8/9/89aa447020cdcb580cea0495694d46a55941edbe
 K
 app/templates/indexAPI.html,e/0/e063c146061d66ef7609cc5651c7613c5702b63d
-8
-debug.py,6/4/64048a6fc0a63a6690d6a2a235f2b7e2d1bd07a4
 @
 .deepsource.toml,f/7/f7fdb5a735547cbe989626708a7eab7e182a2c6f
 @
@@ -67,8 +65,6 @@ H
 app/bot/handlers/ping.py,f/c/fc15b542d5103c17a192d0e6d1bd4e21f8f331a6
 H
 app/bot/handlers/core.py,9/9/99950ab33bbbc51935b10bc3122252b854dbf1b8
-9
-	config.py,1/a/1a1b9769344cb239f2e540e1e6ee1efa2d3034ea
 =
 app/helper.py,0/6/06a2a9cefed22737d2d1fd7e2c591eb7412996ba
 L
