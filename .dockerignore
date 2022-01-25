@@ -1,3 +1,14 @@
 debug.py
 letovoAnalytics.session
 __pycache__
+.git
+.idea
+.vscode
+.deepsource.toml
+.pylintrc
+Procfile
+README.md
+SQL
+Dockerfile.api
+Dockerfile.bot
+.env.development.local

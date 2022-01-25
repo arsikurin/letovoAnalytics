@@ -4,14 +4,16 @@ services:
     container_name: bot
     restart: always
     environment:
-      ENV PIP_DEFAULT_TIMEOUT: 100
-      PIP_DISABLE_PIP_VERSION_CHECK: 1
-      PIP_NO_CACHE_DIR: 1
-      PYTHONUNBUFFERED: 1
-      #POETRY_VERSION: 1.0.5
+      - ENV PIP_DEFAULT_TIMEOUT=100
+      - PIP_DISABLE_PIP_VERSION_CHECK=1
+      - PIP_NO_CACHE_DIR=1
+      - PYTHONUNBUFFERED=1
+      #- POETRY_VERSION=1.0.5
     build:
       dockerfile: Dockerfile.bot
       context: .
+    env_file:
+      - .env.development.local
     depends_on:
       - pgdb
 
@@ -31,9 +33,9 @@ services:
     ports:
       - 5432:5432
     environment:
-      POSTGRES_DB: postgres1
-      POSTGRES_USER: postgres2
-      POSTGRES_PASSWORD: postgres3
+      - POSTGRES_DB=postgres1
+      - POSTGRES_USER=postgres2
+      - POSTGRES_PASSWORD=postgres3
 #    env_file:
 #      - .db.env
 #    volumes:
@@ -41,3 +43,10 @@ services:
 #
 #volumes:
 #  db-data:
+
+#    volumes:
+#      - type: bind
+#        source: .
+#        target: /app
+#        volume:
+#          nocopy: true
