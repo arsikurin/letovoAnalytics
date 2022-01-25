@@ -3,34 +3,24 @@ services:
   bot:
     container_name: bot
     restart: always
-    args:
+    environment:
       - PIP_DEFAULT_TIMEOUT=100
       - PIP_DISABLE_PIP_VERSION_CHECK=1
       - PIP_NO_CACHE_DIR=1
       - PYTHONUNBUFFERED=1
-      - DATABASE_URL=$DATABASE_URL
-      - GOOGLE_API_KEY=$GOOGLE_API_KEY
-      - GOOGLE_FS_KEY=$GOOGLE_FS_KEY
-      - TG_API_HASH=$TG_API_HASH
-      - TG_API_ID=$TG_API_ID
-      - TG_BOT_TOKEN=$TG_BOT_TOKEN
-#    environment:
-#      - PIP_DEFAULT_TIMEOUT=100
-#      - PIP_DISABLE_PIP_VERSION_CHECK=1
-#      - PIP_NO_CACHE_DIR=1
-#      - PYTHONUNBUFFERED=1
-#      - DATABASE_URL=$DATABASE_URL
-#      - GOOGLE_API_KEY=$GOOGLE_API_KEY
-#      - GOOGLE_FS_KEY=$GOOGLE_FS_KEY
-#      - TG_API_HASH=$TG_API_HASH
-#      - TG_API_ID=$TG_API_ID
-#      - TG_BOT_TOKEN=$TG_BOT_TOKEN
-#      #- POETRY_VERSION=1.0.5
+      #- POETRY_VERSION=1.0.5
     build:
+      args:
+        - DATABASE_URL=$DATABASE_URL
+        - GOOGLE_API_KEY=$GOOGLE_API_KEY
+        - GOOGLE_FS_KEY=$GOOGLE_FS_KEY
+        - TG_API_HASH=$TG_API_HASH
+        - TG_API_ID=$TG_API_ID
+        - TG_BOT_TOKEN=$TG_BOT_TOKEN
       dockerfile: Dockerfile.bot
       context: .
-    depends_on:
-      - pgdb
+#    depends_on:
+#      - pgdb
 
 #  api:
 #    container_name: api
