@@ -3,4 +3,3 @@ letovoAnalytics.session
 __pycache__
 .env.development.local
 config.template.yaml
-okteto-pipeline.yaml
