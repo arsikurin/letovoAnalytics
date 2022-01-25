@@ -1,6 +1,6 @@
-FROM python:3.10.2-bullseye
+FROM python:3.10.1-bullseye
 
-WORKDIR .
+WORKDIR /app-data
 
 #ENV PIP_DEFAULT_TIMEOUT=100 \
 #    PIP_DISABLE_PIP_VERSION_CHECK=1 \

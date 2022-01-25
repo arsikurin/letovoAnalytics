@@ -1,6 +1,6 @@
-FROM python:3.10.2-bullseye
+FROM python:3.10.1-bullseye
 
-WORKDIR .
+WORKDIR /app-data
 
 COPY pyproject.toml pyproject.toml
 COPY poetry.lock poetry.lock
