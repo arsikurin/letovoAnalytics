@@ -8,6 +8,12 @@ services:
       - PIP_DISABLE_PIP_VERSION_CHECK=1
       - PIP_NO_CACHE_DIR=1
       - PYTHONUNBUFFERED=1
+      - DATABASE_URL=${DATABASE_URL}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - GOOGLE_FS_KEY=${GOOGLE_FS_KEY}
+      - TG_API_HASH=${TG_API_HASH}
+      - TG_API_ID=${TG_API_ID}
+      - TG_BOT_TOKEN=${TG_BOT_TOKEN}
       #- POETRY_VERSION=1.0.5
     build:
       dockerfile: Dockerfile.bot
@@ -24,16 +30,17 @@ services:
 #      dockerfile: Dockerfile.api
 #      context: .
 
-  pgdb:
-    container_name: pgdb
-    image: postgres
-    restart: always
-    ports:
-      - 5432:5432
-    environment:
-      - POSTGRES_DB=postgres1
-      - POSTGRES_USER=postgres2
-      - POSTGRES_PASSWORD=postgres3
+#  pgdb:
+#    container_name: pgdb
+#    image: postgres
+#    restart: always
+#    ports:
+#      - 5432:5432
+#    environment:
+#      - POSTGRES_DB=postgres1
+#      - POSTGRES_USER=postgres2
+#      - POSTGRES_PASSWORD=postgres3
+
 #    env_file:
 #      - .env.database
 #    volumes:
