@@ -12,8 +12,6 @@ services:
     build:
       dockerfile: Dockerfile.bot
       context: .
-    env_file:
-      - .env.development.local
     depends_on:
       - pgdb
 
@@ -37,7 +35,7 @@ services:
       - POSTGRES_USER=postgres2
       - POSTGRES_PASSWORD=postgres3
 #    env_file:
-#      - .db.env
+#      - .env.database
 #    volumes:
 #      - db-data:/var/lib/postgresql/data
 #

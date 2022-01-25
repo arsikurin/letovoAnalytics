@@ -11,4 +11,3 @@ README.md
 SQL
 Dockerfile.api
 Dockerfile.bot
-.env.development.local

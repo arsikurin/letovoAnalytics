@@ -108,7 +108,7 @@ class ScheduleDataList(BaseModel):
 
 
 class ScheduleResponse(BaseModel):
-    status: str
-    code: int
-    detail: str = Field(alias="message")
+    # status: str
+    # code: int
+    # detail: str = Field(alias="message")
     data: list[ScheduleDataList]
