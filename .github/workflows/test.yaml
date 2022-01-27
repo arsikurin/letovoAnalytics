@@ -21,7 +21,6 @@ jobs:
     - name: Install dependencies
       run: |
         pip install poetry
-        poetry config virtualenvs.create false
         poetry install --no-interaction
     - name: Test with tox
       run: tox

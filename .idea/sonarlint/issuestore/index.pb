@@ -51,8 +51,6 @@ L
 app/dependencies/__init__.py,9/1/91dc6134e15a04bd1249542b12e858a7500c0f77
 =
 app/helper.py,0/6/06a2a9cefed22737d2d1fd7e2c591eb7412996ba
-L
-app/dependencies/firebase.py,6/b/6b1c4b59608a4b10fd367358fe9fd5a5ebe982a4
 I
 app/dependencies/utils.py,6/4/64aa3860a93bfe6dcd4e04b26e95503044aad6b2
 C

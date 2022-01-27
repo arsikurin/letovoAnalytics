@@ -1,7 +1,7 @@
 from telethon import events, TelegramClient, types
 
 from app.bot import CallbackQuery
-from app.dependencies import AnalyticsDatabase, run_parallel, run_sequence
+from app.dependencies import AnalyticsDatabase, run_parallel
 
 
 async def init(client: TelegramClient, cbQuery: CallbackQuery, db: AnalyticsDatabase):
