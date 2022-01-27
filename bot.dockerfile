@@ -1,4 +1,4 @@
-FROM python:3.10.1-bullseye as prod
+FROM python:3.10.2-bullseye as prod
 
 WORKDIR /app-data
 
