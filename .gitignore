@@ -1,5 +1,6 @@
-debug.py
 letovoAnalytics.session
 __pycache__
 .env.development.local
-config.template.yaml
+.pytest_cache
+.coverage
+.tox

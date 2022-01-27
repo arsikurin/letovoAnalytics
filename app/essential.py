@@ -20,13 +20,10 @@ PROJECT_ROOT = os.path.abspath(
     )
 )
 sys.path.append(PROJECT_ROOT)
-
-# set asyncio policy to use uvloop as main event loop
-asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 from config import settings  # noqa
 
-# start_time = time.perf_counter()
-# datetime.timedelta(seconds=time.perf_counter() - start_time)
+# set asyncio policy to use uvloop as event loop
+asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 # initialize logger
 if settings().debug:
@@ -47,3 +44,9 @@ else:
     log.getLogger("aiorun").setLevel(log.INFO)
     # log.getLogger("urllib3.connectionpool").disabled = True
     # log.getLogger("multipart.multipart").disabled = True
+
+# fpath = os.path.join(os.path.dirname(__file__), 'utils')
+# sys.path.append(fpath)
+
+# start_time = time.perf_counter()
+# datetime.timedelta(seconds=time.perf_counter() - start_time)

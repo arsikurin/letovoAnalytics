@@ -5,6 +5,6 @@
 ## [To Do list](https://github.com/arsikurin/letovoAnalytics/projects/1)
 
 
-## Project contains
+## Repository contains
 - API
 - Telegram bot

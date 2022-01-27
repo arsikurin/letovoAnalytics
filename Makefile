@@ -13,18 +13,12 @@ api-prod:
 ping-api:
 	python3 ./app/pinger.py
 
-# for ARM
-bot-dev-arm:
-	arch -x86_64 python3 -X dev ./app/main_bot.py
+update-tokens:
+	python3 ./app/helper.py
 
-api-dev-arm:
-	arch -x86_64 python3 -X dev ./app/main_api.py
+run-dev:
+	docker compose up
 
-bot-prod-arm:
-	arch -x86_64 python3 ./app/main_bot.py
-
-api-prod-arm:
-	arch -x86_64 python3 ./app/main_api.py
-
-ping-api-arm:
-	arch -x86_64 python3 ./app/pinger.py
+# kubernetes
+okteto-deploy:
+	okteto stack deploy --build -f docker-compose.yaml
