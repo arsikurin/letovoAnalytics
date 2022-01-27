@@ -7,9 +7,9 @@ import uvloop
 from colourlib import Fg, Style
 
 """
-add root folder of the project to the PYTHONPATH 
+add root folder of the project to the PYTHONPATH
 in order to access files using absolute paths
- 
+
 for example:
 `import root.module.submodule`
 """

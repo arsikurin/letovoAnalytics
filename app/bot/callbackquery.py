@@ -405,37 +405,37 @@ class CallbackQuerySenders:
         """
         return await event.answer("Not implemented!")
 
-        sender: types.User = await event.get_sender()
-        try:
-            schedule_resp = await self._web.receive_hw_n_schedule(sender_id=str(sender.id), fs=self._fs)
-        except errors_l.UnauthorizedError as err:
-            return await event.answer(f"[✘] {err}", alert=True)
-        except errors_l.NothingFoundError as err:
-            return await event.answer(f"[✘] {err}", alert=True)
-        except aiohttp.ClientConnectionError as err:
-            return await event.answer(f"[✘] {err}", alert=True)
-
-        schedule_response = ScheduleResponse.parse_obj(schedule_resp)
-        for day in schedule_response.data:
-            if day.schedules:
-                wd = types_l.Weekdays(int(day.period_num_day)).name
-
-                payload = f"{day.period_name} | __{day.schedules[0].room.room_name}__:\n"
-
-                if day.schedules[0].group.subject.subject_name_eng:
-                    subject = day.schedules[0].group.subject.subject_name_eng
-                else:
-                    subject = day.schedules[0].group.subject.subject_name
-                payload += f"**{subject} {day.schedules[0].group.group_name}**\n"
-
-                await self.client.send_message(
-                    entity=sender,
-                    message=payload,
-                    parse_mode="md",
-                    silent=True,
-                    link_preview=False
-                )
-        await event.answer()
+        # sender: types.User = await event.get_sender()
+        # try:
+        #     schedule_resp = await self._web.receive_hw_n_schedule(sender_id=str(sender.id), fs=self._fs)
+        # except errors_l.UnauthorizedError as err:
+        #     return await event.answer(f"[✘] {err}", alert=True)
+        # except errors_l.NothingFoundError as err:
+        #     return await event.answer(f"[✘] {err}", alert=True)
+        # except aiohttp.ClientConnectionError as err:
+        #     return await event.answer(f"[✘] {err}", alert=True)
+        #
+        # schedule_response = ScheduleResponse.parse_obj(schedule_resp)
+        # for day in schedule_response.data:
+        #     if day.schedules:
+        #         wd = types_l.Weekdays(int(day.period_num_day)).name
+        #
+        #         payload = f"{day.period_name} | __{day.schedules[0].room.room_name}__:\n"
+        #
+        #         if day.schedules[0].group.subject.subject_name_eng:
+        #             subject = day.schedules[0].group.subject.subject_name_eng
+        #         else:
+        #             subject = day.schedules[0].group.subject.subject_name
+        #         payload += f"**{subject} {day.schedules[0].group.group_name}**\n"
+        #
+        #         await self.client.send_message(
+        #             entity=sender,
+        #             message=payload,
+        #             parse_mode="md",
+        #             silent=True,
+        #             link_preview=False
+        #         )
+        # await event.answer()
 
     async def send_schedule(
             self, event: events.CallbackQuery.Event, specific_day: types_l.Weekdays
@@ -625,7 +625,12 @@ class CallbackQuerySenders:
         mark_a_avg, mark_b_avg = mark_a[0] / mark_a[1], mark_b[0] / mark_b[1]
         mark_c_avg, mark_d_avg = mark_c[0] / mark_c[1], mark_d[0] / mark_d[1]
 
-        round_mark = lambda avg: round(avg) if abs(avg % 1) < settings().EPS else round(avg, 1)
+        def round_mark(avg):
+            if abs(avg % 1) < settings().EPS:
+                return round(avg)
+            else:
+                return round(avg, 1)
+
         mark_a_avg = round_mark(mark_a_avg)
         mark_b_avg = round_mark(mark_b_avg)
         mark_c_avg = round_mark(mark_c_avg)
@@ -634,7 +639,7 @@ class CallbackQuerySenders:
         if self._payload[-2] == "*":
             self._payload += "no recent marks"
 
-        self._payload += f" | __avg:__ "
+        self._payload += " | __avg:__ "
         if mark_a_avg > 0:
             self._payload += f"**{mark_a_avg}**A "
         if mark_b_avg > 0:

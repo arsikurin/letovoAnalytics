@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import itertools as it
 import logging as log
-import typing
 import types
+import typing
+
 import psycopg
 from psycopg.rows import class_row
 
@@ -67,7 +68,6 @@ class AnalyticsDatabase(typing.Protocol):
     async def increase_inline_counter(self, sender_id: str): ...
 
     async def increase_about_counter(self, sender_id: str): ...
-
 
 
 @typing.final
