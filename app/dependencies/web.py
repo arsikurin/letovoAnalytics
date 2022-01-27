@@ -95,7 +95,7 @@ class Web:
 
     async def receive_hw_n_schedule(
             self, sender_id: str, fs: CredentialsDatabase
-    ) -> bytes:
+    ) -> dict:
         """
         Receive homework & schedule
 
@@ -103,7 +103,7 @@ class Web:
         :raise UnauthorizedError:
         :raise NothingFoundError:
 
-        :return: bytes
+        :return: json
         """
         student_id, token = await asyncio.gather(
             fs.get_student_id(sender_id=sender_id),
@@ -129,14 +129,14 @@ class Web:
             async with self.session.get(url=url, headers=headers) as resp:
                 if resp.status != 200:
                     raise errors_l.UnauthorizedError(f"Cannot get data from s.letovo.ru. Error {resp.status}")
-                return await resp.content.read()
+                return await resp.json(loads=orjson.loads)
         except aiohttp.ClientConnectionError as err:
             log.error(err)
             raise aiohttp.ClientConnectionError("Cannot establish connection to s.letovo.ru")
 
     async def receive_marks(
             self, sender_id: str, fs: CredentialsDatabase
-    ) -> bytes:
+    ) -> dict:
         """
         Receive marks
 
@@ -144,7 +144,7 @@ class Web:
         :raise UnauthorizedError:
         :raise NothingFoundError:
 
-        :return: bytes
+        :return: json
         """
         student_id, token = await asyncio.gather(
             fs.get_student_id(sender_id=sender_id),
@@ -169,7 +169,7 @@ class Web:
             async with self.session.get(url=url, headers=headers) as resp:
                 if resp.status != 200:
                     raise errors_l.UnauthorizedError(f"Cannot get data from s.letovo.ru. Error {resp.status}")
-                return await resp.content.read()
+                return await resp.json(loads=orjson.loads)
         except aiohttp.ClientConnectionError as err:
             log.error(err)
             raise aiohttp.ClientConnectionError("Cannot establish connection to s.letovo.ru")

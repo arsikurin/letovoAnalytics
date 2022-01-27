@@ -7,7 +7,7 @@ authors = ["arsikurin <arseny.kurin@gmail.com>"]
 [tool.poetry.dependencies]
 python = "3.10.1"
 orjson = "^3.6.4"
-fastapi = "^0.72.0"
+fastapi = "^0.73.0"
 requests = "^2.26.0"
 firebase-admin = "^5.1.0"
 colourlib = "^0.5.3"
@@ -27,10 +27,37 @@ python-dotenv = "^0.19.2"
 
 [tool.poetry.dev-dependencies]
 pylint = "^2.11.1"
-locust = "^2.5.0"
-# pytest
-# Hypothesis
 flake8 = "^4.0.1"
+snakeviz = "^2.1.1"
+tox = "^3.24.5"
+pytest = "^6.2.5"
+pytest-cov = "^3.0.0"
+mypy = "^0.931"
+#locust = "^2.5.0"
+# Hypothesis
+pytest-mock = "^3.6.1"
+tox-gh-actions = "^2.9.1"
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "--cov=."
+testpaths = [
+    "./app/tests",
+]
+
+[tool.mypy]
+mypy_path = "./"
+check_untyped_defs = true
+disallow_any_generics = true
+ignore_missing_imports = true
+no_implicit_optional = true
+show_error_codes = true
+strict_equality = true
+warn_redundant_casts = true
+warn_return_any = true
+warn_unreachable = true
+warn_unused_configs = true
+no_implicit_reexport = true
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

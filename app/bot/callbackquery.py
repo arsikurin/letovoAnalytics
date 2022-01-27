@@ -33,7 +33,7 @@ class CallbackQueryEventEditors:
                 ], [
                     Button.inline("Marks »", b"marks_page"),
                 ], [
-                    Button.inline("Holidays", b"holidays"),
+                    Button.inline("Others »", b"others_page"),
                 ]
             ]
         )
@@ -87,6 +87,22 @@ class CallbackQueryEventEditors:
                 ], [
                     Button.inline("Summatives", b"summative_marks"),
                     Button.inline("Finals", b"final_marks"),
+                ], [
+                    Button.inline(back, b"main_page")
+                ]
+            ]
+        )
+
+    @staticmethod
+    async def to_others_page(event: events.CallbackQuery.Event):
+        await event.edit(
+            choose_an_option_below,
+            parse_mode="md",
+            buttons=[
+                [
+                    Button.inline("Teachers' names", b"teachers")
+                ], [
+                    Button.inline("Holidays", b"holidays"),
                 ], [
                     Button.inline(back, b"main_page")
                 ]
@@ -223,7 +239,7 @@ class CallbackQuerySenders:
             entity=sender,
             message="I can help you access s.letovo.ru resources via Telegram.\n"
                     "If you're new here, please see the [Terms of Use](https://example.com) and "
-                    "provide your **school** credentials, i. e. login and password,"
+                    "provide your **school** credentials, i.e. login and password,"
                     " **__(Button below the message)__** to begin enjoying the service\n"
                     "\n"
                     "\n"
@@ -331,7 +347,7 @@ class CallbackQuerySenders:
                 ], [
                     Button.inline("Marks »", b"marks_page"),
                 ], [
-                    Button.inline("Holidays", b"holidays"),
+                    Button.inline("Others »", b"others_page"),
                 ]
             ]
         )
@@ -377,6 +393,49 @@ class CallbackQuerySenders:
             message="__after__ **unit IV**\n22.05.2022 — 31.08.2022",
             parse_mode="md"
         )
+        await event.answer()
+
+    async def send_teachers(
+            self, event: events.CallbackQuery.Event
+    ):
+        """
+        parse & send specific day(s) from schedule
+
+        :param event: a return object of CallbackQuery
+        """
+        return await event.answer("Not implemented!")
+
+        sender: types.User = await event.get_sender()
+        try:
+            schedule_resp = await self._web.receive_hw_n_schedule(sender_id=str(sender.id), fs=self._fs)
+        except errors_l.UnauthorizedError as err:
+            return await event.answer(f"[✘] {err}", alert=True)
+        except errors_l.NothingFoundError as err:
+            return await event.answer(f"[✘] {err}", alert=True)
+        except aiohttp.ClientConnectionError as err:
+            return await event.answer(f"[✘] {err}", alert=True)
+
+        schedule_response = ScheduleResponse.parse_obj(schedule_resp)
+        for day in schedule_response.data:
+            if day.schedules:
+                wd = types_l.Weekdays(int(day.period_num_day)).name
+
+                payload = f"{day.period_name} | __{day.schedules[0].room.room_name}__:\n"
+
+                if day.schedules[0].group.subject.subject_name_eng:
+                    subject = day.schedules[0].group.subject.subject_name_eng
+                else:
+                    subject = day.schedules[0].group.subject.subject_name
+                payload += f"**{subject} {day.schedules[0].group.group_name}**\n"
+
+                await self.client.send_message(
+                    entity=sender,
+                    message=payload,
+                    parse_mode="md",
+                    silent=True,
+                    link_preview=False
+                )
+        await event.answer()
 
     async def send_schedule(
             self, event: events.CallbackQuery.Event, specific_day: types_l.Weekdays
@@ -387,6 +446,7 @@ class CallbackQuerySenders:
         :param event: a return object of CallbackQuery
         :param specific_day: day of the week represented by Weekdays enum
         """
+
         if specific_day == types_l.Weekdays.Sunday:
             return await event.answer("Congrats! It's Sunday, no lessons", alert=False)
         sender: types.User = await event.get_sender()
@@ -395,13 +455,12 @@ class CallbackQuerySenders:
         except errors_l.UnauthorizedError as err:
             return await event.answer(f"[✘] {err}", alert=True)
         except errors_l.NothingFoundError as err:
-            # "[✘] Nothing found in database for this user.\nPlease enter /start and register"
             return await event.answer(f"[✘] {err}", alert=True)
         except aiohttp.ClientConnectionError as err:
             return await event.answer(f"[✘] {err}", alert=True)
 
         old_wd = 0
-        schedule_response = ScheduleResponse.parse_raw(schedule_resp)
+        schedule_response = ScheduleResponse.parse_obj(schedule_resp)
         if specific_day.value != -10:
             date = schedule_response.data[0].date.split("-")
             await self.client.send_message(
@@ -464,13 +523,12 @@ class CallbackQuerySenders:
         except errors_l.UnauthorizedError as err:
             return await event.answer(f"[✘] {err}", alert=True)
         except errors_l.NothingFoundError as err:
-            # "[✘] Nothing found in database for this user.\nPlease enter /start and register"
             return await event.answer(f"[✘] {err}", alert=True)
         except aiohttp.ClientConnectionError as err:
             return await event.answer(f"[✘] {err}", alert=True)
 
         old_wd = 0
-        homework_response = HomeworkResponse.parse_raw(homework_resp)
+        homework_response = HomeworkResponse.parse_obj(homework_resp)
         if specific_day.value != -10:
             date = homework_response.data[0].date.split("-")
             await self.client.send_message(
@@ -492,11 +550,11 @@ class CallbackQuerySenders:
                         silent=True
                     )
                 payload = (
-                    f'{day.period_name}: <strong>{day.schedules[0].group.subject.subject_name_eng}</strong>\n'
+                    f"{day.period_name}: <strong>{day.schedules[0].group.subject.subject_name_eng}</strong>\n"
                 )
                 if day.schedules[0].lessons:
                     if day.schedules[0].lessons[0].lesson_hw:
-                        payload += f'{day.schedules[0].lessons[0].lesson_hw}\n'
+                        payload += f"{day.schedules[0].lessons[0].lesson_hw}\n"
                     else:
                         payload += "<em>No homework</em>\n"
 
@@ -512,7 +570,7 @@ class CallbackQuerySenders:
                         payload += "<em>No links attached</em>\n"
 
                     if day.schedules[0].lessons[0].lesson_topic:
-                        payload += f'{day.schedules[0].lessons[0].lesson_topic}\n'
+                        payload += f"{day.schedules[0].lessons[0].lesson_topic}\n"
                     else:
                         payload += "<em>No topic</em>\n"
                 else:
@@ -601,12 +659,11 @@ class CallbackQuerySenders:
         except errors_l.UnauthorizedError as err:
             return await event.answer(f"[✘] {err}", alert=True)
         except errors_l.NothingFoundError as err:
-            # "[✘] Nothing found in database for this user.\nPlease enter /start and register"
             return await event.answer(f"[✘] {err}", alert=True)
         except aiohttp.ClientConnectionError as err:
             return await event.answer(f"[✘] {err}", alert=True)
 
-        marks_response = MarksResponse.parse_raw(marks_resp)
+        marks_response = MarksResponse.parse_obj(marks_resp)
         for subject in marks_response.data:
             if specific == types_l.MarkTypes.SUMMATIVE and subject.summative_list:
                 self._payload = f"**{subject.group.subject.subject_name_eng}**\n"

@@ -1,6 +1,6 @@
 CREATE TABLE users
 (
-    sender_id        VARCHAR(255) PRIMARY KEY,
+    sender_id        VARCHAR(255) PRIMARY KEY, -- TODO change to integer
     message_id       INTEGER,
     schedule_counter INTEGER,
     homework_counter INTEGER,

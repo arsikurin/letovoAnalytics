@@ -1,52 +1,39 @@
 services:
 
   bot:
-    container_name: bot
     restart: always
     environment:
       - PIP_DEFAULT_TIMEOUT=100
       - PIP_DISABLE_PIP_VERSION_CHECK=1
-      - PIP_NO_CACHE_DIR=1
-      - PYTHONUNBUFFERED=1
-      #- POETRY_VERSION=1.0.5
+#      - PIP_NO_CACHE_DIR=1
+#      - PYTHONUNBUFFERED=1
+#      - POETRY_VERSION=1.0.5
+
     build:
-      args:
-        - DATABASE_URL=$DATABASE_URL
-        - GOOGLE_API_KEY=$GOOGLE_API_KEY
-        - GOOGLE_FS_KEY=$GOOGLE_FS_KEY
-        - TG_API_HASH=$TG_API_HASH
-        - TG_API_ID=$TG_API_ID
-        - TG_BOT_TOKEN=$TG_BOT_TOKEN
-      dockerfile: Dockerfile.bot
+      dockerfile: bot.dockerfile
       context: .
+      target: dev
+    volumes:
+      - /Users/arsikurin/PycharmProjects/letovoAnalytics:/app-data
 #    depends_on:
-#      - pgdb
+#      - db
 
 #  api:
-#    container_name: api
 #    restart: always
 #    ports:
 #      - 8081:80
 #    build:
-#      dockerfile: Dockerfile.api
+#      dockerfile: api.dockerfile
 #      context: .
 
-#  pgdb:
-#    container_name: pgdb
+#  db:
 #    image: postgres
 #    restart: always
 #    ports:
 #      - 5432:5432
-#    environment:
-#      - POSTGRES_DB=postgres1
-#      - POSTGRES_USER=postgres2
-#      - POSTGRES_PASSWORD=postgres3
-
-#    env_file:
-#      - .env.database
 #    volumes:
 #      - db-data:/var/lib/postgresql/data
-#
+
 #volumes:
 #  db-data:
 

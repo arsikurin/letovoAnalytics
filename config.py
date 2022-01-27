@@ -8,8 +8,7 @@ from pydantic import BaseSettings, HttpUrl, PostgresDsn, BaseConfig
 # Use vars from local .env file if on local machine
 load_dotenv(find_dotenv(".env.development.local", raise_error_if_not_found=False), override=True)
 
-# fpath = os.path.join(os.path.dirname(__file__), 'utils')
-# sys.path.append(fpath)
+
 BaseConfig.json_loads = orjson.loads
 BaseConfig.json_dumps = orjson.dumps
 

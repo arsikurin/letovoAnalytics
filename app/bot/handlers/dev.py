@@ -1,3 +1,7 @@
+import asyncio
+import datetime
+import time
+
 from telethon import events, types, TelegramClient
 
 from app.bot import CallbackQuery
@@ -11,6 +15,18 @@ async def init(client: TelegramClient, cbQuery: CallbackQuery):
         await run_sequence(
             cbQuery.send_greeting(sender=sender),
             cbQuery.send_dev_page(sender=sender)
+        )
+        raise events.StopPropagation
+
+    @client.on(events.NewMessage(pattern="#ping", forwards=False))
+    async def _ping(event):
+        start_time = time.perf_counter()
+        message = await event.reply("Pong!")
+        delta = datetime.timedelta(seconds=time.perf_counter() - start_time)
+        await run_sequence(
+            message.edit(f"Pong! __(reply took {delta:.2f}s)__"),
+            asyncio.sleep(5),
+            message.delete()
         )
         raise events.StopPropagation
 
