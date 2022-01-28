@@ -1,6 +1,7 @@
 services:
 
   bot:
+    container_name: bot
     restart: always
     environment:
       - PIP_DEFAULT_TIMEOUT=100

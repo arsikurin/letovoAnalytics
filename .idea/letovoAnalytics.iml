@@ -26,6 +26,8 @@
     <option name="versionSpecifier" value="Strong equality (==x.y.z)" />
   </component>
   <component name="PyDocumentationSettings">
+    <option name="format" value="GOOGLE" />
+    <option name="myDocStringFormat" value="Google" />
     <option name="renderExternalDocumentation" value="true" />
   </component>
   <component name="TemplatesService">
