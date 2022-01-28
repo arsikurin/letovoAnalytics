@@ -33,14 +33,24 @@ class Web:
             password: str | None = None
     ) -> str:
         """
+        Receive auth token from s.letovo.ru
         Requires either a sender_id or (password and login)
 
-        :raise aiohttp.ClientConnectionError:
-        :raise UnauthorizedError:
-        :raise NothingFoundError:
+        Args:
+            sender_id (str | None): user's Telegram ID
+            fs (CredentialsDatabase): connection to the database with users' credentials
+            login (str | None): user's login to s.letovo.ru
+            password (str | None): user's password to s.letovo.ru
 
-        :return: str
+        Raises:
+            aiohttp.ClientConnectionError: if connection cannot be established to s.letovo.ru
+            UnauthorizedError: if any other error caught during connection to s.letovo.ru
+            NothingFoundError: if credentials cannot be found in the provided DB
+
+        Returns:
+            str: auth token
         """
+
         if None in (login, password):
             login, password = await asyncio.gather(
                 fs.get_login(sender_id=sender_id),
@@ -67,14 +77,23 @@ class Web:
             self, fs: CredentialsDatabase, sender_id: str | None = None, token: str | None = None
     ) -> int:
         """
+        Receive student id from s.letovo.ru
         Requires either a sender_id or token
 
-        :raise aiohttp.ClientConnectionError:
-        :raise UnauthorizedError:
-        :raise NothingFoundError:
+        Args:
+            sender_id (str | None): user's Telegram ID
+            fs (CredentialsDatabase): connection to the database with users' credentials
+            token (str | None): auth token to s.letovo.ru
 
-        :return: int
+        Raises:
+            aiohttp.ClientConnectionError: if connection cannot be established to s.letovo.ru
+            UnauthorizedError: if any other error caught during connection to s.letovo.ru
+            NothingFoundError: if credentials cannot be found in the provided DB
+
+        Returns:
+            int: student id
         """
+
         if token is None:
             token = await fs.get_token(sender_id=sender_id)
             if token is errors_l.NothingFoundError:
@@ -97,14 +116,21 @@ class Web:
             self, sender_id: str, fs: CredentialsDatabase
     ) -> dict:
         """
-        Receive homework & schedule
+        Receive homework & schedule from s.letovo.ru
 
-        :raise aiohttp.ClientConnectionError:
-        :raise UnauthorizedError:
-        :raise NothingFoundError:
+        Args:
+            sender_id (str | None): user's Telegram ID
+            fs (CredentialsDatabase): connection to the database with users' credentials
 
-        :return: json
+        Raises:
+            aiohttp.ClientConnectionError: if connection cannot be established to s.letovo.ru
+            UnauthorizedError: if any other error caught during connection to s.letovo.ru
+            NothingFoundError: if credentials cannot be found in the provided DB
+
+        Returns:
+            json
         """
+
         student_id, token = await asyncio.gather(
             fs.get_student_id(sender_id=sender_id),
             fs.get_token(sender_id=sender_id)
@@ -138,14 +164,21 @@ class Web:
             self, sender_id: str, fs: CredentialsDatabase
     ) -> dict:
         """
-        Receive marks
+        Receive marks from s.letovo.ru
 
-        :raise aiohttp.ClientConnectionError:
-        :raise UnauthorizedError:
-        :raise NothingFoundError:
+        Args:
+            sender_id (str | None): user's Telegram ID
+            fs (CredentialsDatabase): connection to the database with users' credentials
 
-        :return: json
+        Raises:
+            aiohttp.ClientConnectionError: if connection cannot be established to s.letovo.ru
+            UnauthorizedError: if any other error caught during connection to s.letovo.ru
+            NothingFoundError: if credentials cannot be found in the provided DB
+
+        Returns:
+            json
         """
+
         student_id, token = await asyncio.gather(
             fs.get_student_id(sender_id=sender_id),
             fs.get_token(sender_id=sender_id)

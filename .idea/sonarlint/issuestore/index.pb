@@ -43,15 +43,11 @@ J
 app/pinger.py,4/7/47be40247f87156c5a9f341307f2dabcb6b8de10
 9
 	.pylintrc,5/8/58278ca6e186f004b12621f8c3155064b4dc09b6
-G
-app/bot/handlers_old.py,6/d/6d526a4e6a0de75cb4a161331cb4568085eefb84
 D
 app/schemas/marks.py,9/7/97fbf3327d40eabbec68aaacbf6136cde8685bd8
 L
 app/dependencies/__init__.py,9/1/91dc6134e15a04bd1249542b12e858a7500c0f77
 =
 app/helper.py,0/6/06a2a9cefed22737d2d1fd7e2c591eb7412996ba
-I
-app/dependencies/utils.py,6/4/64aa3860a93bfe6dcd4e04b26e95503044aad6b2
 C
 app/bot/__init__.py,e/9/e9f6b277e939d65a41b31370495c48afd7ea6e31

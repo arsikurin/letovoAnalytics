@@ -22,6 +22,13 @@ class CallbackQueryEventEditors:
 
     @staticmethod
     async def to_main_page(event: events.CallbackQuery.Event):
+        """
+        Display `main` page
+
+        Args:
+            event (events.CallbackQuery.Event): a return object of CallbackQuery
+        """
+        # TODO rename `main` page to `landing` page
         await event.edit(
             choose_an_option_below,
             parse_mode="md",
@@ -40,6 +47,13 @@ class CallbackQueryEventEditors:
 
     @staticmethod
     async def to_schedule_page(event: events.CallbackQuery.Event):
+        """
+        Display `schedule` page
+
+        Args:
+            event (events.CallbackQuery.Event): a return object of CallbackQuery
+        """
+
         await event.edit(
             choose_an_option_below,
             parse_mode="md",
@@ -58,6 +72,13 @@ class CallbackQueryEventEditors:
 
     @staticmethod
     async def to_homework_page(event: events.CallbackQuery.Event):
+        """
+        Display `homework` page
+
+        Args:
+            event (events.CallbackQuery.Event): a return object of CallbackQuery
+        """
+
         await event.edit(
             choose_an_option_below,
             parse_mode="md",
@@ -76,6 +97,13 @@ class CallbackQueryEventEditors:
 
     @staticmethod
     async def to_marks_page(event: events.CallbackQuery.Event):
+        """
+        Display `marks` page
+
+        Args:
+            event (events.CallbackQuery.Event): a return object of CallbackQuery
+        """
+
         await event.edit(
             choose_an_option_below,
             parse_mode="md",
@@ -95,6 +123,13 @@ class CallbackQueryEventEditors:
 
     @staticmethod
     async def to_others_page(event: events.CallbackQuery.Event):
+        """
+        Display `others` page
+
+        Args:
+            event (events.CallbackQuery.Event): a return object of CallbackQuery
+        """
+
         await event.edit(
             choose_an_option_below,
             parse_mode="md",
@@ -111,6 +146,13 @@ class CallbackQueryEventEditors:
 
     @staticmethod
     async def to_specific_day_schedule_page(event: events.CallbackQuery.Event):
+        """
+        Display `specific day schedule` page
+
+        Args:
+            event (events.CallbackQuery.Event): a return object of CallbackQuery
+        """
+
         await event.edit(
             "Choose a day below         ↴",
             parse_mode="md",
@@ -132,6 +174,13 @@ class CallbackQueryEventEditors:
 
     @staticmethod
     async def to_specific_day_homework_page(event: events.CallbackQuery.Event):
+        """
+        Display `specific day homework` page
+
+        Args:
+            event (events.CallbackQuery.Event): a return object of CallbackQuery
+        """
+
         await event.edit(
             "Choose a day below         ↴",
             parse_mode="md",
@@ -353,6 +402,16 @@ class CallbackQuerySenders:
         )
 
     async def send_dev_page(self, sender: types.User) -> types.Message:
+        """
+        Send page related to development
+
+        # Args: TODO
+        #     event (events.CallbackQuery.Event): a return object of CallbackQuery
+
+        Returns:
+            types.Message
+        """
+
         return await self.client.send_message(
             entity=sender,
             message=choose_an_option_below,
@@ -367,8 +426,14 @@ class CallbackQuerySenders:
         )
 
     async def send_holidays(self, event: events.CallbackQuery.Event):
-        # TODO receive holidays from API
+        """
+        Send holidays
 
+        Args:
+            event (events.CallbackQuery.Event): a return object of CallbackQuery
+        """
+
+        # TODO receive holidays from API
         sender: types.User = await event.get_sender()
         await self.client.send_message(
             entity=sender,
@@ -399,9 +464,11 @@ class CallbackQuerySenders:
             self, event: events.CallbackQuery.Event
     ):
         """
-        parse & send specific day(s) from schedule
+        Parse & send teachers' names
 
-        :param event: a return object of CallbackQuery
+        Args:
+            event (events.CallbackQuery.Event): a return object of CallbackQuery
+            # specific_day (types_l.Weekdays): day of the week
         """
         return await event.answer("Not implemented!")
 
@@ -441,10 +508,11 @@ class CallbackQuerySenders:
             self, event: events.CallbackQuery.Event, specific_day: types_l.Weekdays
     ):
         """
-        parse & send specific day(s) from schedule
+        Parse & send schedule
 
-        :param event: a return object of CallbackQuery
-        :param specific_day: day of the week represented by Weekdays enum
+        Args:
+            event (events.CallbackQuery.Event): a return object of CallbackQuery
+            specific_day (types_l.Weekdays): day of the week
         """
 
         if specific_day == types_l.Weekdays.Sunday:
@@ -509,10 +577,11 @@ class CallbackQuerySenders:
             self, event: events.CallbackQuery.Event, specific_day: types_l.Weekdays
     ):
         """
-        parse & send specific day(s) from homework
+        Parse & send homework
 
-        :param event: a return object of CallbackQuery
-        :param specific_day: day of the week represented by Weekdays enum
+        Args:
+            event (events.CallbackQuery.Event): a return object of CallbackQuery
+            specific_day (types_l.Weekdays): day of the week
         """
 
         if specific_day == types_l.Weekdays.SundayHW:
@@ -589,29 +658,32 @@ class CallbackQuerySenders:
     async def _prepare_summative_marks(self, subject: MarksDataList, check_date: bool = False):
         """
         Parse summative marks
+
+        Args:
+            subject (MarksDataList): school subject
+            check_date (bool): check for recency or not
         """
-        # TODO refactor
-        marks = [(mark.mark_value, mark.mark_criterion, mark.created_at) for mark in subject.summative_list]
 
         mark_a, mark_b, mark_c, mark_d = [0, 0], [0, 0], [0, 0], [0, 0]
-        for mark in marks:
-            if mark[1] == "A" and mark[0].isdigit():
-                mark_a[0] += int(mark[0])
-                mark_a[1] += 1
-            elif mark[1] == "B" and mark[0].isdigit():
-                mark_b[0] += int(mark[0])
-                mark_b[1] += 1
-            elif mark[1] == "C" and mark[0].isdigit():
-                mark_c[0] += int(mark[0])
-                mark_c[1] += 1
-            elif mark[1] == "D" and mark[0].isdigit():
-                mark_d[0] += int(mark[0])
-                mark_d[1] += 1
+        for mark in subject.summative_list:
+            if mark.mark_value.isdigit():
+                if mark.mark_criterion == "A":
+                    mark_a[0] += int(mark.mark_value)
+                    mark_a[1] += 1
+                elif mark.mark_criterion == "B":
+                    mark_b[0] += int(mark.mark_value)
+                    mark_b[1] += 1
+                elif mark.mark_criterion == "C":
+                    mark_c[0] += int(mark.mark_value)
+                    mark_c[1] += 1
+                elif mark.mark_criterion == "D":
+                    mark_d[0] += int(mark.mark_value)
+                    mark_d[1] += 1
             if not check_date or (
                     datetime.datetime.now(tz=settings().timezone) -
-                    datetime.datetime.fromisoformat(mark[2]).replace(tzinfo=settings().timezone)
+                    datetime.datetime.fromisoformat(mark.created_at).replace(tzinfo=settings().timezone)
             ).days < 8:
-                self._payload += f"**{mark[0]}**{mark[1]} "
+                self._payload += f"**{mark.mark_value}**{mark.mark_criterion} "
 
         if mark_a[1] == 0:
             mark_a[1] = 1
@@ -622,42 +694,143 @@ class CallbackQuerySenders:
         if mark_d[1] == 0:
             mark_d[1] = 1
 
-        mark_a_avg, mark_b_avg = mark_a[0] / mark_a[1], mark_b[0] / mark_b[1]
-        mark_c_avg, mark_d_avg = mark_c[0] / mark_c[1], mark_d[0] / mark_d[1]
-
-        def round_mark(avg):
-            if abs(avg % 1) < settings().EPS:
-                return round(avg)
-            else:
-                return round(avg, 1)
-
-        mark_a_avg = round_mark(mark_a_avg)
-        mark_b_avg = round_mark(mark_b_avg)
-        mark_c_avg = round_mark(mark_c_avg)
-        mark_d_avg = round_mark(mark_d_avg)
+        mark_a_avg, mark_b_avg = f"{(mark_a[0] / mark_a[1]):.2g}", f"{(mark_b[0] / mark_b[1]):.2g}"
+        mark_c_avg, mark_d_avg = f"{(mark_c[0] / mark_c[1]):.2g}", f"{(mark_d[0] / mark_d[1]):.2g}"
 
         if self._payload[-2] == "*":
             self._payload += "no recent marks"
 
         self._payload += " | __avg:__ "
-        if mark_a_avg > 0:
+        if float(mark_a_avg) > 0:
             self._payload += f"**{mark_a_avg}**A "
-        if mark_b_avg > 0:
+        if float(mark_b_avg) > 0:
             self._payload += f"**{mark_b_avg}**B "
-        if mark_c_avg > 0:
+        if float(mark_c_avg) > 0:
             self._payload += f"**{mark_c_avg}**C "
-        if mark_d_avg > 0:
+        if float(mark_d_avg) > 0:
             self._payload += f"**{mark_d_avg}**D "
+
+    async def _send_summative_marks(self, _marks_response: MarksResponse, sender: types.User):
+        """
+        Send summative marks to the end user
+
+        Args:
+            _marks_response (MarksResponse): marks
+            sender (types.User): end user
+        """
+
+        for subject in _marks_response.data:
+            if subject.summative_list:
+                self._payload = f"**{subject.group.subject.subject_name_eng}**\n"
+                await self._prepare_summative_marks(subject)
+
+                await self.client.send_message(
+                    entity=sender,
+                    message=self._payload,
+                    parse_mode="md",
+                    silent=True
+                )
+
+    async def _send_final_marks(self, _marks_response: MarksResponse, sender: types.User):
+        """
+        Send final marks to the end user
+
+        Args:
+            _marks_response (MarksResponse): marks
+            sender (types.User): end user
+        """
+
+        for subject in _marks_response.data:
+            if subject.final_mark_list:
+                self._payload = f"**{subject.group.subject.subject_name_eng}**\n"
+
+                for mark in subject.final_mark_list:
+                    self._payload += f"**{mark.final_value}**{mark.final_criterion} "
+
+                if subject.result_final_mark:
+                    self._payload += f" | __final:__ **{subject.result_final_mark}**"
+
+                if subject.group_avg_mark:
+                    self._payload += f" | __group_avg:__ **{subject.group_avg_mark}**"
+
+                await self.client.send_message(
+                    entity=sender,
+                    message=self._payload,
+                    parse_mode="md",
+                    silent=True,
+                    link_preview=False
+                )
+
+    async def _send_recent_marks(self, _marks_response: MarksResponse, sender: types.User):
+        """
+        Send recent marks to the end user
+
+        Args:
+            _marks_response (MarksResponse): marks
+            sender (types.User): end user
+        """
+
+        for subject in _marks_response.data:
+            self._payload = f"**{subject.group.subject.subject_name_eng}**\n"
+
+            if subject.formative_list:
+                for mark in subject.formative_list:
+                    created_at = datetime.datetime.fromisoformat(mark.created_at)
+                    now = datetime.datetime.now(tz=settings().timezone)
+                    if (now - created_at.replace(tzinfo=settings().timezone)).days < 8:
+                        self._payload += f"**{mark.mark_value}**F "
+
+            if subject.summative_list:
+                await self._prepare_summative_marks(subject, check_date=True)
+
+            if subject.summative_list or subject.formative_list:
+                await self.client.send_message(
+                    entity=sender,
+                    message=self._payload,
+                    parse_mode="md",
+                    silent=True,
+                    link_preview=False
+                )
+
+    async def _send_all_marks(self, _marks_response: MarksResponse, sender: types.User):
+        """
+        Send all marks to the end user
+
+        Args:
+            _marks_response (MarksResponse): marks
+            sender (types.User): end user
+        """
+
+        for subject in _marks_response.data:
+            self._payload = f"**{subject.group.subject.subject_name_eng}**\n"
+
+            if subject.formative_list:
+                for mark in subject.formative_list:
+                    self._payload += f"**{mark.mark_value}**F "
+
+            if subject.summative_list:
+                await self._prepare_summative_marks(subject)
+
+            if subject.summative_list or subject.formative_list:
+                await self.client.send_message(
+                    entity=sender,
+                    message=self._payload,
+                    parse_mode="md",
+                    silent=True,
+                    link_preview=False
+                )
 
     async def send_marks(
             self, event: events.CallbackQuery.Event, specific: types_l.MarkTypes
     ):
         """
-        parse & send marks
+        Send marks to the end user
 
-        :param event: a return object of CallbackQuery
-        :param specific: ALL, SUMMATIVE, FINAL, RECENT
+        Args:
+            event (events.CallbackQuery.Event): a return object of CallbackQuery
+            specific (types_l.MarkTypes): ALL, SUMMATIVE, FINAL, RECENT
         """
+
         sender: types.User = await event.get_sender()
         try:
             marks_resp = await self._web.receive_marks(sender_id=str(sender.id), fs=self._fs)
@@ -669,73 +842,15 @@ class CallbackQuerySenders:
             return await event.answer(f"[✘] {err}", alert=True)
 
         marks_response = MarksResponse.parse_obj(marks_resp)
-        for subject in marks_response.data:
-            if specific == types_l.MarkTypes.SUMMATIVE and subject.summative_list:
-                self._payload = f"**{subject.group.subject.subject_name_eng}**\n"
-                await self._prepare_summative_marks(subject)
-                await self.client.send_message(
-                    entity=sender,
-                    message=self._payload,
-                    parse_mode="md",
-                    silent=True
-                )
+        if specific == types_l.MarkTypes.SUMMATIVE:
+            await self._send_summative_marks(_marks_response=marks_response, sender=sender)
+        elif specific == types_l.MarkTypes.FINAL:
+            await self._send_final_marks(_marks_response=marks_response, sender=sender)
+        elif specific == types_l.MarkTypes.RECENT:
+            await self._send_recent_marks(_marks_response=marks_response, sender=sender)
+        elif specific == types_l.MarkTypes.ALL:
+            await self._send_all_marks(_marks_response=marks_response, sender=sender)
 
-            elif specific == types_l.MarkTypes.FINAL:
-                self._payload = f"**{subject.group.subject.subject_name_eng}**\n"
-                if subject.final_mark_list:
-                    for mark in subject.final_mark_list:
-                        self._payload += f"**{mark.final_value}**{mark.final_criterion} "
-                    if subject.result_final_mark:
-                        self._payload += f" | __final:__ **{subject.result_final_mark}**"
-
-                    if subject.group_avg_mark:
-                        self._payload += f" | __group_avg:__ **{subject.group_avg_mark}**"
-                    await self.client.send_message(
-                        entity=sender,
-                        message=self._payload,
-                        parse_mode="md",
-                        silent=True,
-                        link_preview=False
-                    )
-
-            elif specific == types_l.MarkTypes.RECENT:
-                self._payload = f"**{subject.group.subject.subject_name_eng}**\n"
-                if subject.formative_list:
-                    for mark in subject.formative_list:
-                        created_at = datetime.datetime.fromisoformat(mark.created_at)
-                        now = datetime.datetime.now(tz=settings().timezone)
-                        if (now - created_at.replace(tzinfo=settings().timezone)).days < 8:
-                            self._payload += f"**{mark.mark_value}**F "
-
-                if subject.summative_list:
-                    await self._prepare_summative_marks(subject, check_date=True)
-
-                if subject.summative_list or subject.formative_list:
-                    await self.client.send_message(
-                        entity=sender,
-                        message=self._payload,
-                        parse_mode="md",
-                        silent=True,
-                        link_preview=False
-                    )
-
-            elif specific == types_l.MarkTypes.ALL:
-                self._payload = f"**{subject.group.subject.subject_name_eng}**\n"
-                if subject.formative_list:
-                    for mark in subject.formative_list:
-                        self._payload += f"**{mark.mark_value}**F "
-
-                if subject.summative_list:
-                    await self._prepare_summative_marks(subject)
-
-                if subject.summative_list or subject.formative_list:
-                    await self.client.send_message(
-                        entity=sender,
-                        message=self._payload,
-                        parse_mode="md",
-                        silent=True,
-                        link_preview=False
-                    )
         del self._payload
         await event.answer()
 
