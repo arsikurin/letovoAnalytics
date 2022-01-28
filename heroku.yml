@@ -1,14 +1,13 @@
-#setup:
-#  addons:
-#    - plan: heroku-postgresql
-#      as: DATABASE
+setup:
+  addons:
+    - plan: heroku-postgresql
+      as: PGDB
 #  config:
 #    S3_BUCKET: my-example-bucket
 build:
   docker:
-#    web: api.dockerfile
+    web: api.dockerfile
     worker: bot.dockerfile
-#    target: prod
 
 #release:
 #  command:
