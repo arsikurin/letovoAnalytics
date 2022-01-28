@@ -16,6 +16,12 @@ class Web:
     Class for dealing with web API of s.letovo.ru
     """
     __slots__ = ("_session",)
+    _instance = None
+
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
 
     def __init__(self, session: aiohttp.ClientSession):
         self.session: aiohttp.ClientSession = session
