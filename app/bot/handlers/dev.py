@@ -5,7 +5,7 @@ import time
 from telethon import events, types, TelegramClient
 
 from app.bot import CallbackQuery
-from app.dependencies import run_sequence
+from app.dependencies import run_sequence, run_parallel
 
 
 async def init(client: TelegramClient, cbQuery: CallbackQuery):
@@ -19,14 +19,17 @@ async def init(client: TelegramClient, cbQuery: CallbackQuery):
         raise events.StopPropagation
 
     @client.on(events.NewMessage(pattern="#ping", forwards=False))
-    async def _ping(event):
+    async def _ping(event: events.NewMessage.Event):
         start_time = time.perf_counter()
         message = await event.reply("Pong!")
         delta = datetime.timedelta(seconds=time.perf_counter() - start_time)
-        await run_sequence(
-            message.edit(f"Pong! __(reply took {delta:.2f}s)__"),
-            asyncio.sleep(5),
-            message.delete()
+        await run_parallel(
+            event.delete(),
+            run_sequence(
+                message.edit(f"Pong! __(reply took {delta.seconds}s {delta.microseconds}ms)__"),
+                asyncio.sleep(5),
+                message.delete()
+            )
         )
         raise events.StopPropagation
 
