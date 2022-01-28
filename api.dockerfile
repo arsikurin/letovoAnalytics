@@ -18,6 +18,6 @@ COPY poetry.lock poetry.lock
 
 COPY . .
 
-EXPOSE ${PORT:?err}
+EXPOSE ${PORT}
 
 CMD ["uvicorn", "app:app", "--workers 4", "--host 0.0.0.0", "--port=${PORT}", "--log-level debug"]
