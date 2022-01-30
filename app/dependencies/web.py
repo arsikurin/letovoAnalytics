@@ -58,7 +58,6 @@ class Web:
         Returns:
             str: auth token
         """
-
         if None in (login, password):
             login, password = await run_parallel(
                 fs.get_login(sender_id=sender_id),
@@ -101,7 +100,6 @@ class Web:
         Returns:
             int: student id
         """
-
         if token is None:
             token = await fs.get_token(sender_id=sender_id)
             if token is errors_l.NothingFoundError:
@@ -138,7 +136,6 @@ class Web:
         Returns:
             json
         """
-
         student_id, token = await run_parallel(
             fs.get_student_id(sender_id=sender_id),
             fs.get_token(sender_id=sender_id)
@@ -185,7 +182,6 @@ class Web:
         Returns:
             json
         """
-
         student_id, token = await run_parallel(
             fs.get_student_id(sender_id=sender_id),
             fs.get_token(sender_id=sender_id)
