@@ -580,7 +580,7 @@ class CallbackQuerySenders:
             )
 
         for day in schedule_response.data:
-            if day.schedules and specific_day.value in (int(day.period_num_day), -10):
+            if day.schedules and specific_day.value in {int(day.period_num_day), -10}:
                 wd = types_l.Weekdays(int(day.period_num_day)).name
                 if specific_day.value == -10 and wd != old_wd:
                     await self.client.send_message(
