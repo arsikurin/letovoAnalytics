@@ -53,7 +53,6 @@ class CallbackQueryEventEditors:
         Args:
             event (events.CallbackQuery.Event): a return object of CallbackQuery
         """
-
         await event.edit(
             choose_an_option_below,
             parse_mode="md",
@@ -78,7 +77,6 @@ class CallbackQueryEventEditors:
         Args:
             event (events.CallbackQuery.Event): a return object of CallbackQuery
         """
-
         await event.edit(
             choose_an_option_below,
             parse_mode="md",
@@ -103,7 +101,6 @@ class CallbackQueryEventEditors:
         Args:
             event (events.CallbackQuery.Event): a return object of CallbackQuery
         """
-
         await event.edit(
             choose_an_option_below,
             parse_mode="md",
@@ -129,7 +126,6 @@ class CallbackQueryEventEditors:
         Args:
             event (events.CallbackQuery.Event): a return object of CallbackQuery
         """
-
         await event.edit(
             choose_an_option_below,
             parse_mode="md",
@@ -152,7 +148,6 @@ class CallbackQueryEventEditors:
         Args:
             event (events.CallbackQuery.Event): a return object of CallbackQuery
         """
-
         await event.edit(
             "Choose a day below         ↴",
             parse_mode="md",
@@ -180,7 +175,6 @@ class CallbackQueryEventEditors:
         Args:
             event (events.CallbackQuery.Event): a return object of CallbackQuery
         """
-
         await event.edit(
             "Choose a day below         ↴",
             parse_mode="md",
@@ -267,7 +261,6 @@ class CallbackQuerySenders:
         Returns:
             types.Message
         """
-
         payload = f'{fn if (fn := sender.first_name) else ""} {ln if (ln := sender.last_name) else ""}'.strip()
         return await self.client.send_message(
             entity=sender,
@@ -303,7 +296,6 @@ class CallbackQuerySenders:
         Returns:
             types.Message
         """
-
         return await self.client.send_message(
             entity=sender,
             message="I can help you access s.letovo.ru resources via Telegram.\n"
@@ -354,7 +346,6 @@ class CallbackQuerySenders:
         Args:
             sender (types.User): end user
         """
-
         for user in await self._db.get_users():
             resp = await self._db.get_analytics(user)
             if not any((
@@ -395,7 +386,6 @@ class CallbackQuerySenders:
         Returns:
             types.Message
         """
-
         return await self.client.send_message(
             entity=sender,
             message="**Arseny Kurin**\n\n"
@@ -415,7 +405,6 @@ class CallbackQuerySenders:
         Returns:
             types.Message
         """
-
         return await self.client.send_message(
             entity=sender,
             message="**What you can do:**\n"
@@ -440,7 +429,6 @@ class CallbackQuerySenders:
         Returns:
             types.Message
         """
-
         return await self.client.send_message(
             entity=sender,
             message=choose_an_option_below,
@@ -468,7 +456,6 @@ class CallbackQuerySenders:
         Returns:
             types.Message
         """
-
         return await self.client.send_message(
             entity=sender,
             message=choose_an_option_below,
@@ -489,7 +476,6 @@ class CallbackQuerySenders:
         Args:
             event (events.CallbackQuery.Event): a return object of CallbackQuery
         """
-
         # TODO receive holidays from API
         sender: types.User = await event.get_sender()
         await self.client.send_message(
@@ -527,7 +513,6 @@ class CallbackQuerySenders:
             event (events.CallbackQuery.Event): a return object of CallbackQuery
             # specific_day (types_l.Weekdays): day of the week
         """
-
         sender: types.User = await event.get_sender()
         try:
             teachers_resp = await self._web.receive_marks_and_teachers(sender_id=str(sender.id), fs=self._fs)
@@ -570,7 +555,6 @@ class CallbackQuerySenders:
             event (events.CallbackQuery.Event): a return object of CallbackQuery
             specific_day (types_l.Weekdays): day of the week
         """
-
         if specific_day == types_l.Weekdays.Sunday:
             return await event.answer("Congrats! It's Sunday, no lessons", alert=False)
         sender: types.User = await event.get_sender()
@@ -640,7 +624,6 @@ class CallbackQuerySenders:
             event (events.CallbackQuery.Event): a return object of CallbackQuery
             specific_day (types_l.Weekdays): day of the week
         """
-
         if specific_day == types_l.Weekdays.SundayHW:
             return await event.answer("Congrats! Tomorrow's Sunday, no hw", alert=False)
         sender: types.User = await event.get_sender()
@@ -721,7 +704,6 @@ class CallbackQuerySenders:
             subject (MarksDataList): school subject
             check_date (bool): check for recency or not
         """
-
         mark_a, mark_b, mark_c, mark_d = [0, 0], [0, 0], [0, 0], [0, 0]
         for mark in subject.summative_list:
             if mark.mark_value.isdigit():
@@ -776,7 +758,6 @@ class CallbackQuerySenders:
             _marks_response (MarksResponse): marks
             sender (types.User): end user
         """
-
         for subject in _marks_response.data:
             if subject.summative_list:
                 self._payload = f"**{subject.group.subject.subject_name_eng}**\n"
@@ -797,7 +778,6 @@ class CallbackQuerySenders:
             _marks_response (MarksResponse): marks
             sender (types.User): end user
         """
-
         for subject in _marks_response.data:
             if subject.final_mark_list:
                 self._payload = f"**{subject.group.subject.subject_name_eng}**\n"
@@ -827,7 +807,6 @@ class CallbackQuerySenders:
             _marks_response (MarksResponse): marks
             sender (types.User): end user
         """
-
         for subject in _marks_response.data:
             self._payload = f"**{subject.group.subject.subject_name_eng}**\n"
 
@@ -858,7 +837,6 @@ class CallbackQuerySenders:
             _marks_response (MarksResponse): marks
             sender (types.User): end user
         """
-
         for subject in _marks_response.data:
             self._payload = f"**{subject.group.subject.subject_name_eng}**\n"
 
@@ -888,7 +866,6 @@ class CallbackQuerySenders:
             event (events.CallbackQuery.Event): a return object of CallbackQuery
             specific (types_l.MarkTypes): ALL, SUMMATIVE, FINAL, RECENT
         """
-
         sender: types.User = await event.get_sender()
         try:
             marks_resp = await self._web.receive_marks_and_teachers(sender_id=str(sender.id), fs=self._fs)
