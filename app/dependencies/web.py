@@ -1,4 +1,3 @@
-import asyncio
 import datetime
 import logging as log
 import typing
@@ -6,8 +5,11 @@ import typing
 import aiohttp
 import orjson
 
-from app.dependencies import errors as errors_l, CredentialsDatabase
+from app.dependencies import errors as errors_l, CredentialsDatabase, run_parallel
 from config import settings
+
+creds_not_found = "Credentials not found in the database.\nConsider entering /start and registering afterwards"
+no_conn = "Cannot establish connection to s.letovo.ru"
 
 
 @typing.final
@@ -58,13 +60,13 @@ class Web:
         """
 
         if None in (login, password):
-            login, password = await asyncio.gather(
+            login, password = await run_parallel(
                 fs.get_login(sender_id=sender_id),
                 fs.get_password(sender_id=sender_id)
             )
             if errors_l.NothingFoundError in (login, password):
                 raise errors_l.NothingFoundError(
-                    "Credentials not found in the database.\nConsider entering /start and registering afterwards"
+                    creds_not_found
                 )
         login_data = {
             "login": login,
@@ -77,7 +79,7 @@ class Web:
                 resp_j = await resp.json(loads=orjson.loads)
                 return f'{resp_j["data"]["token_type"]} {resp_j["data"]["token"]}'
         except aiohttp.ClientConnectionError:
-            raise aiohttp.ClientConnectionError("Cannot establish connection to s.letovo.ru")
+            raise aiohttp.ClientConnectionError(no_conn)
 
     async def receive_student_id(
             self, fs: CredentialsDatabase, sender_id: str | None = None, token: str | None = None
@@ -104,7 +106,7 @@ class Web:
             token = await fs.get_token(sender_id=sender_id)
             if token is errors_l.NothingFoundError:
                 raise errors_l.NothingFoundError(
-                    "Credentials not found in the database.\nConsider entering /start and registering afterwards"
+                    creds_not_found
                 )
         headers = {
             "Authorization": token
@@ -116,9 +118,9 @@ class Web:
                 resp_j = await resp.json(loads=orjson.loads)
                 return int(resp_j["data"]["user"]["student_id"])
         except aiohttp.ClientConnectionError:
-            raise aiohttp.ClientConnectionError("Cannot establish connection to s.letovo.ru")
+            raise aiohttp.ClientConnectionError(no_conn)
 
-    async def receive_hw_n_schedule(
+    async def receive_schedule_and_hw(
             self, sender_id: str, fs: CredentialsDatabase
     ) -> dict:
         """
@@ -137,13 +139,13 @@ class Web:
             json
         """
 
-        student_id, token = await asyncio.gather(
+        student_id, token = await run_parallel(
             fs.get_student_id(sender_id=sender_id),
             fs.get_token(sender_id=sender_id)
         )
         if errors_l.NothingFoundError in (student_id, token):
             raise errors_l.NothingFoundError(
-                "Credentials not found in the database.\nConsider entering /start and registering afterwards"
+                creds_not_found
             )
 
         if datetime.datetime.now(tz=settings().timezone).strftime("%a") == "Sun":
@@ -156,7 +158,6 @@ class Web:
         headers = {
             "Authorization": token,
         }
-
         try:
             async with self.session.get(url=url, headers=headers) as resp:
                 if resp.status != 200:
@@ -164,13 +165,13 @@ class Web:
                 return await resp.json(loads=orjson.loads)
         except aiohttp.ClientConnectionError as err:
             log.error(err)
-            raise aiohttp.ClientConnectionError("Cannot establish connection to s.letovo.ru")
+            raise aiohttp.ClientConnectionError(no_conn)
 
-    async def receive_marks(
+    async def receive_marks_and_teachers(
             self, sender_id: str, fs: CredentialsDatabase
     ) -> dict:
         """
-        Receive marks from s.letovo.ru
+        Receive marks & teachers' names from s.letovo.ru
 
         Args:
             sender_id (str | None): user's Telegram ID
@@ -185,13 +186,13 @@ class Web:
             json
         """
 
-        student_id, token = await asyncio.gather(
+        student_id, token = await run_parallel(
             fs.get_student_id(sender_id=sender_id),
             fs.get_token(sender_id=sender_id)
         )
         if errors_l.NothingFoundError in (student_id, token):
             raise errors_l.NothingFoundError(
-                "Credentials not found in the database.\nConsider entering /start and registering afterwards"
+                creds_not_found
             )
         if int(datetime.datetime.now(tz=settings().timezone).strftime("%m")) >= 9:
             period_num = "1"
@@ -203,7 +204,6 @@ class Web:
         headers = {
             "Authorization": token,
         }
-
         try:
             async with self.session.get(url=url, headers=headers) as resp:
                 if resp.status != 200:
@@ -211,4 +211,4 @@ class Web:
                 return await resp.json(loads=orjson.loads)
         except aiohttp.ClientConnectionError as err:
             log.error(err)
-            raise aiohttp.ClientConnectionError("Cannot establish connection to s.letovo.ru")
+            raise aiohttp.ClientConnectionError(no_conn)

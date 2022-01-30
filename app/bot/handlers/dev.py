@@ -22,11 +22,11 @@ async def init(client: TelegramClient, cbQuery: CallbackQuery):
     async def _ping(event: events.NewMessage.Event):
         start_time = time.perf_counter()
         message = await event.reply("Pong!")
-        delta = datetime.timedelta(seconds=time.perf_counter() - start_time)
+        took = datetime.timedelta(seconds=time.perf_counter() - start_time)
         await run_parallel(
             event.delete(),
             run_sequence(
-                message.edit(f"Pong! __(reply took {delta.seconds}s {delta.microseconds}ms)__"),
+                message.edit(f"Pong! __(reply took {took.total_seconds()}s)__"),
                 asyncio.sleep(5),
                 message.delete()
             )
