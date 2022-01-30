@@ -15,10 +15,6 @@ E
 .vscode/settings.json,8/9/89aa447020cdcb580cea0495694d46a55941edbe
 K
 app/templates/indexAPI.html,e/0/e063c146061d66ef7609cc5651c7613c5702b63d
-@
-.deepsource.toml,f/7/f7fdb5a735547cbe989626708a7eab7e182a2c6f
-@
-app/api/utils.py,3/5/352060e690e20468709e6ce67711a906e70ebc0b
 M
 app/api/endpoints/__init__.py,5/3/53f74166a0a52796a7e4b699d309f3f15ff1001d
 ?
