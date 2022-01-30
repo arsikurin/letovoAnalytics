@@ -202,7 +202,6 @@ class Firestore:
         Fill in at least one param in each map!
         Otherwise, all data will be erased there
         """
-
         space = ""
         fn = f'"first_name": {first_name!r},'
         la = f'"last_name": {last_name!r},'

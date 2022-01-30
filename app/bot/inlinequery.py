@@ -16,7 +16,6 @@ class InlineQueryEventEditors:
         """
         display main page in inline query
         """
-
         await event.answer(
             results=[
                 event.builder.article(
@@ -59,7 +58,6 @@ class InlineQuerySenders:
         :param event: a return object of InlineQuery
         :param specific_day: day number or -10 to send entire schedule
         """
-
         schedule_future = await Web.receive_data(self.session, sender_id=str(event.sender_id), fs=fs)
         if schedule_future == errors_l.UnauthorizedError:
             return await event.answer(
