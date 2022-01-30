@@ -16,7 +16,7 @@ unknown_err = "the connection is lost"
 
 class AnalyticsDatabase(typing.Protocol):
     """
-    Class for dealing with relational DB
+    Class for dealing with relational databases
     """
     __slots__ = ("__connection",)
 
@@ -73,7 +73,7 @@ class AnalyticsDatabase(typing.Protocol):
 @typing.final
 class Postgresql:
     """
-    Class for working with relational DB
+    Class for dealing with Postgresql
     """
     __slots__ = ("__connection",)
 
