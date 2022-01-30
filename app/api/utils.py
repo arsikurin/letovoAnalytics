@@ -17,7 +17,6 @@ async def get(app: FastAPI, func: Callable[..., T], request: Request = None) -> 
     """
     Returns the result of calling `func` with its' dependencies, optionally with a request in scope
     """
-
     dependant = get_dependant(call=func, path='')
     request = request or Request(
         {'type': 'http', 'query_string': '', 'headers': [], 'app': app}
