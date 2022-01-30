@@ -56,8 +56,6 @@ J
 app/bot/handlers/others.py,f/d/fdd61c8ae4c4063a2e84c2ed3c9190d4d518d0d0
 ;
 poetry.lock,0/0/0068a1506b061a8948c37d78b0dd5697211558d3
-L
-app/dependencies/firebase.py,6/b/6b1c4b59608a4b10fd367358fe9fd5a5ebe982a4
 E
 app/tests/conftest.py,9/f/9f467a9fcd7ffe82aaeae615d9ddff23c4b4f90c
 8
@@ -68,10 +66,6 @@ K
 .github/workflows/test.yaml,a/6/a60e2382fd0c34cb06177a3d7034264e22531192
 >
 pyproject.toml,5/d/5d07e7d72637aa0d59c89d381fe6dc4cf46e2491
-@
-app/essential.py,9/e/9e913b2e7e335ecf82b791bfc4924f020c7d8b81
-7
-tox.ini,6/1/61be067c7cf3bdbf8a6b021a2b5167eb30612d0c
 S
 #app/dependencies/types/analytics.py,2/4/24153e35cbb1893c93ebb2494a2e3dbd8f400804
 9

@@ -108,7 +108,8 @@ class InlineQuerySenders:
                     payload += f'\n<strong>=={wd}==</strong>\n'
 
                 payload += f'{day["period_name"]} | <em>{day["schedules"][0]["room"]["room_name"]}</em>:\n'
-                payload += f'<strong>{day["schedules"][0]["group"]["subject"]["subject_name_eng"]} {day["schedules"][0]["group"]["group_name"]}</strong>\n'
+                payload += f'<strong>{day["schedules"][0]["group"]["subject"]["subject_name_eng"]} ' \
+                           f'{day["schedules"][0]["group"]["group_name"]}</strong>\n'
                 if day["schedules"][0]["zoom_meetings"]:
                     payload += f'[ZOOM]({day["schedules"][0]["zoom_meetings"][0]["meeting_url"]}\n)'
                 payload += f'{day["period_start"]} — {day["period_end"]}\n'

@@ -15,7 +15,7 @@ from config import settings
 
 class CredentialsDatabase(typing.Protocol):
     """
-    Class for working with document oriented database
+    Class for dealing with document oriented databases
     """
     __slots__ = ("__client",)
 
@@ -83,7 +83,7 @@ class CredentialsDatabase(typing.Protocol):
 @typing.final
 class Firestore:
     """
-    Class for working with Google Firestore
+    Class for dealing with Google Firestore database
     """
     __slots__ = ("__client",)
 
@@ -113,7 +113,14 @@ class Firestore:
     @staticmethod
     async def create() -> CredentialsDatabase:
         """
-        Factory
+        Factory for initializing database connection object
+
+        Notes:
+            Instead, use context manager, i.e. the `with` statement,
+            because it allows you to forget about closing connections, etc.
+
+        Returns:
+            class instance with database connection
         """
         self_ = Firestore()
         self_._client = await self_._connect()
@@ -122,7 +129,10 @@ class Firestore:
     @staticmethod
     async def _connect() -> AsyncClient:
         """
-        Connect to Firestore
+        Internal method used for connecting to the database
+
+        Returns:
+            database connection
         """
         app = firebase_admin.initialize_app(
             credential=credentials.Certificate(yaml.full_load(settings().GOOGLE_FS_KEY))
@@ -130,10 +140,19 @@ class Firestore:
         return AsyncClient(credentials=app.credential.get_credential(), project=app.project_id)
 
     async def disconnect(self):
+        """
+        Close database connection
+        """
         self._client.close()
 
     @staticmethod
     async def send_email(email: str):
+        """
+        Email a new user informing them that registration succeeded
+
+        Args:
+            email (str): whom to send an email
+        """
         api_url: str = (
             "https://www.googleapis.com/identitytoolkit/v3/relyingparty/getOobConfirmationCode?key="
             f"{settings().GOOGLE_API_KEY}"
@@ -159,8 +178,11 @@ class Firestore:
             lang: str | None = None
     ):
         """
-        Fill in at least one param in each map!
-        Otherwise, all data will be erased there
+        Update user's data in the database
+
+        Warnings:
+            Fill in at least one param in each map!
+            Otherwise, all data will be erased there
         """
         space = ""
         st = f'"student_id": {student_id!r},'
@@ -199,8 +221,11 @@ class Firestore:
             last_name: str | None = None,
     ):
         """
-        Fill in at least one param in each map!
-        Otherwise, all data will be erased there
+        Update user's name in the database
+
+        Warnings:
+            Fill in at least one param in each map!
+            Otherwise, all data will be erased there
         """
         space = ""
         fn = f'"first_name": {first_name!r},'
@@ -220,10 +245,32 @@ class Firestore:
         await doc_ref.set(yaml.full_load(request_payload), merge=True)
 
     async def is_inited(self, sender_id: str) -> bool:
+        """
+        Check the user's presence in the database
+
+        Notes:
+            Instead, use `is_logged` because current method requires more time to execute
+            and cannot verify the registration status
+
+        Args:
+            sender_id (str): user's Telegram ID
+
+        Returns:
+            bool
+        """
         docs = self._client.collection("users").stream()
         return sender_id in [doc.id async for doc in docs]
 
     async def is_logged(self, sender_id: str) -> bool:
+        """
+        Check the user's presence in the database.
+
+        Args:
+            sender_id (str): user's Telegram ID
+
+        Returns:
+            bool: `True` if user's credentials are in presented in the database. Otherwise, `False`
+        """
         doc: DocumentSnapshot = await self._client.collection("users").document(sender_id).get()
         try:
             return doc.exists
@@ -231,9 +278,24 @@ class Firestore:
             return False
 
     async def get_users(self) -> typing.AsyncIterator[DocumentSnapshot]:
+        """
+        Get users' IDs to easily iterate over
+
+        Returns:
+            AsyncIterator
+        """
         return self._client.collection("users").stream()
 
     async def get_student_id(self, sender_id: str) -> int | typing.Type[errors_l.NothingFoundError]:
+        """
+        Get user's student ID
+
+        Args:
+            sender_id (str): user's Telegram ID
+
+        Returns:
+            student ID (int) or errors_l.NothingFoundError if not found in the database
+        """
         doc: DocumentSnapshot = await self._client.collection("users").document(sender_id).get()
         try:
             if not doc.exists:
@@ -243,6 +305,15 @@ class Firestore:
             return errors_l.NothingFoundError
 
     async def get_token(self, sender_id: str) -> str | typing.Type[errors_l.NothingFoundError]:
+        """
+        Get user's auth token
+
+        Args:
+            sender_id (str): user's Telegram ID
+
+        Returns:
+            auth token (str) or errors_l.NothingFoundError if not found in the database
+        """
         doc: DocumentSnapshot = await self._client.collection("users").document(sender_id).get()
         try:
             if not doc.exists:
@@ -252,6 +323,15 @@ class Firestore:
             return errors_l.NothingFoundError
 
     async def get_password(self, sender_id: str) -> str | typing.Type[errors_l.NothingFoundError]:
+        """
+        Get user's password
+
+        Args:
+            sender_id (str): user's Telegram ID
+
+        Returns:
+            password (str) or errors_l.NothingFoundError if not found in the database
+        """
         doc: DocumentSnapshot = await self._client.collection("users").document(sender_id).get()
         try:
             if not doc.exists:
@@ -261,6 +341,15 @@ class Firestore:
             return errors_l.NothingFoundError
 
     async def get_login(self, sender_id: str) -> str | typing.Type[errors_l.NothingFoundError]:
+        """
+        Get user's login
+
+        Args:
+            sender_id (str): user's Telegram ID
+
+        Returns:
+            login (str) or errors_l.NothingFoundError if not found in the database
+        """
         doc: DocumentSnapshot = await self._client.collection("users").document(sender_id).get()
         try:
             if not doc.exists:
@@ -270,6 +359,15 @@ class Firestore:
             return errors_l.NothingFoundError
 
     async def get_name(self, sender_id: str) -> str | typing.Type[errors_l.NothingFoundError]:
+        """
+        Get user's name
+
+        Args:
+            sender_id (str): user's Telegram ID
+
+        Returns:
+            name (str) or errors_l.NothingFoundError if not found in the database
+        """
         doc: DocumentSnapshot = await self._client.collection("names").document(sender_id).get()
         try:
             if not doc.exists:
@@ -279,6 +377,15 @@ class Firestore:
             return errors_l.NothingFoundError
 
     async def get_surname(self, sender_id: str) -> str | typing.Type[errors_l.NothingFoundError]:
+        """
+        Get user's surname
+
+        Args:
+            sender_id (str): user's Telegram ID
+
+        Returns:
+            surname (int) or errors_l.NothingFoundError if not found in the database
+        """
         doc: DocumentSnapshot = await self._client.collection("names").document(sender_id).get()
         try:
             if not doc.exists:

@@ -42,7 +42,9 @@ class Web:
     ) -> str:
         """
         Receive auth token from s.letovo.ru
-        Requires either a sender_id or (password and login)
+
+        Notes:
+            Requires either a sender_id or (password and login)
 
         Args:
             sender_id (str | None): user's Telegram ID
@@ -58,12 +60,12 @@ class Web:
         Returns:
             str: auth token
         """
-        if None in (login, password):
+        if None in {login, password}:
             login, password = await run_parallel(
                 fs.get_login(sender_id=sender_id),
                 fs.get_password(sender_id=sender_id)
             )
-            if errors_l.NothingFoundError in (login, password):
+            if errors_l.NothingFoundError in {login, password}:
                 raise errors_l.NothingFoundError(
                     creds_not_found
                 )
@@ -85,7 +87,9 @@ class Web:
     ) -> int:
         """
         Receive student id from s.letovo.ru
-        Requires either a sender_id or token
+
+        Notes:
+            Requires either a sender_id or token
 
         Args:
             sender_id (str | None): user's Telegram ID
@@ -125,7 +129,7 @@ class Web:
         Receive homework & schedule from s.letovo.ru
 
         Args:
-            sender_id (str | None): user's Telegram ID
+            sender_id (str): user's Telegram ID
             fs (CredentialsDatabase): connection to the database with users' credentials
 
         Raises:
@@ -140,7 +144,7 @@ class Web:
             fs.get_student_id(sender_id=sender_id),
             fs.get_token(sender_id=sender_id)
         )
-        if errors_l.NothingFoundError in (student_id, token):
+        if errors_l.NothingFoundError in {student_id, token}:
             raise errors_l.NothingFoundError(
                 creds_not_found
             )
@@ -171,7 +175,7 @@ class Web:
         Receive marks & teachers' names from s.letovo.ru
 
         Args:
-            sender_id (str | None): user's Telegram ID
+            sender_id (str): user's Telegram ID
             fs (CredentialsDatabase): connection to the database with users' credentials
 
         Raises:
@@ -186,7 +190,7 @@ class Web:
             fs.get_student_id(sender_id=sender_id),
             fs.get_token(sender_id=sender_id)
         )
-        if errors_l.NothingFoundError in (student_id, token):
+        if errors_l.NothingFoundError in {student_id, token}:
             raise errors_l.NothingFoundError(
                 creds_not_found
             )
