@@ -1,8 +1,6 @@
 
 C
 app/api/__init__.py,4/0/407bde4b68f04669686373519bb18966abda13b9
-=
-SQL/alter.sql,c/3/c3f8643b2ddc712688caf3ab64ebd9688fdbfc30
 J
 app/api/endpoints/marks.py,f/d/fd845415776e3d6a2c74ba8364d6c63867afae25
 M
@@ -48,8 +46,6 @@ G
 .gitignore,a/5/a5cc2925ca8258af241be7e5b0381edf30266302
 9
 	config.py,1/a/1a1b9769344cb239f2e540e1e6ee1efa2d3034ea
->
-SQL/create.sql,d/d/dd4cbd5bae2856080323f378773a8754a7afc8fb
 E
 app/tests/__init__.py,4/4/447707a821d80cc39e532ce0179db7ddffdf17c9
 H
