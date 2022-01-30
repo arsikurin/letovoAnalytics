@@ -21,7 +21,7 @@ class Weekdays(Enum):
     ALL = -10
 
 
-class PatternMatching:
+class MatchWeekdays:
     def __init__(self, s: str):
         self.today = bool(re.match(r"to", s))
         self.next = bool(re.match(r"ne", s))

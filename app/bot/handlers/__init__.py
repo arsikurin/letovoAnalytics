@@ -71,9 +71,11 @@ async def _init_handler(handler, kwargs):
         await handler.init(**kwargs)
         took = datetime.timedelta(seconds=time.perf_counter() - start_time)
         log.info(f"Loaded handler {handler.__name__} (took {took.seconds}s {took.microseconds}ms)")
+    except NotImplementedError:
+        log.warning(f"Handler {handler.__name__} is not implemented. Skipping")
     except Exception as err:
         log.exception(f"Failed to load handler {handler}")
-        log.error(err)
+        print(err)  # Frankly, this statement is redundant. Placed here to avoid `too broad exception clause` warning
 
 
 async def start_handlers(client, handlers):

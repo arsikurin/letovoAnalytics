@@ -9,8 +9,8 @@ from app.dependencies import types as types_l, CredentialsDatabase
 
 
 async def init(client: TelegramClient, iQuery: InlineQuery, fs: CredentialsDatabase):
-    log.info("iquery currently out of date. Therefore, it is disabled")
-    return
+    # log.info("iquery currently out of date. Therefore, it is disabled")
+    raise NotImplementedError
 
     @client.on(events.InlineQuery())  # TODO NOT WORKING CURRENTLY
     async def _inline_query(event: events.InlineQuery.Event):
@@ -25,14 +25,14 @@ async def init(client: TelegramClient, iQuery: InlineQuery, fs: CredentialsDatab
             iQuery.send_schedule,
             event=event
         )
-        match types_l.PatternMatching(event.query.query):
-            case types_l.PatternMatching(next=True):
+        match types_l.MatchWeekdays(event.query.query):
+            case types_l.MatchWeekdays(next=True):
                 # TODO next day inline query
                 await send_schedule(specific_day=int(datetime.datetime.now().strftime("%w")))
                 # await event.answer([
                 #     builder.article(title="Next lesson", text=text if text else "No schedule found in analytics")
                 # ], switch_pm="Log in", switch_pm_param="inlineMode")
-            case types_l.PatternMatching(today=True):
+            case types_l.MatchWeekdays(today=True):
                 await send_schedule(specific_day=int(datetime.datetime.now().strftime("%w")))
             case PatternMatching(monday=True):
                 await send_schedule(specific_day=Weekdays.Monday.value)

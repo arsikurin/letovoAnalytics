@@ -8,7 +8,7 @@ from telethon import Button, events, TelegramClient, types
 from app.dependencies import (
     types as types_l, errors as errors_l, Web, AnalyticsDatabase, CredentialsDatabase
 )
-from app.schemas import MarksResponse, MarksDataList, ScheduleResponse, HomeworkResponse
+from app.schemas import MarksResponse, MarksDataList, ScheduleResponse, HomeworkResponse, TeachersResponse
 from config import settings
 
 choose_an_option_below = "Choose an option below ↴"
@@ -258,6 +258,16 @@ class CallbackQuerySenders:
         self.__payload = ""
 
     async def send_greeting(self, sender: types.User) -> types.Message:
+        """
+        Send a greeting to the end user
+
+        Args:
+            sender (types.User): end user
+
+        Returns:
+            types.Message
+        """
+
         payload = f'{fn if (fn := sender.first_name) else ""} {ln if (ln := sender.last_name) else ""}'.strip()
         return await self.client.send_message(
             entity=sender,
@@ -284,6 +294,16 @@ class CallbackQuerySenders:
         )
 
     async def send_help_page(self, sender: types.User) -> types.Message:
+        """
+        Send help page
+
+        Args:
+            sender (types.User): end user
+
+        Returns:
+            types.Message
+        """
+
         return await self.client.send_message(
             entity=sender,
             message="I can help you access s.letovo.ru resources via Telegram.\n"
@@ -328,6 +348,13 @@ class CallbackQuerySenders:
         )
 
     async def send_stats(self, sender: types.User):
+        """
+        Send usage statistics
+
+        Args:
+            sender (types.User): end user
+        """
+
         for user in await self._db.get_users():
             resp = await self._db.get_analytics(user)
             if not any((
@@ -359,6 +386,16 @@ class CallbackQuerySenders:
             )
 
     async def send_about_page(self, sender: types.User) -> types.Message:
+        """
+        Send `about developers` page
+
+        Args:
+            sender (types.User): end user
+
+        Returns:
+            types.Message
+        """
+
         return await self.client.send_message(
             entity=sender,
             message="**Arseny Kurin**\n\n"
@@ -369,6 +406,16 @@ class CallbackQuerySenders:
         )
 
     async def send_common_page(self, sender: types.User) -> types.Message:
+        """
+        Send `small help` page
+
+        Args:
+            sender (types.User): end user
+
+        Returns:
+            types.Message
+        """
+
         return await self.client.send_message(
             entity=sender,
             message="**What you can do:**\n"
@@ -384,6 +431,16 @@ class CallbackQuerySenders:
         )
 
     async def send_main_page(self, sender: types.User) -> types.Message:
+        """
+        Send landing page
+
+        Args:
+            sender (types.User): end user
+
+        Returns:
+            types.Message
+        """
+
         return await self.client.send_message(
             entity=sender,
             message=choose_an_option_below,
@@ -405,8 +462,8 @@ class CallbackQuerySenders:
         """
         Send page related to development
 
-        # Args: TODO
-        #     event (events.CallbackQuery.Event): a return object of CallbackQuery
+        Args:
+            sender (types.User): end user
 
         Returns:
             types.Message
@@ -470,39 +527,38 @@ class CallbackQuerySenders:
             event (events.CallbackQuery.Event): a return object of CallbackQuery
             # specific_day (types_l.Weekdays): day of the week
         """
-        return await event.answer("Not implemented!")
 
-        # sender: types.User = await event.get_sender()
-        # try:
-        #     schedule_resp = await self._web.receive_hw_n_schedule(sender_id=str(sender.id), fs=self._fs)
-        # except errors_l.UnauthorizedError as err:
-        #     return await event.answer(f"[✘] {err}", alert=True)
-        # except errors_l.NothingFoundError as err:
-        #     return await event.answer(f"[✘] {err}", alert=True)
-        # except aiohttp.ClientConnectionError as err:
-        #     return await event.answer(f"[✘] {err}", alert=True)
-        #
-        # schedule_response = ScheduleResponse.parse_obj(schedule_resp)
-        # for day in schedule_response.data:
-        #     if day.schedules:
-        #         wd = types_l.Weekdays(int(day.period_num_day)).name
-        #
-        #         payload = f"{day.period_name} | __{day.schedules[0].room.room_name}__:\n"
-        #
-        #         if day.schedules[0].group.subject.subject_name_eng:
-        #             subject = day.schedules[0].group.subject.subject_name_eng
-        #         else:
-        #             subject = day.schedules[0].group.subject.subject_name
-        #         payload += f"**{subject} {day.schedules[0].group.group_name}**\n"
-        #
-        #         await self.client.send_message(
-        #             entity=sender,
-        #             message=payload,
-        #             parse_mode="md",
-        #             silent=True,
-        #             link_preview=False
-        #         )
-        # await event.answer()
+        sender: types.User = await event.get_sender()
+        try:
+            teachers_resp = await self._web.receive_marks_and_teachers(sender_id=str(sender.id), fs=self._fs)
+        except errors_l.UnauthorizedError as err:
+            return await event.answer(f"[✘] {err}", alert=True)
+        except errors_l.NothingFoundError as err:
+            return await event.answer(f"[✘] {err}", alert=True)
+        except aiohttp.ClientConnectionError as err:
+            return await event.answer(f"[✘] {err}", alert=True)
+
+        teachers_response = TeachersResponse.parse_obj(teachers_resp)
+        for subject in teachers_response.data:
+            if subject.group.group_teachers:
+                if subject.group.subject.subject_name_eng:
+                    subject_name = subject.group.subject.subject_name_eng
+                else:
+                    subject_name = subject.group.subject.subject_name
+                payload = f"**{subject_name} {subject.group.group_name}**\n"
+
+                for subject_teacher in subject.group.group_teachers:
+                    t = subject_teacher.teacher
+                    payload += f"{t.teacher_name} {t.teacher_fath} {t.teacher_surname}\n{t.teacher_mail}\n\n"
+
+                await self.client.send_message(
+                    entity=sender,
+                    message=payload,
+                    parse_mode="md",
+                    silent=True,
+                    link_preview=False
+                )
+        await event.answer()
 
     async def send_schedule(
             self, event: events.CallbackQuery.Event, specific_day: types_l.Weekdays
@@ -519,7 +575,7 @@ class CallbackQuerySenders:
             return await event.answer("Congrats! It's Sunday, no lessons", alert=False)
         sender: types.User = await event.get_sender()
         try:
-            schedule_resp = await self._web.receive_hw_n_schedule(sender_id=str(sender.id), fs=self._fs)
+            schedule_resp = await self._web.receive_schedule_and_hw(sender_id=str(sender.id), fs=self._fs)
         except errors_l.UnauthorizedError as err:
             return await event.answer(f"[✘] {err}", alert=True)
         except errors_l.NothingFoundError as err:
@@ -530,10 +586,11 @@ class CallbackQuerySenders:
         old_wd = 0
         schedule_response = ScheduleResponse.parse_obj(schedule_resp)
         if specific_day.value != -10:
-            date = schedule_response.data[0].date.split("-")
+            start_of_week = datetime.datetime.fromisoformat(schedule_response.data[0].date)
             await self.client.send_message(
                 entity=sender,
-                message=f"__{specific_day.name}, {int(date[2]) + specific_day.value - 1}.{date[1]}.{date[0]}__\n",
+                message=f'__{specific_day.name}, '
+                        f'{(start_of_week + datetime.timedelta(specific_day.value - 1)).strftime("%d.%m.%Y")}__\n',
                 parse_mode="md",
                 silent=True
             )
@@ -588,7 +645,7 @@ class CallbackQuerySenders:
             return await event.answer("Congrats! Tomorrow's Sunday, no hw", alert=False)
         sender: types.User = await event.get_sender()
         try:
-            homework_resp = await self._web.receive_hw_n_schedule(sender_id=str(sender.id), fs=self._fs)
+            homework_resp = await self._web.receive_schedule_and_hw(sender_id=str(sender.id), fs=self._fs)
         except errors_l.UnauthorizedError as err:
             return await event.answer(f"[✘] {err}", alert=True)
         except errors_l.NothingFoundError as err:
@@ -599,10 +656,11 @@ class CallbackQuerySenders:
         old_wd = 0
         homework_response = HomeworkResponse.parse_obj(homework_resp)
         if specific_day.value != -10:
-            date = homework_response.data[0].date.split("-")
+            start_of_week = datetime.datetime.fromisoformat(homework_response.data[0].date)
             await self.client.send_message(
                 entity=sender,
-                message=f"__{specific_day.name}, {int(date[2]) + specific_day.value - 1}.{date[1]}.{date[0]}__\n",
+                message=f'__{specific_day.name}, '
+                        f'{(start_of_week + datetime.timedelta(specific_day.value - 1)).strftime("%d.%m.%Y")}__\n',
                 parse_mode="md",
                 silent=True
             )
@@ -833,7 +891,7 @@ class CallbackQuerySenders:
 
         sender: types.User = await event.get_sender()
         try:
-            marks_resp = await self._web.receive_marks(sender_id=str(sender.id), fs=self._fs)
+            marks_resp = await self._web.receive_marks_and_teachers(sender_id=str(sender.id), fs=self._fs)
         except errors_l.UnauthorizedError as err:
             return await event.answer(f"[✘] {err}", alert=True)
         except errors_l.NothingFoundError as err:

@@ -37,7 +37,7 @@ class FinalMarkList(BaseModel):
     # final_delete_user: Optional[int]
 
 
-class MarksSubject(BaseModel):
+class Subject(BaseModel):
     # id_subject: int
     subject_name: str
     subject_name_eng: Optional[str]
@@ -46,17 +46,17 @@ class MarksSubject(BaseModel):
     # subject_development: int
 
 
-class MarksGroup(BaseModel):
+class Group(BaseModel):
     # id_group: int
     group_name: str
     # group_subject: str
     group_level: str
     # group_hour: int
     # group_hour_week: int
-    subject: MarksSubject
+    subject: Subject
 
 
-class MarksDataList(BaseModel):
+class DataList(BaseModel):
     # id_group: int
     formative_avg_value: Optional[int]
     summative_avg_value: Optional[int]
@@ -69,11 +69,11 @@ class MarksDataList(BaseModel):
     # target_mark: Optional[int]
     final_mark_list: list[FinalMarkList]
     result_final_mark: Optional[str]
-    group: MarksGroup
+    group: Group
 
 
 class MarksResponse(BaseModel):
     # status: str
     # code: int
     # message: str
-    data: list[MarksDataList]
+    data: list[DataList]

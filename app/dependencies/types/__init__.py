@@ -1,9 +1,9 @@
 from .analytics import AnalyticsResponse
-from .enums import MarkTypes, PatternMatching, Weekdays
+from .enums import MarkTypes, MatchWeekdays, Weekdays
 
 __all__ = (
     "Weekdays",
     "MarkTypes",
-    "PatternMatching",
+    "MatchWeekdays",
     "AnalyticsResponse"
 )

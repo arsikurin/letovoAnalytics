@@ -1,10 +1,12 @@
-from .marks import MarksResponse, MarksDataList
-from .schedule import ScheduleResponse
-from .homework import HomeworkResponse
+from .marks import MarksResponse, DataList as MarksDataList
+from .schedule import ScheduleResponse, ScheduleResponse as HomeworkResponse
+# from .homework import HomeworkResponse
+from .teachers import TeachersResponse
 
 __all__ = (
     "MarksResponse",
     "MarksDataList",
     "ScheduleResponse",
-    "HomeworkResponse"
+    "HomeworkResponse",
+    "TeachersResponse"
 )

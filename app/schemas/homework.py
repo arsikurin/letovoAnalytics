@@ -3,7 +3,7 @@ from typing import Optional
 from pydantic import BaseModel, Field
 
 
-class HomeworkAttendance(BaseModel):
+class Attendance(BaseModel):
     # id_attendance: int
     # attendance_period: int
     # attendance_student: int
@@ -14,7 +14,7 @@ class HomeworkAttendance(BaseModel):
     attendance_reason: Optional[str]
 
 
-class HomeworkSubject(BaseModel):
+class Subject(BaseModel):
     # id_subject: int
     subject_name: str
     subject_name_eng: Optional[str]
@@ -23,24 +23,24 @@ class HomeworkSubject(BaseModel):
     # subject_development: int
 
 
-class HomeworkGroup(BaseModel):
+class Group(BaseModel):
     # id_group: int
     group_name: str
     # group_hour: int
     # group_hour_week: int
     # group_level: str
     # group_subject: int
-    subject: HomeworkSubject
+    subject: Subject
     # group_teachers: Optional[list]
 
 
-class HomeworkRoom(BaseModel):
+class Room(BaseModel):
     # id_room: int
     room_name: str
     room_description: str
 
 
-class HomeworkWorkList(BaseModel):
+class WorkList(BaseModel):
     # id_work: int
     work_comment: Optional[str]
     # work_lesson: int
@@ -51,7 +51,7 @@ class HomeworkWorkList(BaseModel):
     # mark_list: list
 
 
-class HomeworkLessonsList(BaseModel):
+class LessonsList(BaseModel):
     # id_lesson: int
     # lesson_period: int
     # lesson_group: str
@@ -66,11 +66,11 @@ class HomeworkLessonsList(BaseModel):
     # lesson_hw_duration: int
     lesson_comment: Optional[str]
     # lesson_de: int
-    # work: list[HomeworkWorkList]
-    attendance: list[HomeworkAttendance]
+    # work: list[WorkList]
+    attendance: list[Attendance]
 
 
-class HomeworkZoomMeetings(BaseModel):
+class ZoomMeetings(BaseModel):
     # meeting_id: int
     # meeting_topic: str
     # meeting_group_id: int
@@ -79,19 +79,19 @@ class HomeworkZoomMeetings(BaseModel):
     meeting_url: str
 
 
-class HomeworkList(BaseModel):
+class SchedulesList(BaseModel):
     # id_schedule: int = Field(alias="id_shedule")
     # schedule_period: int = Field(alias="shedule_period")
     # schedule_group: int = Field(alias="shedule_group")
     # schedule_room: int = Field(alias="shedule_room")
-    lessons: list[HomeworkLessonsList]
-    zoom_meetings: Optional[HomeworkZoomMeetings]
+    lessons: list[LessonsList]
+    zoom_meetings: Optional[ZoomMeetings]
     # program_dev_type: str
-    group: HomeworkGroup
-    room: HomeworkRoom
+    group: Group
+    room: Room
 
 
-class HomeworkDataList(BaseModel):
+class DataList(BaseModel):
     # id_period: int
     # period_year: int
     period_num_day: int
@@ -104,11 +104,11 @@ class HomeworkDataList(BaseModel):
     # period_feed: int
     # period_feed_name: Optional[str]
     date: str
-    schedules: list[HomeworkList]
+    schedules: list[SchedulesList]
 
 
 class HomeworkResponse(BaseModel):
-    status: str
-    code: int
-    detail: str = Field(alias="message")
-    data: list[HomeworkDataList]
+    # status: str
+    # code: int
+    # detail: str = Field(alias="message")
+    data: list[DataList]

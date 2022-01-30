@@ -1,4 +1,4 @@
-FROM python:3.10.2-bullseye as dev
+FROM python:3.10.2-bullseye AS dev
 
 WORKDIR /app-data
 
@@ -14,7 +14,7 @@ COPY . .
 CMD ["make", "bot-dev"]
 
 
-FROM python:3.10.2-bullseye as prod
+FROM python:3.10.2-bullseye AS prod
 
 WORKDIR /app-data
 
