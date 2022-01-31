@@ -142,6 +142,10 @@ class Firestore:
     async def disconnect(self):
         """
         Close database connection
+
+        Notes:
+            Instead, use context manager, i.e. the `with` statement,
+            because it allows you to forget about closing connections, etc.
         """
         self._client.close()
 
@@ -273,7 +277,7 @@ class Firestore:
         """
         doc: DocumentSnapshot = await self._client.collection("users").document(sender_id).get()
         try:
-            return doc.exists
+            return bool(doc.get("data.analytics_password"))
         except KeyError:
             return False
 
