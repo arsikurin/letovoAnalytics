@@ -133,6 +133,8 @@ class CallbackQueryEventEditors:
                 [
                     Button.inline("Teachers' names", b"teachers")
                 ], [
+                    Button.inline("Letovo Diploma", b"diploma"),
+                ], [
                     Button.inline("Holidays", b"holidays"),
                 ], [
                     Button.inline(back, b"main_page")
@@ -301,7 +303,8 @@ class CallbackQuerySenders:
             message="I can help you access s.letovo.ru resources via Telegram.\n"
                     "If you're new here, please see the [Terms of Use](https://example.com) and "
                     "provide your **school** credentials, i.e. login and password,"
-                    " **__(Button below the message)__** to begin enjoying the service\n"
+                    " to begin enjoying the service.\n"
+                    "To do this, click the **button below the message**.\n"
                     "\n"
                     "\n"
                     "**You can control the bot by sending these commands**\n"

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "letovo-analytics"
-version = "2022.01.28"
+version = "2022.01.31"
 description = "Letovo Analytics bot helps letovians access s.letovo.ru resources via Telegram"
 authors = ["arsikurin <arseny.kurin@gmail.com>"]
 
@@ -8,13 +8,12 @@ authors = ["arsikurin <arseny.kurin@gmail.com>"]
 python = "3.10.2"
 orjson = "^3.6.4"
 fastapi = "^0.73.0"
-requests = "^2.26.0"
 firebase-admin = "^5.1.0"
 colourlib = "^0.5.3"
 PyYAML = "^6.0"
 cryptg = "^0.2.post4"
 Jinja2 = "^3.0.2"
-aiofiles = "^0.8.0"
+#aiofiles = "^0.8.0"
 python-multipart = "^0.0.5"
 uvloop = "^0.16.0"
 aiorun = "^2021.10.1"

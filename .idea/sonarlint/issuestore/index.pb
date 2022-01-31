@@ -15,10 +15,6 @@ K
 app/templates/indexAPI.html,e/0/e063c146061d66ef7609cc5651c7613c5702b63d
 M
 app/api/endpoints/__init__.py,5/3/53f74166a0a52796a7e4b699d309f3f15ff1001d
-?
-app/main_api.py,1/4/142ed3d04270118b10adefd8fe93f6eeb1123f67
-J
-app/api/endpoints/login.py,5/f/5f23380c3ed4f43ac54ad5d9388e709171f1d7f8
 =
 app/pinger.py,4/7/47be40247f87156c5a9f341307f2dabcb6b8de10
 9
@@ -52,26 +48,16 @@ H
 app/tests/test_pytest.py,7/9/79bc96eefeff50432cd9135cb3ff467e1088b202
 J
 app/tests/test_unittest.py,4/2/42e2cf386919ff91e660724c8606c250a7ec2ea1
-J
-app/bot/handlers/others.py,f/d/fdd61c8ae4c4063a2e84c2ed3c9190d4d518d0d0
-;
-poetry.lock,0/0/0068a1506b061a8948c37d78b0dd5697211558d3
 E
 app/tests/conftest.py,9/f/9f467a9fcd7ffe82aaeae615d9ddff23c4b4f90c
-8
-Makefile,8/3/836efb6e25a091dcb4ff8e1dbb2f0be6a5cbf14c
 O
 app/api/endpoints/.dockerignore,6/e/6e654326f08bae48f5e4195d77d3241253c7ec1e
 K
 .github/workflows/test.yaml,a/6/a60e2382fd0c34cb06177a3d7034264e22531192
->
-pyproject.toml,5/d/5d07e7d72637aa0d59c89d381fe6dc4cf46e2491
 S
 #app/dependencies/types/analytics.py,2/4/24153e35cbb1893c93ebb2494a2e3dbd8f400804
 9
 	.stignore,1/8/182c17f09c9dbb84021557352e9738b136158dbd
->
-api.dockerfile,5/f/5f7e1b96a3e5b5ebfafa25bef5891dbc1c36c60e
 9
 	README.md,8/e/8ec9a00bfd09b3190ac6b22251dbb1aa95a0579d
 8
