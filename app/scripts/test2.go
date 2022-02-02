@@ -1,4 +1,4 @@
-package main
+package github.com/arsikurin/letovoAnalytics
 
 import (
 	"fmt"
