@@ -28,8 +28,8 @@ class CredentialsDatabase(typing.Protocol):
             exc_tb: types.TracebackType | None,
     ): ...
 
-    @property
-    def _client(self) -> AsyncClient: ...
+    # @property
+    # def _client(self) -> AsyncClient: ...
 
     @staticmethod
     async def create() -> CredentialsDatabase:
