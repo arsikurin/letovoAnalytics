@@ -128,7 +128,7 @@ class Postgresql:
             )
             return it.chain.from_iterable(await cursor.fetchall())
         except psycopg.OperationalError as err:
-            log.error(err)
+            log.exception(err)
             if err == unknown_err:
                 log.info(f"Trying to fix `{err}` Error!")
                 await self._connection.close()
@@ -145,7 +145,7 @@ class Postgresql:
             cursor.row_factory = class_row(types_l.AnalyticsResponse)
             return await cursor.fetchone()
         except psycopg.OperationalError as err:
-            log.error(err)
+            log.exception(err)
             if err == unknown_err:
                 log.info(f"Trying to fix `{err}` Error!")
                 await self._connection.close()
@@ -160,7 +160,7 @@ class Postgresql:
             )
             return bool(await cursor.fetchone())
         except psycopg.OperationalError as err:
-            log.error(err)
+            log.exception(err)
             if err == unknown_err:
                 log.info(f"Trying to fix `{err}` Error!")
                 await self._connection.close()
@@ -178,7 +178,7 @@ class Postgresql:
             )
             await self._connection.commit()
         except psycopg.OperationalError as err:
-            log.error(err)
+            log.exception(err)
             if err == unknown_err:
                 log.info(f"Trying to fix `{err}` Error!")
                 await self._connection.close()
@@ -195,7 +195,7 @@ class Postgresql:
             )
             await self._connection.commit()
         except psycopg.OperationalError as err:
-            log.error(err)
+            log.exception(err)
             if err == unknown_err:
                 log.info(f"Trying to fix `{err}` Error!")
                 await self._connection.close()
@@ -210,7 +210,7 @@ class Postgresql:
             )
             await self._connection.commit()
         except psycopg.OperationalError as err:
-            log.error(err)
+            log.exception(err)
             if err == unknown_err:
                 log.info(f"Trying to fix `{err}` Error!")
                 await self._connection.close()
@@ -225,7 +225,7 @@ class Postgresql:
             )
             await self._connection.commit()
         except psycopg.OperationalError as err:
-            log.error(err)
+            log.exception(err)
             if err == unknown_err:
                 log.info(f"Trying to fix `{err}` Error!")
                 await self._connection.close()
@@ -240,7 +240,7 @@ class Postgresql:
             )
             await self._connection.commit()
         except psycopg.OperationalError as err:
-            log.error(err)
+            log.exception(err)
             if err == unknown_err:
                 log.info(f"Trying to fix `{err}` Error!")
                 await self._connection.close()
@@ -255,7 +255,7 @@ class Postgresql:
             )
             await self._connection.commit()
         except psycopg.OperationalError as err:
-            log.error(err)
+            log.exception(err)
             if err == unknown_err:
                 log.info(f"Trying to fix `{err}` Error!")
                 await self._connection.close()
@@ -270,7 +270,7 @@ class Postgresql:
             )
             await self._connection.commit()
         except psycopg.OperationalError as err:
-            log.error(err)
+            log.exception(err)
             if err == unknown_err:
                 log.info(f"Trying to fix `{err}` Error!")
                 await self._connection.close()
@@ -285,7 +285,7 @@ class Postgresql:
             )
             await self._connection.commit()
         except psycopg.OperationalError as err:
-            log.error(err)
+            log.exception(err)
             if err == unknown_err:
                 log.info(f"Trying to fix `{err}` Error!")
                 await self._connection.close()
@@ -300,7 +300,7 @@ class Postgresql:
             )
             await self._connection.commit()
         except psycopg.OperationalError as err:
-            log.error(err)
+            log.exception(err)
             if err == unknown_err:
                 log.info(f"Trying to fix `{err}` Error!")
                 await self._connection.close()
@@ -315,7 +315,7 @@ class Postgresql:
             )
             await self._connection.commit()
         except psycopg.OperationalError as err:
-            log.error(err)
+            log.exception(err)
             if err.__str__() == unknown_err:
                 log.info(f"Trying to fix `{err}` Error!")
                 await self._connection.close()

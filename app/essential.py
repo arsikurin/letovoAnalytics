@@ -36,8 +36,8 @@ if settings().debug:
 else:
     log.basicConfig(
         format=f"{Style.Bold}(%(levelname)s) {Fg.Green}%(asctime)s{Fg.Reset} {Style.Bold}%(message)s{Style.Reset}"
-               f"\n[%(name)s]\n",
-        level=log.DEBUG
+               f"\n[%(name)s] — (%(filename)s).%(funcName)s(%(lineno)d)\n",
+        level=log.DEBUG, stream=sys.stdout
     )
     log.getLogger("telethon.network.mtprotosender").setLevel(log.INFO)
     log.getLogger("telethon.extensions.messagepacker").setLevel(log.INFO)
