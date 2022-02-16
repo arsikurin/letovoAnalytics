@@ -80,7 +80,7 @@ class Postgresql:
     def __init__(self):
         self._connection: psycopg.AsyncConnection[typing.Any] = ...
 
-    async def __aenter__(self) -> AnalyticsDatabase:
+    async def __aenter__(self) -> Postgresql:
         self._connection = await self._connect()
         return self
 
@@ -101,7 +101,7 @@ class Postgresql:
         self.__connection = value
 
     @staticmethod
-    async def create() -> AnalyticsDatabase:
+    async def create() -> Postgresql:
         """
         Factory
         """

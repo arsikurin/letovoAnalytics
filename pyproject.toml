@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "letovo-analytics"
-version = "2022.01.31"
+version = "2022.02.13"
 description = "Letovo Analytics bot helps letovians access s.letovo.ru resources via Telegram"
 authors = ["arsikurin <arseny.kurin@gmail.com>"]
 
@@ -31,12 +31,13 @@ snakeviz = "^2.1.1"
 tox = "^3.24.5"
 pytest = "^6.2.5"
 pytest-cov = "^3.0.0"
-mypy = "^0.931"
 #locust = "^2.5.0"
 # Hypothesis
 pytest-mock = "^3.6.1"
 tox-gh-actions = "^2.9.1"
 bandit = "^1.7.2"
+mypy = {git = "https://github.com/python/mypy.git", rev = "9b3147701f054bf8ef42bd96e33153b05976a5e1"}
+types-PyYAML = "^6.0.4"
 
 [tool.pytest.ini_options]
 minversion = "6.0"
@@ -56,15 +57,15 @@ show_error_codes = true
 strict_equality = true
 warn_redundant_casts = true
 warn_return_any = true
-warn_unreachable = true
+warn_unreachable = false
 warn_unused_configs = true
-no_implicit_reexport = true
+no_implicit_reexport = false
 
 
 [tool.bandit]
 #tests = ["B301"]
 #skips = ["B101", "B601"]
-exclude_dirs = [".tox", ".git", ".idea", ".vscode", "__pycache__"]
+exclude_dirs = [".tox", ".git", ".idea", ".vscode", "__pycache__", "./app/tests"]
 
 [tool.bandit.any_other_function_with_shell_equals_true]
 no_shell = [

@@ -6,7 +6,7 @@ import typing
 import aiohttp
 import firebase_admin
 import yaml
-from firebase_admin import credentials
+from firebase_admin import credentials, _DEFAULT_APP_NAME
 from google.cloud.firestore_v1.async_client import AsyncClient, AsyncDocumentReference, DocumentSnapshot
 
 from app.dependencies import errors as errors_l
@@ -85,13 +85,17 @@ class Firestore:
     """
     Class for dealing with Google Firestore database
     """
-    __slots__ = ("__client",)
+    __slots__ = ("__client", "app_name")
 
-    def __init__(self):
+    def __init__(self, app_name: str | None = None):
         self._client: AsyncClient = ...
+        self.app_name = app_name
 
-    async def __aenter__(self) -> CredentialsDatabase:
-        self._client = await self._connect()
+    async def __aenter__(self) -> Firestore:
+        if self.app_name is None:
+            self.app_name = _DEFAULT_APP_NAME
+
+        self._client = await self._connect(app_name=self.app_name)
         return self
 
     async def __aexit__(
@@ -111,7 +115,7 @@ class Firestore:
         self.__client = value
 
     @staticmethod
-    async def create() -> CredentialsDatabase:
+    async def create(app_name: str | None = None) -> Firestore:
         """
         Factory for initializing database connection object
 
@@ -123,19 +127,21 @@ class Firestore:
             class instance with database connection
         """
         self_ = Firestore()
-        self_._client = await self_._connect()
+        self_._client = await self_._connect(app_name=app_name)
         return self_
 
     @staticmethod
-    async def _connect() -> AsyncClient:
+    async def _connect(app_name: str | None = None) -> AsyncClient:
         """
         Internal method used for connecting to the database
 
         Returns:
             database connection
         """
+        if app_name is None:
+            app_name = _DEFAULT_APP_NAME
         app = firebase_admin.initialize_app(
-            credential=credentials.Certificate(yaml.full_load(settings().GOOGLE_FS_KEY))
+            credential=credentials.Certificate(yaml.full_load(settings().GOOGLE_FS_KEY)), name=app_name
         )
         return AsyncClient(credentials=app.credential.get_credential(), project=app.project_id)
 

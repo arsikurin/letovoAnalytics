@@ -26,4 +26,4 @@ async def main():
 
 
 if __name__ == "__main__":
-    aiorun.run(main(), use_uvloop=True, executor_workers=14)
+    aiorun.run(main(), use_uvloop=True, executor_workers=20)
