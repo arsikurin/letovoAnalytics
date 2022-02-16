@@ -20,10 +20,10 @@ class Web:
     __slots__ = ("_session",)
     _instance = None
 
-    def __new__(cls, *args, **kwargs):
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
+    # def __new__(cls, *args, **kwargs):
+    #     if cls._instance is None:
+    #         cls._instance = super().__new__(cls)
+    #     return cls._instance
 
     def __init__(self, session: aiohttp.ClientSession):
         self.session: aiohttp.ClientSession = session
@@ -123,7 +123,7 @@ class Web:
             raise aiohttp.ClientConnectionError(no_conn)
 
     async def receive_schedule_and_hw(
-            self, sender_id: str, fs: CredentialsDatabase
+            self, sender_id: str, fs: CredentialsDatabase, week: bool = True
     ) -> dict:
         """
         Receive homework & schedule from s.letovo.ru
@@ -131,6 +131,7 @@ class Web:
         Args:
             sender_id (str): user's Telegram ID
             fs (CredentialsDatabase): connection to the database with users' credentials
+            week (bool, optional): receive schedule & hw for week or for current day
 
         Raises:
             aiohttp.ClientConnectionError: if connection cannot be established to s.letovo.ru
@@ -149,12 +150,15 @@ class Web:
                 creds_not_found
             )
 
-        if datetime.datetime.now(tz=settings().timezone).strftime("%a") == "Sun":
+        if int(datetime.datetime.now(tz=settings().timezone).strftime("%w")) == 0:
             date = (datetime.datetime.now(tz=settings().timezone) + datetime.timedelta(1)).strftime("%Y-%m-%d")
         else:
             date = datetime.datetime.now(tz=settings().timezone).strftime("%Y-%m-%d")
 
-        url = f"https://s-api.letovo.ru/api/schedule/{student_id}/week?schedule_date={date}"
+        if week:
+            url = f"https://s-api.letovo.ru/api/schedule/{student_id}/week?schedule_date={date}"
+        else:
+            url = f"https://s-api.letovo.ru/api/schedule/{student_id}/day?schedule_date={date}"
 
         headers = {
             "Authorization": token,

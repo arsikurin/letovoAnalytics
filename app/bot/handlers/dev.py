@@ -38,7 +38,7 @@ async def init(client: TelegramClient, cbQuery: CallbackQuery):
         sender: types.User = await event.get_sender()
         await run_sequence(
             cbQuery.send_stats(sender=sender),
-            event.answer("Done")
+            event.answer("Has been sent")
         )
         raise events.StopPropagation
 
@@ -49,6 +49,8 @@ async def init(client: TelegramClient, cbQuery: CallbackQuery):
         if sender_id not in ("606336225",):
             raise events.StopPropagation
         from app.helper import main
-        await main()
-        await event.answer("Tokens updated in the Database")
+        await run_sequence(
+            main(),
+            event.answer("Tokens updated in the Database")
+        )
         raise events.StopPropagation

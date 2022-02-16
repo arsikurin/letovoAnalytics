@@ -16,13 +16,13 @@ class NothingFoundError(Exception):
 
 class UnauthorizedError(Exception):
     """
-    Occurs when anything cannot be obtained due to wrong credentials
+    Occurs when anything cannot be obtained due to the wrong credentials
     """
 
     def __init__(self, detail: str | None = None, fix: str | None = None):
         if detail is None:
             super().__init__(
-                "The data you are looking cannot be obtained due to wrong credentials"
+                "The data you are looking cannot be obtained due to the wrong credentials"
             )
         else:
             super().__init__(
