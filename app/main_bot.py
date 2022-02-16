@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import asyncio
+import logging as log
 
 import aiohttp
 import aiorun
@@ -6,8 +8,15 @@ from telethon import TelegramClient
 
 import essential  # noqa: used to initialize PYTHONPATH and logger
 from app.bot import handlers, CallbackQuery, InlineQuery
-from app.dependencies import Postgresql, Firestore, run_sequence
+from app.dependencies import Postgresql, Firestore, run_sequence, run_parallel
 from config import settings
+
+
+async def coro(fs: Firestore):
+    while True:
+        log.debug("Sent ping to Firestore")
+        await fs.is_logged("1")
+        await asyncio.sleep(60 * 60)
 
 
 async def main():
@@ -19,9 +28,13 @@ async def main():
         cbQuery = CallbackQuery(client=client, session=session, db=db, fs=fs)
         iQuery = InlineQuery(s=session)
 
-        await run_sequence(
-            handlers.init(client=client, cbQuery=cbQuery, iQuery=iQuery, db=db, fs=fs),
-            aiorun.shutdown_waits_for(client.run_until_disconnected())
+        log.debug("Entered mainloop")
+        await run_parallel(
+            coro(fs),
+            run_sequence(
+                handlers.init(client=client, cbQuery=cbQuery, iQuery=iQuery, db=db, fs=fs),
+                aiorun.shutdown_waits_for(client.run_until_disconnected())
+            )
         )
 
 
