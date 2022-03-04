@@ -12,7 +12,7 @@ from app.dependencies import Postgresql, Firestore, run_sequence, run_parallel
 from config import settings
 
 
-async def coro(fs: Firestore):
+async def firestore_pinger(fs: Firestore):
     while True:
         log.debug("Sent ping to Firestore")
         await fs.is_logged("1")
@@ -30,7 +30,7 @@ async def main():
 
         log.debug("Entered mainloop")
         await run_parallel(
-            coro(fs),
+            firestore_pinger(fs),
             run_sequence(
                 handlers.init(client=client, cbQuery=cbQuery, iQuery=iQuery, db=db, fs=fs),
                 aiorun.shutdown_waits_for(client.run_until_disconnected())
