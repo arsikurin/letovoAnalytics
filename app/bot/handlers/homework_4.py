@@ -4,11 +4,11 @@ import functools as ft
 from telethon import events, TelegramClient, types
 
 from app.bot import CallbackQuery
-from app.dependencies import AnalyticsDatabase, types as types_l
+from app.dependencies import Postgresql, types as types_l
 from config import settings
 
 
-async def init(client: TelegramClient, cbQuery: CallbackQuery, db: AnalyticsDatabase):
+async def init(client: TelegramClient, cbQuery: CallbackQuery, db: Postgresql):
     @client.on(events.CallbackQuery(data=b"homework_page"))
     async def _homework_page(event: events.CallbackQuery.Event):
         await cbQuery.to_homework_page(event=event)

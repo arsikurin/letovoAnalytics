@@ -1,15 +1,13 @@
 import datetime
 import functools as ft
-import logging as log
 
 from telethon import events, types, TelegramClient
 
 from app.bot import InlineQuery
-from app.dependencies import types as types_l, CredentialsDatabase
+from app.dependencies import types as types_l, Firestore
 
 
-async def init(client: TelegramClient, iQuery: InlineQuery, fs: CredentialsDatabase):
-    # log.info("iquery currently out of date. Therefore, it is disabled")
+async def init(client: TelegramClient, iQuery: InlineQuery, fs: Firestore):
     raise NotImplementedError
 
     @client.on(events.InlineQuery())  # TODO NOT WORKING CURRENTLY
@@ -34,19 +32,19 @@ async def init(client: TelegramClient, iQuery: InlineQuery, fs: CredentialsDatab
                 # ], switch_pm="Log in", switch_pm_param="inlineMode")
             case types_l.MatchWeekdays(today=True):
                 await send_schedule(specific_day=int(datetime.datetime.now().strftime("%w")))
-            case PatternMatching(monday=True):
-                await send_schedule(specific_day=Weekdays.Monday.value)
-            case PatternMatching(tuesday=True):
-                await send_schedule(specific_day=Weekdays.Tuesday.value)
-            case PatternMatching(wednesday=True):
-                await send_schedule(specific_day=Weekdays.Wednesday.value)
-            case PatternMatching(thursday=True):
-                await send_schedule(specific_day=Weekdays.Thursday.value)
-            case PatternMatching(friday=True):
-                await send_schedule(specific_day=Weekdays.Friday.value)
-            case PatternMatching(saturday=True):
-                await send_schedule(specific_day=Weekdays.Saturday.value)
-            case PatternMatching(entire=True):
-                await send_schedule(specific_day=Weekdays.ALL.value)
+            case types_l.MatchWeekdays(monday=True):
+                await send_schedule(specific_day=types_l.Weekdays.Monday.value)
+            case types_l.MatchWeekdays(tuesday=True):
+                await send_schedule(specific_day=types_l.Weekdays.Tuesday.value)
+            case types_l.MatchWeekdays(wednesday=True):
+                await send_schedule(specific_day=types_l.Weekdays.Wednesday.value)
+            case types_l.MatchWeekdays(thursday=True):
+                await send_schedule(specific_day=types_l.Weekdays.Thursday.value)
+            case types_l.MatchWeekdays(friday=True):
+                await send_schedule(specific_day=types_l.Weekdays.Friday.value)
+            case types_l.MatchWeekdays(saturday=True):
+                await send_schedule(specific_day=types_l.Weekdays.Saturday.value)
+            case types_l.MatchWeekdays(entire=True):
+                await send_schedule(specific_day=types_l.Weekdays.ALL.value)
             case _:
                 await iQuery.to_main_page(event=event)

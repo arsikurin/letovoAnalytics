@@ -13,89 +13,22 @@ from app.dependencies import errors as errors_l
 from config import settings
 
 
-class CredentialsDatabase(typing.Protocol):
-    """
-    Class for dealing with document oriented databases
-    """
-    __slots__ = ("__client",)
-
-    async def __aenter__(self) -> CredentialsDatabase: ...
-
-    async def __aexit__(
-            self,
-            exc_type: typing.Type[BaseException] | None,
-            exc_val: BaseException | None,
-            exc_tb: types.TracebackType | None,
-    ): ...
-
-    # @property
-    # def _client(self) -> AsyncClient: ...
-
-    @staticmethod
-    async def create() -> CredentialsDatabase:
-        """
-        Factory
-        """
-
-    @staticmethod
-    async def _connect() -> AsyncClient: ...
-
-    async def disconnect(self): ...
-
-    async def update_data(
-            self,
-            sender_id: str,
-            student_id: int | None = None,
-            mail_address: str | None = None,
-            mail_password: str | None = None,
-            analytics_login: str | None = None,
-            analytics_password: str | None = None,
-            token: str | None = None,
-            lang: str | None = None
-    ): ...
-
-    async def update_name(
-            self,
-            sender_id: str,
-            first_name: int | None = None,
-            last_name: str | None = None,
-    ): ...
-
-    async def is_inited(self, sender_id: str) -> bool: ...
-
-    async def is_logged(self, sender_id: str) -> bool: ...
-
-    async def get_users(self) -> typing.AsyncIterator[DocumentSnapshot]: ...
-
-    async def get_student_id(self, sender_id: str) -> int | typing.Type[errors_l.NothingFoundError]: ...
-
-    async def get_token(self, sender_id: str) -> str | typing.Type[errors_l.NothingFoundError]: ...
-
-    async def get_password(self, sender_id: str) -> str | typing.Type[errors_l.NothingFoundError]: ...
-
-    async def get_login(self, sender_id: str) -> str | typing.Type[errors_l.NothingFoundError]: ...
-
-    async def get_name(self, sender_id: str) -> str | typing.Type[errors_l.NothingFoundError]: ...
-
-    async def get_surname(self, sender_id: str) -> str | typing.Type[errors_l.NothingFoundError]: ...
-
-
 @typing.final
 class Firestore:
     """
     Class for dealing with Google Firestore database
-    """
-    __slots__ = ("__client", "app_name")
 
-    def __init__(self, app_name: str | None = None):
+    Args:
+        app_name (str): name of the connection. If not provided, default will be used
+    """
+    __slots__ = ("__client", "_app_name")
+
+    def __init__(self, app_name: str = _DEFAULT_APP_NAME):
         self._client: AsyncClient = ...
         self.app_name = app_name
 
     async def __aenter__(self) -> Firestore:
-        if self.app_name is None:
-            self.app_name = _DEFAULT_APP_NAME
-
-        self._client = await self._connect(app_name=self.app_name)
+        self._client = await self._connect()
         return self
 
     async def __aexit__(
@@ -114,40 +47,49 @@ class Firestore:
     def _client(self, value: AsyncClient):
         self.__client = value
 
+    @property
+    def app_name(self) -> str:
+        return self._app_name
+
+    @app_name.setter
+    def app_name(self, value: str):
+        self._app_name = value
+
     @staticmethod
-    async def create(app_name: str | None = None) -> Firestore:
+    async def create(*, app_name: str = _DEFAULT_APP_NAME) -> Firestore:
         """
-        Factory for initializing database connection object
+        Factory used for initializing database connection object
 
         Notes:
             Instead, use context manager, i.e. the `with` statement,
             because it allows you to forget about closing connections, etc.
 
+        Args:
+            app_name (str): name of the connection. If not provided, default will be used
+
         Returns:
             class instance with database connection
         """
-        self_ = Firestore()
-        self_._client = await self_._connect(app_name=app_name)
-        return self_
+        self = Firestore()
+        self.app_name = app_name
+        self._client = await self._connect()
+        return self
 
-    @staticmethod
-    async def _connect(app_name: str | None = None) -> AsyncClient:
+    async def _connect(self) -> AsyncClient:
         """
         Internal method used for connecting to the database
 
         Returns:
             database connection
         """
-        if app_name is None:
-            app_name = _DEFAULT_APP_NAME
         app = firebase_admin.initialize_app(
-            credential=credentials.Certificate(yaml.full_load(settings().GOOGLE_FS_KEY)), name=app_name
+            credential=credentials.Certificate(yaml.full_load(settings().GOOGLE_FS_KEY)), name=self.app_name
         )
         return AsyncClient(credentials=app.credential.get_credential(), project=app.project_id)
 
     async def disconnect(self):
         """
-        Close database connection
+        Close the database connection
 
         Notes:
             Instead, use context manager, i.e. the `with` statement,
@@ -156,7 +98,7 @@ class Firestore:
         self._client.close()
 
     @staticmethod
-    async def send_email(email: str):
+    async def send_email_to(email: str, /):
         """
         Email a new user informing them that registration succeeded
 

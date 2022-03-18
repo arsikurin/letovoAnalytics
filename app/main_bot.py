@@ -16,7 +16,7 @@ async def firestore_pinger(fs: Firestore):
     while True:
         log.debug("Sent ping to Firestore")
         await fs.is_logged("1")
-        await asyncio.sleep(60 * 60)
+        await asyncio.sleep(60 * 30)
 
 
 async def main():

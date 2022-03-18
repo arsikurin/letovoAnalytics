@@ -1,10 +1,10 @@
 from telethon import events, TelegramClient, types
 
 from app.bot import CallbackQuery
-from app.dependencies import AnalyticsDatabase, run_parallel
+from app.dependencies import Postgresql, run_parallel
 
 
-async def init(client: TelegramClient, cbQuery: CallbackQuery, db: AnalyticsDatabase):
+async def init(client: TelegramClient, cbQuery: CallbackQuery, db: Postgresql):
     @client.on(events.CallbackQuery(data=b"others_page"))
     async def _others_page(event: events.CallbackQuery.Event):
         await cbQuery.to_others_page(event=event)

@@ -1,4 +1,3 @@
-import asyncio
 import datetime
 import typing
 
@@ -6,7 +5,7 @@ import aiohttp
 from telethon import Button, events, TelegramClient, types
 
 from app.dependencies import (
-    types as types_l, errors as errors_l, Web, AnalyticsDatabase, CredentialsDatabase
+    types as types_l, errors as errors_l, Web, Postgresql, Firestore, run_parallel
 )
 from app.schemas import MarksResponse, MarksDataList, ScheduleResponse, HomeworkResponse, TeachersResponse
 from config import settings
@@ -58,7 +57,7 @@ class CallbackQueryEventEditors:
             parse_mode="md",
             buttons=[
                 [
-                    Button.inline("For The week", b"entire_schedule")
+                    Button.inline("For The Week", b"entire_schedule")
                 ], [
                     Button.inline("For Today", b"today_schedule"),
                 ], [
@@ -198,15 +197,24 @@ class CallbackQueryEventEditors:
 
 
 class CallbackQuerySenders:
+    """
+    Class for dealing with web API of s.letovo.ru
+
+    Args:
+        session (aiohttp.ClientSession): an instance of `TelegramClient` with credentials filled in
+        session (aiohttp.ClientSession): an instance of `aiohttp.ClientSession`
+        db (Postgresql): connection to the database with users' usage analytics
+        fs (Firestore): connection to the database with users' credentials
+    """
     __slots__ = ("_client", "__web", "__db", "__fs", "__payload")
 
     def __init__(
-            self, client: TelegramClient, session: aiohttp.ClientSession, db: AnalyticsDatabase, fs: CredentialsDatabase
+            self, client: TelegramClient, session: aiohttp.ClientSession, db: Postgresql, fs: Firestore
     ):
         self.client: TelegramClient = client
-        self._web: Web = Web(session)
-        self._db: AnalyticsDatabase = db
-        self._fs: CredentialsDatabase = fs
+        self._web: Web = Web(session=session, fs=fs)
+        self._db: Postgresql = db
+        self._fs: Firestore = fs
         self._payload: str = ""
 
     @property
@@ -226,19 +234,19 @@ class CallbackQuerySenders:
         self.__web = value
 
     @property
-    def _db(self) -> AnalyticsDatabase:
+    def _db(self) -> Postgresql:
         return self.__db
 
     @_db.setter
-    def _db(self, value: AnalyticsDatabase):
+    def _db(self, value: Postgresql):
         self.__db = value
 
     @property
-    def _fs(self) -> CredentialsDatabase:
+    def _fs(self) -> Firestore:
         return self.__fs
 
     @_fs.setter
-    def _fs(self, value: CredentialsDatabase):
+    def _fs(self, value: Firestore):
         self.__fs = value
 
     @property
@@ -332,7 +340,7 @@ class CallbackQuerySenders:
                     "\n"
                     "\n"
                     "**Marks CI**\n"
-                    "From **0** to **8** following by a criterion:\n"
+                    "From **0** to **8** following by a criterion:\n"  # todo
                     "**A**, **B**, **C** or **D** — Summative marks\n"
                     "**F** — Formative marks\n"
                     "\n"
@@ -361,7 +369,7 @@ class CallbackQuerySenders:
                     resp.options_counter, resp.help_counter, resp.about_counter
             )): continue  # noqa
 
-            name, surname, login = await asyncio.gather(
+            name, surname, login = await run_parallel(
                 self._fs.get_name(resp.sender_id),
                 self._fs.get_surname(resp.sender_id),
                 self._fs.get_login(resp.sender_id),
@@ -519,11 +527,10 @@ class CallbackQuerySenders:
 
         Args:
             event (events.CallbackQuery.Event): a return object of CallbackQuery
-            # specific_day (types_l.Weekdays): day of the week
         """
         sender: types.User = await event.get_sender()
         try:
-            teachers_resp = await self._web.receive_marks_and_teachers(sender_id=str(sender.id), fs=self._fs)
+            teachers_resp = await self._web.receive_marks_and_teachers(sender_id=str(sender.id))
         except errors_l.UnauthorizedError as err:
             return await event.answer(f"[✘] {err}", alert=True)
         except errors_l.NothingFoundError as err:
@@ -571,41 +578,29 @@ class CallbackQuerySenders:
         try:
             if specific_day == types_l.Weekdays.TODAY:
                 schedule_resp = await self._web.receive_schedule_and_hw(
-                    sender_id=str(sender.id), fs=self._fs, week=False
+                    sender_id=str(sender.id), week=False
                 )
             else:
                 schedule_resp = await self._web.receive_schedule_and_hw(
-                    sender_id=str(sender.id), fs=self._fs
+                    sender_id=str(sender.id)
                 )
         except (errors_l.UnauthorizedError, errors_l.NothingFoundError, aiohttp.ClientConnectionError) as err:
             return await event.answer(f"[✘] {err}", alert=True)
 
         old_wd = ""
+        msg_ids = []
         schedule_response = ScheduleResponse.parse_obj(schedule_resp)
-        if specific_day != types_l.Weekdays.ALL:
-            if specific_day == types_l.Weekdays.TODAY:
-                today = datetime.datetime.now(tz=settings().timezone).strftime("%A")
-            else:
-                today = specific_day.name
-            start_of_week = datetime.datetime.fromisoformat(schedule_response.data[0].date)
-            await self.client.send_message(
-                entity=sender,
-                message=f'__{today}, '
-                        f'{(start_of_week + datetime.timedelta(specific_day.value - 1)).strftime("%d.%m.%Y")}__\n',
-                parse_mode="md",
-                silent=True
-            )
-
         for day in schedule_response.data:
             if day.schedules and specific_day.value in {int(day.period_num_day), -10, -15}:
                 wd = types_l.Weekdays(int(day.period_num_day)).name
                 if specific_day == types_l.Weekdays.ALL and wd != old_wd:
-                    await self.client.send_message(
+                    msg = await self.client.send_message(
                         entity=sender,
                         message=f"\n**=={wd}==**\n",
                         parse_mode="md",
                         silent=True
                     )
+                    msg_ids.append(msg.id)
 
                 payload = f"{day.period_name} | <em>{day.schedules[0].room.room_name}</em>:\n"
                 # if day.schedules[0].lessons[0].attendance:
@@ -621,14 +616,35 @@ class CallbackQuerySenders:
                 payload += f"{day.period_start} — {day.period_end}\n"
                 if day.schedules[0].zoom_meetings:
                     payload += f"<a href='{day.schedules[0].zoom_meetings.meeting_url}'>ZOOM</a>"
-                await self.client.send_message(
+                msg = await self.client.send_message(
                     entity=sender,
                     message=payload,
                     parse_mode="html",
                     silent=True,
                     link_preview=False
                 )
+                msg_ids.append(msg.id)
                 old_wd = wd
+
+        if specific_day != types_l.Weekdays.ALL:
+            if specific_day == types_l.Weekdays.TODAY:
+                today = datetime.datetime.now(tz=settings().timezone).strftime("%A")
+            else:
+                today = specific_day.name
+            start_of_week = datetime.datetime.fromisoformat(schedule_response.data[0].date)
+            msg = await self.client.send_message(
+                entity=sender,
+                message=f'__{today}, '
+                        f'{(start_of_week + datetime.timedelta(specific_day.value - 1)).strftime("%d.%m.%Y")}__\n',
+                buttons=[
+                    Button.inline("Close", b"close")
+                ],
+                parse_mode="md",
+                silent=True
+            )
+            msg_ids.append(msg.id)
+            await self._db.set_msg_ids(sender_id=str(sender.id), msg_ids=" ".join(map(str, msg_ids)))
+
         await event.answer()
 
     async def send_homework(
@@ -646,35 +662,32 @@ class CallbackQuerySenders:
 
         sender: types.User = await event.get_sender()
         try:
-            homework_resp = await self._web.receive_schedule_and_hw(sender_id=str(sender.id), fs=self._fs)
+            homework_resp = await self._web.receive_schedule_and_hw(sender_id=str(sender.id))
         except (errors_l.UnauthorizedError, errors_l.NothingFoundError, aiohttp.ClientConnectionError) as err:
             return await event.answer(f"[✘] {err}", alert=True)
 
         old_wd = ""
         homework_response = HomeworkResponse.parse_obj(homework_resp)
-        if specific_day != types_l.Weekdays.ALL:
-            start_of_week = datetime.datetime.fromisoformat(homework_response.data[0].date)
-            await self.client.send_message(
-                entity=sender,
-                message=f'__{specific_day.name}, '
-                        f'{(start_of_week + datetime.timedelta(specific_day.value - 1)).strftime("%d.%m.%Y")}__\n',
-                parse_mode="md",
-                silent=True
-            )
-
+        msg_ids = []
         for day in homework_response.data:
             if day.schedules and specific_day.value in {int(day.period_num_day), -10}:
                 flag = False
                 wd = types_l.Weekdays(int(day.period_num_day)).name
                 if specific_day == types_l.Weekdays.ALL and wd != old_wd:
-                    await self.client.send_message(
+                    msg = await self.client.send_message(
                         entity=sender,
                         message=f"\n**=={wd}==**\n",
                         parse_mode="md",
                         silent=True
                     )
+                    msg_ids.append(msg.id)
+
+                if day.schedules[0].group.subject.subject_name_eng:
+                    subject = day.schedules[0].group.subject.subject_name_eng
+                else:
+                    subject = day.schedules[0].group.subject.subject_name
                 payload = (
-                    f"{day.period_name}: <strong>{day.schedules[0].group.subject.subject_name_eng}</strong>\n"
+                    f"{day.period_name}: <strong>{subject}</strong>\n"
                 )
                 if day.schedules[0].lessons:
                     if day.schedules[0].lessons[0].lesson_hw:
@@ -700,17 +713,35 @@ class CallbackQuerySenders:
                 else:
                     payload += "Lessons not found\n"
 
-                await self.client.send_message(
+                msg = await self.client.send_message(
                     entity=sender,
                     message=payload,
                     parse_mode="html",
                     silent=True,
                     link_preview=False
                 )
+                msg_ids.append(msg.id)
+
                 old_wd = wd
+
+        if specific_day != types_l.Weekdays.ALL:
+            start_of_week = datetime.datetime.fromisoformat(homework_response.data[0].date)
+            msg = await self.client.send_message(
+                entity=sender,
+                message=f'__{specific_day.name}, '
+                        f'{(start_of_week + datetime.timedelta(specific_day.value - 1)).strftime("%d.%m.%Y")}__\n',
+                buttons=[
+                    Button.inline("Close", b"close")
+                ],
+                parse_mode="md",
+                silent=True
+            )
+            msg_ids.append(msg.id)
+            await self._db.set_msg_ids(sender_id=str(sender.id), msg_ids=" ".join(map(str, msg_ids)))
+
         await event.answer("Homework might not be displayed properly as it is in beta")
 
-    async def _prepare_summative_marks(self, subject: MarksDataList, check_date: bool = False):
+    async def _prepare_summative_marks(self, subject: MarksDataList, *, check_date: bool = False):
         """
         Parse summative marks
 
@@ -794,16 +825,18 @@ class CallbackQuerySenders:
         """
         for subject in _marks_response.data:
             if subject.final_mark_list:
+                # TODO subject name not only eng should be
                 self._payload = f"**{subject.group.subject.subject_name_eng}**\n"
 
+                # TODO sort final marks
                 for mark in subject.final_mark_list:
                     self._payload += f"**{mark.final_value}**{mark.final_criterion} "
 
-                if subject.result_final_mark:
-                    self._payload += f" | __final:__ **{subject.result_final_mark}**"
-
                 if subject.group_avg_mark:
                     self._payload += f" | __group_avg:__ **{subject.group_avg_mark}**"
+
+                if subject.result_final_mark:
+                    self._payload += f" | __final:__ **{subject.result_final_mark}**"
 
                 await self.client.send_message(
                     entity=sender,
@@ -884,7 +917,7 @@ class CallbackQuerySenders:
         """
         sender: types.User = await event.get_sender()
         try:
-            marks_resp = await self._web.receive_marks_and_teachers(sender_id=str(sender.id), fs=self._fs)
+            marks_resp = await self._web.receive_marks_and_teachers(sender_id=str(sender.id))
         except (errors_l.UnauthorizedError, errors_l.NothingFoundError, aiohttp.ClientConnectionError) as err:
             return await event.answer(f"[✘] {err}", alert=True)
 
