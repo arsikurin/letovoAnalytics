@@ -2,12 +2,7 @@ import functools as ft
 from zoneinfo import ZoneInfo
 
 import orjson
-from dotenv import load_dotenv, find_dotenv
 from pydantic import BaseSettings, HttpUrl, PostgresDsn, BaseConfig
-
-# Use vars from local .env file if on local machine
-load_dotenv(find_dotenv(".env.development.local", raise_error_if_not_found=False), override=True)
-
 
 BaseConfig.json_loads = orjson.loads
 BaseConfig.json_dumps = orjson.dumps
@@ -16,7 +11,7 @@ BaseConfig.json_dumps = orjson.dumps
 class AppSettings(BaseSettings):
     EPS: float = 2.220446049250313e-16
     URL_MAIN_LETOVO: HttpUrl = "https://s.letovo.ru"
-    URL_MAIN_API: HttpUrl = "https://letovo-analytics-api.herokuapp.com/"
+    URL_MAIN_API: HttpUrl = "https://letovo-analytics-api.herokuapp.com"
     URL_MAIN_LOCAL: HttpUrl = "https://letovo-analytics.web.app/"
     URL_LOGIN_LETOVO: HttpUrl = "https://s-api.letovo.ru/api/login"
     URL_LOGIN_LOCAL: HttpUrl = "https://letovo-analytics.web.app/login"
@@ -34,8 +29,9 @@ class AppSettings(BaseSettings):
     timezone: ZoneInfo = ZoneInfo("Europe/Moscow")
 
     class Config:
+        env_file = ".env.development.local"
+        env_file_encoding = "utf-8"
         # validate_assignment
-        ...
 
 
 @ft.cache

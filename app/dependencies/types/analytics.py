@@ -4,7 +4,6 @@ from dataclasses import dataclass
 @dataclass(slots=True)
 class AnalyticsResponse:
     sender_id: str
-    message_id: int
     schedule_counter: int
     homework_counter: int
     marks_counter: int

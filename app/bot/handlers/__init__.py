@@ -9,19 +9,18 @@ import time
 from telethon import TelegramClient, events, types
 
 from app.bot import CallbackQuery, InlineQuery
-from app.dependencies import AnalyticsDatabase, CredentialsDatabase, run_parallel
+from app.dependencies import Postgresql, Firestore, run_parallel
 
 
 async def init(
-        client: TelegramClient, cbQuery: CallbackQuery, iQuery: InlineQuery, db: AnalyticsDatabase,
-        fs: CredentialsDatabase
+        client: TelegramClient, cbQuery: CallbackQuery, iQuery: InlineQuery, db: Postgresql, fs: Firestore
 ):
     handlers = [
         # Dynamically import
         importlib.import_module(".", f"{__name__}.{file[:-3]}")
 
         # All the files in the current directory
-        for file in os.listdir(os.path.dirname(__file__))
+        for file in sorted(os.listdir(os.path.dirname(__file__)), key=lambda x: x[-4])
 
         # If they start with a letter and are Python files
         if file[0].isalpha() and file.endswith(".py")
@@ -31,11 +30,13 @@ async def init(
     modules = {m.__name__.split(".")[-1]: m for m in handlers}
 
     # All kwargs provided to get_init_args are those that handlers may access
-    to_init = (get_init_coro(handler, client=client, cbQuery=cbQuery, iQuery=iQuery, db=db, fs=fs, modules=modules) for
-               handler in handlers)
+    to_init = (
+        get_init_coro(handler, client=client, cbQuery=cbQuery, iQuery=iQuery, db=db, fs=fs, modules=modules)
+        for handler in handlers
+    )
 
     # Plugins may not have a valid init so those need to be filtered out
-    await asyncio.gather(*(filter(None, to_init)))
+    await run_parallel(*(filter(None, to_init)))
 
     @client.on(events.NewMessage())
     async def _delete(event: events.NewMessage.Event):

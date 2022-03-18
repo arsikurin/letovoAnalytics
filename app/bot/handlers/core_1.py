@@ -3,10 +3,10 @@ import logging as log
 from telethon import events, types, TelegramClient
 
 from app.bot import CallbackQuery
-from app.dependencies import run_sequence, run_parallel, AnalyticsDatabase, CredentialsDatabase
+from app.dependencies import run_sequence, run_parallel, Firestore, Postgresql
 
 
-async def init(client: TelegramClient, cbQuery: CallbackQuery, db: AnalyticsDatabase, fs: CredentialsDatabase):
+async def init(client: TelegramClient, cbQuery: CallbackQuery, db: Postgresql, fs: Firestore):
     @client.on(events.NewMessage(pattern=r"(?i).*options"))
     async def _options(event: events.NewMessage.Event):
         sender: types.User = await event.get_sender()
@@ -87,4 +87,16 @@ async def init(client: TelegramClient, cbQuery: CallbackQuery, db: AnalyticsData
             ),
             db.increase_help_counter(sender_id=sender_id)
         )
+        raise events.StopPropagation
+
+    @client.on(events.CallbackQuery(data=b"close"))
+    async def handle_close(event: events.CallbackQuery.Event):
+        sender: types.User = await event.get_sender()
+        sender_id = str(sender.id)
+        _, msg_ids_to_delete = await run_parallel(
+            event.edit(buttons=None),
+            db.get_msg_ids(sender_id=sender_id)
+        )
+
+        await client.delete_messages(sender, tuple(map(int, msg_ids_to_delete.split())))
         raise events.StopPropagation

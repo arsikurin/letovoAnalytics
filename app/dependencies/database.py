@@ -14,68 +14,13 @@ from config import settings
 unknown_err = "the connection is lost"
 
 
-class AnalyticsDatabase(typing.Protocol):
-    """
-    Class for dealing with relational databases
-    """
-    __slots__ = ("__connection",)
-
-    async def __aenter__(self) -> AnalyticsDatabase: ...
-
-    async def __aexit__(
-            self,
-            exc_type: typing.Type[BaseException] | None,
-            exc_val: BaseException | None,
-            exc_tb: types.TracebackType | None,
-    ): ...
-
-    @property
-    def _connection(self) -> psycopg.AsyncConnection[typing.Any]: ...
-
-    @staticmethod
-    async def create() -> AnalyticsDatabase:
-        """
-        Factory
-        """
-
-    @staticmethod
-    async def _connect() -> psycopg.AsyncConnection[typing.Any]: ...
-
-    async def disconnect(self): ...
-
-    async def get_users(self) -> typing.Iterator[str]: ...
-
-    async def get_analytics(self, sender_id: str) -> types_l.AnalyticsResponse: ...
-
-    async def is_inited(self, sender_id: str) -> bool: ...
-
-    async def init_user(self, sender_id: str): ...
-
-    async def reset_analytics(self): ...
-
-    async def increase_schedule_counter(self, sender_id: str): ...
-
-    async def increase_homework_counter(self, sender_id: str): ...
-
-    async def increase_marks_counter(self, sender_id: str): ...
-
-    async def increase_holidays_counter(self, sender_id: str): ...
-
-    async def increase_options_counter(self, sender_id: str): ...
-
-    async def increase_help_counter(self, sender_id: str): ...
-
-    async def increase_inline_counter(self, sender_id: str): ...
-
-    async def increase_about_counter(self, sender_id: str): ...
-
-
 @typing.final
 class Postgresql:
     """
     Class for dealing with Postgresql
     """
     __slots__ = ("__connection",)
+    counter = 0
 
     def __init__(self):
         self._connection: psycopg.AsyncConnection[typing.Any] = ...
@@ -103,16 +48,26 @@ class Postgresql:
     @staticmethod
     async def create() -> Postgresql:
         """
-        Factory
+        Factory used for initializing database connection object
+
+        Notes:
+            Instead, use context manager, i.e. the `with` statement,
+            because it allows you to forget about closing connections, etc.
+
+        Returns:
+            class instance with database connection
         """
-        self_ = Postgresql()
-        self_._connection = await self_._connect()
-        return self_
+        self = Postgresql()
+        self._connection = await self._connect()
+        return self
 
     @staticmethod
     async def _connect() -> psycopg.AsyncConnection[typing.Any]:
         """
         Connect to Postgres
+
+        Returns:
+            database connection
         """
         return await psycopg.AsyncConnection.connect(
             conninfo=settings().DATABASE_URL, sslmode="require"  # , row_factory=class_row(`class`)
@@ -136,17 +91,18 @@ class Postgresql:
                 await self.get_users()
 
     async def get_analytics(self, sender_id: str) -> types_l.AnalyticsResponse:
-        # TODO refactor wildcard
         try:
             cursor = await self._connection.execute(
-                "SELECT * FROM users WHERE sender_id = %s",
+                "SELECT sender_id, schedule_counter, homework_counter, marks_counter, holidays_counter, clear_counter,"
+                "options_counter, help_counter, about_counter, inline_counter FROM users WHERE sender_id = %s",
                 (sender_id,)
             )
             cursor.row_factory = class_row(types_l.AnalyticsResponse)
             return await cursor.fetchone()
         except psycopg.OperationalError as err:
             log.exception(err)
-            if err == unknown_err:
+            if self.counter == 0:
+                self.counter += 1
                 log.info(f"Trying to fix `{err}` Error!")
                 await self._connection.close()
                 self._connection = await self._connect()
@@ -161,7 +117,8 @@ class Postgresql:
             return bool(await cursor.fetchone())
         except psycopg.OperationalError as err:
             log.exception(err)
-            if err == unknown_err:
+            if self.counter == 0:
+                self.counter += 1
                 log.info(f"Trying to fix `{err}` Error!")
                 await self._connection.close()
                 self._connection = await self._connect()
@@ -171,15 +128,16 @@ class Postgresql:
         try:
             await self._connection.execute(
                 "INSERT INTO users ("
-                "sender_id, message_id, schedule_counter, homework_counter, marks_counter, holidays_counter, "
+                "sender_id, schedule_counter, homework_counter, marks_counter, holidays_counter, "
                 "clear_counter, options_counter, help_counter, about_counter, inline_counter"
-                ") VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-                (sender_id, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+                ") VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                (sender_id, 0, 0, 0, 0, 0, 0, 0, 0, 0)
             )
             await self._connection.commit()
         except psycopg.OperationalError as err:
             log.exception(err)
-            if err == unknown_err:
+            if self.counter == 0:
+                self.counter += 1
                 log.info(f"Trying to fix `{err}` Error!")
                 await self._connection.close()
                 self._connection = await self._connect()
@@ -189,18 +147,51 @@ class Postgresql:
         try:
             await self._connection.execute(
                 "UPDATE users SET "  # noqa
-                "schedule_counter = %s, homework_counter = %s, marks_counter = %s, holidays_counter = %s, "
+                "schedule_counter = %s, homework_counter = %s, marks_counter = %s, holidays_counter = %s, msg_ids = %s,"
                 "clear_counter = %s, options_counter = %s, help_counter = %s, about_counter = %s, inline_counter = %s",
-                (0, 0, 0, 0, 0, 0, 0, 0, 0)
+                (0, 0, 0, 0, "", 0, 0, 0, 0, 0)
             )
             await self._connection.commit()
         except psycopg.OperationalError as err:
             log.exception(err)
-            if err == unknown_err:
+            if self.counter == 0:
+                self.counter += 1
                 log.info(f"Trying to fix `{err}` Error!")
                 await self._connection.close()
                 self._connection = await self._connect()
                 await self.reset_analytics()
+
+    async def set_msg_ids(self, sender_id: str, msg_ids: str):
+        try:
+            await self._connection.execute(
+                "UPDATE users SET msg_ids = %s WHERE sender_id = %s",
+                (msg_ids, sender_id)
+            )
+            await self._connection.commit()
+        except psycopg.OperationalError as err:
+            log.exception(err)
+            if self.counter == 0:
+                self.counter += 1
+                log.info(f"Trying to fix `{err}` Error!")
+                await self._connection.close()
+                self._connection = await self._connect()
+                await self.set_msg_ids(sender_id, msg_ids)
+
+    async def get_msg_ids(self, sender_id: str) -> str:
+        try:
+            cursor = await self._connection.execute(
+                "SELECT msg_ids FROM users WHERE sender_id = %s",
+                (sender_id,)
+            )
+            return (await cursor.fetchone())[0]
+        except psycopg.OperationalError as err:
+            log.exception(err)
+            if self.counter == 0:
+                self.counter += 1
+                log.info(f"Trying to fix `{err}` Error!")
+                await self._connection.close()
+                self._connection = await self._connect()
+                await self.get_msg_ids(sender_id)
 
     async def increase_schedule_counter(self, sender_id: str):
         try:
@@ -211,7 +202,8 @@ class Postgresql:
             await self._connection.commit()
         except psycopg.OperationalError as err:
             log.exception(err)
-            if err == unknown_err:
+            if self.counter == 0:
+                self.counter += 1
                 log.info(f"Trying to fix `{err}` Error!")
                 await self._connection.close()
                 self._connection = await self._connect()
@@ -226,7 +218,8 @@ class Postgresql:
             await self._connection.commit()
         except psycopg.OperationalError as err:
             log.exception(err)
-            if err == unknown_err:
+            if self.counter == 0:
+                self.counter += 1
                 log.info(f"Trying to fix `{err}` Error!")
                 await self._connection.close()
                 self._connection = await self._connect()
@@ -241,7 +234,8 @@ class Postgresql:
             await self._connection.commit()
         except psycopg.OperationalError as err:
             log.exception(err)
-            if err == unknown_err:
+            if self.counter == 0:
+                self.counter += 1
                 log.info(f"Trying to fix `{err}` Error!")
                 await self._connection.close()
                 self._connection = await self._connect()
@@ -256,7 +250,8 @@ class Postgresql:
             await self._connection.commit()
         except psycopg.OperationalError as err:
             log.exception(err)
-            if err == unknown_err:
+            if self.counter == 0:
+                self.counter += 1
                 log.info(f"Trying to fix `{err}` Error!")
                 await self._connection.close()
                 self._connection = await self._connect()
@@ -271,7 +266,8 @@ class Postgresql:
             await self._connection.commit()
         except psycopg.OperationalError as err:
             log.exception(err)
-            if err == unknown_err:
+            if self.counter == 0:
+                self.counter += 1
                 log.info(f"Trying to fix `{err}` Error!")
                 await self._connection.close()
                 self._connection = await self._connect()
@@ -286,7 +282,8 @@ class Postgresql:
             await self._connection.commit()
         except psycopg.OperationalError as err:
             log.exception(err)
-            if err == unknown_err:
+            if self.counter == 0:
+                self.counter += 1
                 log.info(f"Trying to fix `{err}` Error!")
                 await self._connection.close()
                 self._connection = await self._connect()
@@ -301,7 +298,8 @@ class Postgresql:
             await self._connection.commit()
         except psycopg.OperationalError as err:
             log.exception(err)
-            if err == unknown_err:
+            if self.counter == 0:
+                self.counter += 1
                 log.info(f"Trying to fix `{err}` Error!")
                 await self._connection.close()
                 self._connection = await self._connect()
