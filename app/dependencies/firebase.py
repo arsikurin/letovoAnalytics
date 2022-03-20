@@ -19,7 +19,7 @@ class Firestore:
     Class for dealing with Google Firestore database
 
     Args:
-        app_name (str): name of the connection. If not provided, default will be used
+        app_name (str): name of the connection. If not specified, the default value will be used
     """
     __slots__ = ("__client", "_app_name")
 
@@ -98,12 +98,15 @@ class Firestore:
         self._client.close()
 
     @staticmethod
-    async def send_email_to(email: str, /):
+    async def send_email_to(email: str, /) -> bytes:
         """
         Email a new user informing them that registration succeeded
 
         Args:
             email (str): whom to send an email
+
+        Returns:
+            binary response
         """
         api_url: str = (
             "https://www.googleapis.com/identitytoolkit/v3/relyingparty/getOobConfirmationCode?key="
@@ -246,7 +249,7 @@ class Firestore:
             sender_id (str): user's Telegram ID
 
         Returns:
-            student ID (int) or errors_l.NothingFoundError if not found in the database
+            student ID (int) or `errors_l.NothingFoundError` if not found in the database
         """
         doc: DocumentSnapshot = await self._client.collection("users").document(sender_id).get()
         try:
@@ -264,7 +267,7 @@ class Firestore:
             sender_id (str): user's Telegram ID
 
         Returns:
-            auth token (str) or errors_l.NothingFoundError if not found in the database
+            auth token (str) or `errors_l.NothingFoundError` if not found in the database
         """
         doc: DocumentSnapshot = await self._client.collection("users").document(sender_id).get()
         try:
@@ -282,7 +285,7 @@ class Firestore:
             sender_id (str): user's Telegram ID
 
         Returns:
-            password (str) or errors_l.NothingFoundError if not found in the database
+            password (str) or `errors_l.NothingFoundError` if not found in the database
         """
         doc: DocumentSnapshot = await self._client.collection("users").document(sender_id).get()
         try:
@@ -300,7 +303,7 @@ class Firestore:
             sender_id (str): user's Telegram ID
 
         Returns:
-            login (str) or errors_l.NothingFoundError if not found in the database
+            login (str) or `errors_l.NothingFoundError` if not found in the database
         """
         doc: DocumentSnapshot = await self._client.collection("users").document(sender_id).get()
         try:
@@ -318,7 +321,7 @@ class Firestore:
             sender_id (str): user's Telegram ID
 
         Returns:
-            name (str) or errors_l.NothingFoundError if not found in the database
+            name (str) or `errors_l.NothingFoundError` if not found in the database
         """
         doc: DocumentSnapshot = await self._client.collection("names").document(sender_id).get()
         try:
@@ -336,7 +339,7 @@ class Firestore:
             sender_id (str): user's Telegram ID
 
         Returns:
-            surname (int) or errors_l.NothingFoundError if not found in the database
+            surname (str) or `errors_l.NothingFoundError` if not found in the database
         """
         doc: DocumentSnapshot = await self._client.collection("names").document(sender_id).get()
         try:

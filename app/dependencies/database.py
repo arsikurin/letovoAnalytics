@@ -84,7 +84,8 @@ class Postgresql:
             return it.chain.from_iterable(await cursor.fetchall())
         except psycopg.OperationalError as err:
             log.exception(err)
-            if err == unknown_err:
+            if self.counter == 0:
+                self.counter += 1
                 log.info(f"Trying to fix `{err}` Error!")
                 await self._connection.close()
                 self._connection = await self._connect()
@@ -146,7 +147,7 @@ class Postgresql:
     async def reset_analytics(self):
         try:
             await self._connection.execute(
-                "UPDATE users SET "  # noqa
+                "UPDATE users SET "  # noqa: the method should update all the users in the database
                 "schedule_counter = %s, homework_counter = %s, marks_counter = %s, holidays_counter = %s, msg_ids = %s,"
                 "clear_counter = %s, options_counter = %s, help_counter = %s, about_counter = %s, inline_counter = %s",
                 (0, 0, 0, 0, "", 0, 0, 0, 0, 0)

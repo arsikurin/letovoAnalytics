@@ -198,7 +198,7 @@ class CallbackQueryEventEditors:
 
 class CallbackQuerySenders:
     """
-    Class for dealing with web API of s.letovo.ru
+    Class for dealing with callback query messages
 
     Args:
         session (aiohttp.ClientSession): an instance of `TelegramClient` with credentials filled in
@@ -938,5 +938,5 @@ class CallbackQuerySenders:
 @typing.final
 class CallbackQuery(CallbackQueryEventEditors, CallbackQuerySenders):
     """
-    Class for working with callback query
+    Class for dealing with callback query
     """
