@@ -39,8 +39,6 @@ R
 .deepsource.toml,f/7/f7fdb5a735547cbe989626708a7eab7e182a2c6f
 >
 api.dockerfile,5/f/5f7e1b96a3e5b5ebfafa25bef5891dbc1c36c60e
-6
-go.mod,c/4/c47645c391ad0571c40779079363c9d48412e18b
 E
 app/tests/conftest.py,9/f/9f467a9fcd7ffe82aaeae615d9ddff23c4b4f90c
 O
