@@ -48,7 +48,7 @@ async def init(
         raise events.StopPropagation
 
 
-def get_init_coro(handler, **kwargs):
+def get_init_coro(handler, /, **kwargs):
     p_init = getattr(handler, "init", None)
     if not callable(p_init):
         return
