@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "letovo-analytics"
-version = "2022.03.18"
+version = "2022.3.18"
 description = "Letovo Analytics bot helps letovians access s.letovo.ru resources via Telegram"
 authors = ["arsikurin <arseny.kurin@gmail.com>"]
 
