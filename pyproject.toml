@@ -5,7 +5,7 @@ description = "Letovo Analytics bot helps letovians access s.letovo.ru resources
 authors = ["arsikurin <arseny.kurin@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = "3.10.2"
+python = "3.10.3"
 orjson = "^3.6.4"
 fastapi = "^0.75.0"
 firebase-admin = "^5.1.0"
