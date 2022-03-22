@@ -355,7 +355,7 @@ grpcio-gcp = ["grpcio-gcp (>=0.2.2)"]
 
 [[package]]
 name = "google-api-python-client"
-version = "2.41.0"
+version = "2.42.0"
 description = "Google API Client Library for Python"
 category = "main"
 optional = false
@@ -1218,7 +1218,7 @@ testing = ["coverage (>=4)", "coverage-enable-subprocess (>=1)", "flaky (>=3)", 
 
 [[package]]
 name = "watchgod"
-version = "0.8"
+version = "0.8.1"
 description = "Simple, modern file watching and code reload in python."
 category = "main"
 optional = false
@@ -1257,8 +1257,8 @@ multidict = ">=4.0"
 
 [metadata]
 lock-version = "1.1"
-python-versions = "3.10.2"
-content-hash = "07f65dce41513fb8640a393f10d66149d94870a654cec2cf04843c20adf02cc5"
+python-versions = "3.10.3"
+content-hash = "8af32c3bf4a8cf3e2a86d0f99d8e567c46171e51350c24dc88a08a75cbbf7926"
 
 [metadata.files]
 aiohttp = [
@@ -1623,8 +1623,8 @@ google-api-core = [
     {file = "google_api_core-2.7.1-py3-none-any.whl", hash = "sha256:6be1fc59e2a7ba9f66808bbc22f976f81e4c3e7ab20fa0620ce42686288787d0"},
 ]
 google-api-python-client = [
-    {file = "google-api-python-client-2.41.0.tar.gz", hash = "sha256:facbe8e25ea9d07241299bf7704f53dec154ad3dc52fec2ea23ca6d6e5f6b392"},
-    {file = "google_api_python_client-2.41.0-py2.py3-none-any.whl", hash = "sha256:ce25fc21cf0649a1cbf42583e78d5fd7648ff2700e7b89b945209149ba913adc"},
+    {file = "google-api-python-client-2.42.0.tar.gz", hash = "sha256:7bf58b665b635d06adb47797a9a4f73482e739e02ed036cd960dc7c183361f67"},
+    {file = "google_api_python_client-2.42.0-py2.py3-none-any.whl", hash = "sha256:303f5e7005b26e5ca4d2f04489545cdc482ca558e8932e528217e11127c17cd8"},
 ]
 google-auth = [
     {file = "google-auth-2.6.2.tar.gz", hash = "sha256:60d449f8142c742db760f4c0be39121bc8d9be855555d784c252deaca1ced3f5"},
@@ -2379,8 +2379,8 @@ virtualenv = [
     {file = "virtualenv-20.13.4.tar.gz", hash = "sha256:ce8901d3bbf3b90393498187f2d56797a8a452fb2d0d7efc6fd837554d6f679c"},
 ]
 watchgod = [
-    {file = "watchgod-0.8-py3-none-any.whl", hash = "sha256:339c2cfede1ccc1e277bbf5e82e42886f3c80801b01f45ab10d9461c4118b5eb"},
-    {file = "watchgod-0.8.tar.gz", hash = "sha256:29a1d8f25e1721ddb73981652ca318c47387ffb12ec4171ddd7b9d01540033b1"},
+    {file = "watchgod-0.8.1-py3-none-any.whl", hash = "sha256:4ba20c2fa3e63df706ab50e694b9453b05395fadb7cbbfd984d71fb1547d485d"},
+    {file = "watchgod-0.8.1.tar.gz", hash = "sha256:c12d15f3df7d11e740704e45398277f75f1d78f46ad59ca9d7505bfd8b8d3086"},
 ]
 websockets = [
     {file = "websockets-10.2-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:d5396710f86a306cf52f87fd8ea594a0e894ba0cc5a36059eaca3a477dc332aa"},
