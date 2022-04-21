@@ -19,7 +19,6 @@ class Weekdays(Enum):
     SundayHW = 7
     Sunday = 0
     ALL = -10
-    TODAY = -15
 
 
 class MatchWeekdays:

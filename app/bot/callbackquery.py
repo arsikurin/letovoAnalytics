@@ -7,193 +7,11 @@ from telethon import Button, events, TelegramClient, types
 from app.dependencies import (
     types as types_l, errors as errors_l, Web, Postgresql, Firestore, run_parallel
 )
-from app.schemas import MarksResponse, MarksDataList, ScheduleResponse, HomeworkResponse, TeachersResponse
+from app.schemas import MarksResponse, MarksDataList, ScheduleAndHWResponse, TeachersResponse
 from config import settings
 
 choose_an_option_below = "Choose an option below ↴"
 back = "« Back"
-
-
-class CallbackQueryEventEditors:
-    """
-    Class for working with callback query events
-    """
-
-    @staticmethod
-    async def to_main_page(event: events.CallbackQuery.Event):
-        """
-        Display `main` page
-
-        Args:
-            event (events.CallbackQuery.Event): a return object of CallbackQuery
-        """
-        # TODO rename `main` page to `landing` page
-        await event.edit(
-            choose_an_option_below,
-            parse_mode="md",
-            buttons=[
-                [
-                    Button.inline("Schedule »", b"schedule_page")
-                ], [
-                    Button.inline("Homework »", b"homework_page"),
-                ], [
-                    Button.inline("Marks »", b"marks_page"),
-                ], [
-                    Button.inline("Others »", b"others_page"),
-                ]
-            ]
-        )
-
-    @staticmethod
-    async def to_schedule_page(event: events.CallbackQuery.Event):
-        """
-        Display `schedule` page
-
-        Args:
-            event (events.CallbackQuery.Event): a return object of CallbackQuery
-        """
-        await event.edit(
-            choose_an_option_below,
-            parse_mode="md",
-            buttons=[
-                [
-                    Button.inline("For The Week", b"entire_schedule")
-                ], [
-                    Button.inline("For Today", b"today_schedule"),
-                ], [
-                    Button.inline("Specific Day »", b"specific_day_schedule"),
-                ], [
-                    Button.inline(back, b"main_page")
-                ]
-            ]
-        )
-
-    @staticmethod
-    async def to_homework_page(event: events.CallbackQuery.Event):
-        """
-        Display `homework` page
-
-        Args:
-            event (events.CallbackQuery.Event): a return object of CallbackQuery
-        """
-        await event.edit(
-            choose_an_option_below,
-            parse_mode="md",
-            buttons=[
-                [
-                    Button.inline("For The Week", b"entire_homework")
-                ], [
-                    Button.inline("For Tomorrow", b"tomorrows_homework"),
-                ], [
-                    Button.inline("Specific Day »", b"specific_day_homework"),
-                ], [
-                    Button.inline(back, b"main_page")
-                ]
-            ]
-        )
-
-    @staticmethod
-    async def to_marks_page(event: events.CallbackQuery.Event):
-        """
-        Display `marks` page
-
-        Args:
-            event (events.CallbackQuery.Event): a return object of CallbackQuery
-        """
-        await event.edit(
-            choose_an_option_below,
-            parse_mode="md",
-            buttons=[
-                [
-                    Button.inline("All marks", b"all_marks")
-                ], [
-                    Button.inline("Recent marks", b"recent_marks"),
-                ], [
-                    Button.inline("Summatives", b"summative_marks"),
-                    Button.inline("Finals", b"final_marks"),
-                ], [
-                    Button.inline(back, b"main_page")
-                ]
-            ]
-        )
-
-    @staticmethod
-    async def to_others_page(event: events.CallbackQuery.Event):
-        """
-        Display `others` page
-
-        Args:
-            event (events.CallbackQuery.Event): a return object of CallbackQuery
-        """
-        await event.edit(
-            choose_an_option_below,
-            parse_mode="md",
-            buttons=[
-                [
-                    Button.inline("Teachers' info", b"teachers")
-                ], [
-                    Button.inline("Letovo Diploma", b"diploma"),
-                ], [
-                    Button.inline("Holidays", b"holidays"),
-                ], [
-                    Button.inline(back, b"main_page")
-                ]
-            ]
-        )
-
-    @staticmethod
-    async def to_specific_day_schedule_page(event: events.CallbackQuery.Event):
-        """
-        Display `specific day schedule` page
-
-        Args:
-            event (events.CallbackQuery.Event): a return object of CallbackQuery
-        """
-        await event.edit(
-            "Choose a day below         ↴",
-            parse_mode="md",
-            buttons=[
-                [
-                    Button.inline("Monday", b"monday_schedule"),
-                    Button.inline("Tuesday", b"tuesday_schedule")
-                ], [
-                    Button.inline("Wednesday", b"wednesday_schedule"),
-                    Button.inline("Thursday", b"thursday_schedule")
-                ], [
-                    Button.inline("Friday", b"friday_schedule"),
-                    Button.inline("Saturday", b"saturday_schedule")
-                ], [
-                    Button.inline(back, b"schedule_page")
-                ]
-            ]
-        )
-
-    @staticmethod
-    async def to_specific_day_homework_page(event: events.CallbackQuery.Event):
-        """
-        Display `specific day homework` page
-
-        Args:
-            event (events.CallbackQuery.Event): a return object of CallbackQuery
-        """
-        await event.edit(
-            "Choose a day below         ↴",
-            parse_mode="md",
-            buttons=[
-                [
-                    Button.inline("Monday", b"monday_homework"),
-                    Button.inline("Tuesday", b"tuesday_homework")
-                ], [
-                    Button.inline("Wednesday", b"wednesday_homework"),
-                    Button.inline("Thursday", b"thursday_homework")
-                ], [
-                    Button.inline("Friday", b"friday_homework"),
-                    Button.inline("Saturday", b"saturday_homework")
-                ], [
-                    Button.inline(back, b"homework_page")
-                ]
-            ]
-        )
 
 
 class CallbackQuerySenders:
@@ -462,6 +280,48 @@ class CallbackQuerySenders:
             ]
         )
 
+    # async def send_settings_page(self, sender: types.User) -> types.Message:
+    #     """
+    #     Send settings page
+    #
+    #     Args:
+    #         sender (types.User): end user
+    #
+    #     Returns:
+    #         types.Message
+    #     """
+    #     main_email = ""
+    #     spare_emails = [
+    #         "", ""
+    #     ]
+    #     buttons = [
+    #         [
+    #             Button.inline(main_email, b"set_1"),
+    #             Button.inline("Active", b"set_1"),
+    #             Button.inline("Remove", b"remove_1")
+    #         ]
+    #     ]
+    #     for i, email in enumerate(spare_emails):
+    #         buttons.append(
+    #             [
+    #                 Button.inline(email, f"set_{i + 2}"),
+    #                 Button.inline("Remove", f"remove_{i + 2}"),
+    #             ]
+    #         )
+    #     if len(spare_emails) < 2:
+    #         buttons.append(
+    #             [
+    #                 Button.url("Add", settings().URL_LOGIN_LOCAL),
+    #             ]
+    #         )
+    #
+    #     return await self.client.send_message(
+    #         entity=sender,
+    #         message="Settings",
+    #         parse_mode="md",
+    #         buttons=buttons
+    #     )
+
     async def send_dev_page(self, sender: types.User) -> types.Message:
         """
         Send page related to development
@@ -570,28 +430,27 @@ class CallbackQuerySenders:
             event (events.CallbackQuery.Event): a return object of CallbackQuery
             specific_day (types_l.Weekdays): day of the week
         """
-        if specific_day == types_l.Weekdays.TODAY and \
-                int(datetime.datetime.now(tz=settings().timezone).strftime("%w")) == 0:
+        if int(datetime.datetime.now(tz=settings().timezone).strftime("%w")) == 0:
             return await event.answer("Congrats! It's Sunday, no lessons", alert=False)
 
         sender: types.User = await event.get_sender()
         try:
-            if specific_day == types_l.Weekdays.TODAY:
+            if specific_day != types_l.Weekdays.ALL:
                 schedule_resp = await self._web.receive_schedule_and_hw(
-                    sender_id=str(sender.id), week=False
+                    sender_id=str(sender.id), specific_day=specific_day, week=False
                 )
             else:
                 schedule_resp = await self._web.receive_schedule_and_hw(
-                    sender_id=str(sender.id)
+                    sender_id=str(sender.id), specific_day=specific_day
                 )
         except (errors_l.UnauthorizedError, errors_l.NothingFoundError, aiohttp.ClientConnectionError) as err:
             return await event.answer(f"[✘] {err}", alert=True)
 
         old_wd = ""
         msg_ids = []
-        schedule_response = ScheduleResponse.parse_obj(schedule_resp)
+        schedule_response = ScheduleAndHWResponse.parse_obj(schedule_resp)
         for day in schedule_response.data:
-            if day.schedules and specific_day.value in {int(day.period_num_day), -10, -15}:
+            if day.schedules and specific_day.value in {int(day.period_num_day), -10}:
                 wd = types_l.Weekdays(int(day.period_num_day)).name
                 if specific_day == types_l.Weekdays.ALL and wd != old_wd:
                     msg = await self.client.send_message(
@@ -602,11 +461,11 @@ class CallbackQuerySenders:
                     )
                     msg_ids.append(msg.id)
 
-                payload = f"{day.period_name} | <em>{day.schedules[0].room.room_name}</em>:\n"
-                # if day.schedules[0].lessons[0].attendance:
-                #     payload += "  Missed\n"
-                # else:
-                #     payload += "\n"
+                payload = f"{day.period_name} | <em>{day.schedules[0].room.room_name}</em>:"
+                if day.schedules[0].lessons[0].attendance:
+                    payload += "  Ditched\n"
+                else:
+                    payload += "\n"
                 if day.schedules[0].group.subject.subject_name_eng:
                     subject = day.schedules[0].group.subject.subject_name_eng
                 else:
@@ -627,15 +486,11 @@ class CallbackQuerySenders:
                 old_wd = wd
 
         if specific_day != types_l.Weekdays.ALL:
-            if specific_day == types_l.Weekdays.TODAY:
-                today = datetime.datetime.now(tz=settings().timezone).strftime("%A")
-            else:
-                today = specific_day.name
             start_of_week = datetime.datetime.fromisoformat(schedule_response.data[0].date)
             msg = await self.client.send_message(
                 entity=sender,
-                message=f'__{today}, '
-                        f'{(start_of_week + datetime.timedelta(specific_day.value - 1)).strftime("%d.%m.%Y")}__\n',
+                message=f'__{specific_day.name}, '
+                        f'{start_of_week.strftime("%d.%m.%Y")}__\n',
                 buttons=[
                     Button.inline("Close", b"close")
                 ],
@@ -662,12 +517,19 @@ class CallbackQuerySenders:
 
         sender: types.User = await event.get_sender()
         try:
-            homework_resp = await self._web.receive_schedule_and_hw(sender_id=str(sender.id))
+            if specific_day != types_l.Weekdays.ALL:
+                homework_resp = await self._web.receive_schedule_and_hw(
+                    sender_id=str(sender.id), specific_day=specific_day, week=False
+                )
+            else:
+                homework_resp = await self._web.receive_schedule_and_hw(
+                    sender_id=str(sender.id), specific_day=specific_day
+                )
         except (errors_l.UnauthorizedError, errors_l.NothingFoundError, aiohttp.ClientConnectionError) as err:
             return await event.answer(f"[✘] {err}", alert=True)
 
         old_wd = ""
-        homework_response = HomeworkResponse.parse_obj(homework_resp)
+        homework_response = ScheduleAndHWResponse.parse_obj(homework_resp)
         msg_ids = []
         for day in homework_response.data:
             if day.schedules and specific_day.value in {int(day.period_num_day), -10}:
@@ -729,7 +591,7 @@ class CallbackQuerySenders:
             msg = await self.client.send_message(
                 entity=sender,
                 message=f'__{specific_day.name}, '
-                        f'{(start_of_week + datetime.timedelta(specific_day.value - 1)).strftime("%d.%m.%Y")}__\n',
+                        f'{start_of_week.strftime("%d.%m.%Y")}__\n',
                 buttons=[
                     Button.inline("Close", b"close")
                 ],
@@ -825,18 +687,29 @@ class CallbackQuerySenders:
         """
         for subject in _marks_response.data:
             if subject.final_mark_list:
+                year_mark = None
                 # TODO subject name not only eng should be
                 self._payload = f"**{subject.group.subject.subject_name_eng}**\n"
 
                 # TODO sort final marks
-                for mark in subject.final_mark_list:
-                    self._payload += f"**{mark.final_value}**{mark.final_criterion} "
+                if isinstance(subject.final_mark_list, list):
+                    for mark in subject.final_mark_list:
+                        self._payload += f"**{mark.final_value}**{mark.final_criterion} "
+                else:
+                    for mark in subject.final_mark_list.values():
+                        if mark['final_criterion'] != "Y":
+                            self._payload += f"**{mark['final_value']}**{mark['final_criterion']} "
+                        else:
+                            year_mark = mark['final_value']
 
                 if subject.group_avg_mark:
                     self._payload += f" | __group_avg:__ **{subject.group_avg_mark}**"
 
                 if subject.result_final_mark:
-                    self._payload += f" | __final:__ **{subject.result_final_mark}**"
+                    self._payload += f" | __semester:__ **{subject.result_final_mark}**"
+
+                if year_mark is not None:
+                    self._payload += f" | __year:__ **{year_mark}**"
 
                 await self.client.send_message(
                     entity=sender,
@@ -935,8 +808,235 @@ class CallbackQuerySenders:
         await event.answer()
 
 
+class CallbackQueryEventEditors(CallbackQuerySenders):
+    """
+    Class for dealing with callback query events
+
+    .
+    """
+
+    @staticmethod
+    async def to_main_page(event: events.CallbackQuery.Event):
+        """
+        Display `main` page
+
+        Args:
+            event (events.CallbackQuery.Event): a return object of CallbackQuery
+        """
+        # TODO rename `main` page to `landing` page
+        await event.edit(
+            choose_an_option_below,
+            parse_mode="md",
+            buttons=[
+                [
+                    Button.inline("Schedule »", b"schedule_page")
+                ], [
+                    Button.inline("Homework »", b"homework_page"),
+                ], [
+                    Button.inline("Marks »", b"marks_page"),
+                ], [
+                    Button.inline("Others »", b"others_page"),
+                ]
+            ]
+        )
+
+    @staticmethod
+    async def to_schedule_page(event: events.CallbackQuery.Event):
+        """
+        Display `schedule` page
+
+        Args:
+            event (events.CallbackQuery.Event): a return object of CallbackQuery
+        """
+        await event.edit(
+            choose_an_option_below,
+            parse_mode="md",
+            buttons=[
+                [
+                    Button.inline("For The Week", b"entire_schedule")
+                ], [
+                    Button.inline("For Today", b"today_schedule"),
+                ], [
+                    Button.inline("Specific Day »", b"specific_day_schedule"),
+                ], [
+                    Button.inline(back, b"main_page")
+                ]
+            ]
+        )
+
+    @staticmethod
+    async def to_homework_page(event: events.CallbackQuery.Event):
+        """
+        Display `homework` page
+
+        Args:
+            event (events.CallbackQuery.Event): a return object of CallbackQuery
+        """
+        await event.edit(
+            choose_an_option_below,
+            parse_mode="md",
+            buttons=[
+                [
+                    Button.inline("For The Week", b"entire_homework")
+                ], [
+                    Button.inline("For Tomorrow", b"tomorrows_homework"),
+                ], [
+                    Button.inline("Specific Day »", b"specific_day_homework"),
+                ], [
+                    Button.inline(back, b"main_page")
+                ]
+            ]
+        )
+
+    @staticmethod
+    async def to_marks_page(event: events.CallbackQuery.Event):
+        """
+        Display `marks` page
+
+        Args:
+            event (events.CallbackQuery.Event): a return object of CallbackQuery
+        """
+        await event.edit(
+            choose_an_option_below,
+            parse_mode="md",
+            buttons=[
+                [
+                    Button.inline("All marks", b"all_marks")
+                ], [
+                    Button.inline("Recent marks", b"recent_marks"),
+                ], [
+                    Button.inline("Summatives", b"summative_marks"),
+                    Button.inline("Finals", b"final_marks"),
+                ], [
+                    Button.inline(back, b"main_page")
+                ]
+            ]
+        )
+
+    @staticmethod
+    async def to_others_page(event: events.CallbackQuery.Event):
+        """
+        Display `others` page
+
+        Args:
+            event (events.CallbackQuery.Event): a return object of CallbackQuery
+        """
+        await event.edit(
+            choose_an_option_below,
+            parse_mode="md",
+            buttons=[
+                [
+                    Button.inline("Teachers' info", b"teachers")
+                ], [
+                    Button.inline("Letovo Diploma", b"diploma"),
+                ], [
+                    Button.inline("Holidays", b"holidays"),
+                ], [
+                    Button.inline(back, b"main_page")
+                ]
+            ]
+        )
+
+    @staticmethod
+    async def to_specific_day_schedule_page(event: events.CallbackQuery.Event):
+        """
+        Display `specific day schedule` page
+
+        Args:
+            event (events.CallbackQuery.Event): a return object of CallbackQuery
+        """
+        await event.edit(
+            "Choose a day below         ↴",
+            parse_mode="md",
+            buttons=[
+                [
+                    Button.inline("Monday", b"monday_schedule"),
+                    Button.inline("Tuesday", b"tuesday_schedule")
+                ], [
+                    Button.inline("Wednesday", b"wednesday_schedule"),
+                    Button.inline("Thursday", b"thursday_schedule")
+                ], [
+                    Button.inline("Friday", b"friday_schedule"),
+                    Button.inline("Saturday", b"saturday_schedule")
+                ], [
+                    Button.inline(back, b"schedule_page")
+                ]
+            ]
+        )
+
+    @staticmethod
+    async def to_specific_day_homework_page(event: events.CallbackQuery.Event):
+        """
+        Display `specific day homework` page
+
+        Args:
+            event (events.CallbackQuery.Event): a return object of CallbackQuery
+        """
+        await event.edit(
+            "Choose a day below         ↴",
+            parse_mode="md",
+            buttons=[
+                [
+                    Button.inline("Monday", b"monday_homework"),
+                    Button.inline("Tuesday", b"tuesday_homework")
+                ], [
+                    Button.inline("Wednesday", b"wednesday_homework"),
+                    Button.inline("Thursday", b"thursday_homework")
+                ], [
+                    Button.inline("Friday", b"friday_homework"),
+                    Button.inline("Saturday", b"saturday_homework")
+                ], [
+                    Button.inline(back, b"homework_page")
+                ]
+            ]
+        )
+
+    @staticmethod
+    async def set_account(event: events.CallbackQuery.Event):
+        sender: types.User = await event.get_sender()
+        to_active = int(event.data.split(b"_")[-1])
+        buttons: types.ReplyInlineMarkup = (await event.get_message()).reply_markup
+        choices = {1, 2, 3}
+        choices.remove(to_active)
+
+        if len(buttons.rows[to_active - 1].buttons) == 3:
+            await event.answer("Already in use!")
+        else:
+            choice = choices.pop()
+            if len(buttons.rows[choice - 1].buttons) == 3:
+                cur_active = choice - 1
+            else:
+                cur_active = choices.pop() - 1
+            buttons.rows[cur_active].buttons.pop(1)
+            buttons.rows[to_active - 1].buttons.insert(1, Button.inline("Active", event.data))
+            # TODO swap current active and future active accounts
+            await event.edit(
+                "settings",
+                parse_mode="md",
+                buttons=buttons
+            )
+
+    @staticmethod
+    async def remove_account(event: events.CallbackQuery.Event):
+        sender: types.User = await event.get_sender()
+        to_remove = int(event.data.split(b"_")[-1])
+        buttons: types.ReplyInlineMarkup = (await event.get_message()).reply_markup
+
+        if len(buttons.rows[to_remove - 1].buttons) == 3:
+            await event.answer("Cannot remove address in use!")
+        else:
+            buttons.rows[to_remove - 1].buttons.clear()
+            buttons.rows[to_remove - 1].buttons.append(Button.url("Add", settings().URL_LOGIN_LOCAL))
+            # TODO remove account
+            await event.edit(
+                "settings",
+                parse_mode="md",
+                buttons=buttons
+            )
+
+
 @typing.final
-class CallbackQuery(CallbackQueryEventEditors, CallbackQuerySenders):
+class CallbackQuery(CallbackQueryEventEditors):
     """
     Class for dealing with callback query
     """

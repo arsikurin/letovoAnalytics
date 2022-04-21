@@ -1,4 +1,4 @@
-import functools as ft
+from functools import cache
 from zoneinfo import ZoneInfo
 
 import orjson
@@ -34,7 +34,7 @@ class AppSettings(BaseSettings):
         # validate_assignment
 
 
-@ft.cache
+@cache
 def settings() -> AppSettings:
     """
     `settings.cache_clear()` to dump cache

@@ -146,8 +146,9 @@ class Postgresql:
 
     async def reset_analytics(self):
         try:
+            # noinspection SqlWithoutWhere
             await self._connection.execute(
-                "UPDATE users SET "  # noqa: the method should update all the users in the database
+                "UPDATE users SET "
                 "schedule_counter = %s, homework_counter = %s, marks_counter = %s, holidays_counter = %s, msg_ids = %s,"
                 "clear_counter = %s, options_counter = %s, help_counter = %s, about_counter = %s, inline_counter = %s",
                 (0, 0, 0, 0, "", 0, 0, 0, 0, 0)

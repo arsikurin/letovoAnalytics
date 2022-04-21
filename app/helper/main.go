@@ -28,7 +28,6 @@ type TokenResponse struct {
 }
 
 func receiveToken(doc *firestore.DocumentSnapshot) (*TokenResponse, error) {
-	var err error
 	login, err := doc.DataAt("data.analytics_login")
 	if err != nil {
 		return nil, err
@@ -66,11 +65,8 @@ func receiveToken(doc *firestore.DocumentSnapshot) (*TokenResponse, error) {
 }
 
 func main() {
-	var (
-		err error
-		wg  sync.WaitGroup
-	)
-	err = godotenv.Load(".env.development.local")
+	var wg sync.WaitGroup
+	err := godotenv.Load(".env.development.local")
 	if err != nil {
 		log.Println(err)
 	}
