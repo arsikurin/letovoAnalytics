@@ -6,7 +6,7 @@ async fn main() {
         .await;
 
     match resp {
-        Ok(..) => println!("Sent ping to API!"),
+        Ok(r) => println!("Sent ping to the API! code: {}", r.status()),
         Err(e) => println!("Something went wrong!\n{}", e)
     }
 }

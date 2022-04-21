@@ -5,7 +5,7 @@ import typing
 import aiohttp
 import orjson
 
-from app.dependencies import errors as errors_l, run_parallel, Firestore
+from app.dependencies import errors as errors_l, types as types_l, run_parallel, Firestore
 from config import settings
 
 creds_not_found = "Credentials not found in the database.\nConsider entering /start and registering afterwards"
@@ -134,12 +134,13 @@ class Web:
             raise aiohttp.ClientConnectionError(no_conn)
 
     async def receive_schedule_and_hw(
-            self, sender_id: str, *, week: bool = True
+            self, sender_id: str, specific_day: types_l.Weekdays, *, week: bool = True
     ) -> dict:
         """
         Receive homework & schedule from s.letovo.ru
 
         Args:
+            specific_day:
             sender_id (str): user's Telegram ID
             week (bool, optional): receive schedule & hw for week or for current day
 
@@ -161,14 +162,16 @@ class Web:
             )
 
         if int(datetime.datetime.now(tz=settings().timezone).strftime("%w")) == 0:
-            date = (datetime.datetime.now(tz=settings().timezone) + datetime.timedelta(1)).strftime("%Y-%m-%d")
+            date = (datetime.datetime.now(tz=settings().timezone) + datetime.timedelta(1))
         else:
-            date = datetime.datetime.now(tz=settings().timezone).strftime("%Y-%m-%d")
+            date = datetime.datetime.now(tz=settings().timezone)
 
         if week:
-            url = f"https://s-api.letovo.ru/api/schedule/{student_id}/week?schedule_date={date}"
+            url = f"https://s-api.letovo.ru/api/schedule/{student_id}/week?schedule_date={date.strftime('%Y-%m-%d')}"
         else:
-            url = f"https://s-api.letovo.ru/api/schedule/{student_id}/day?schedule_date={date}"
+            delta = specific_day.value - int(date.strftime("%w"))
+            date += datetime.timedelta(delta)
+            url = f"https://s-api.letovo.ru/api/schedule/{student_id}/day?schedule_date={date.strftime('%Y-%m-%d')}"
 
         headers = {
             "Authorization": token,

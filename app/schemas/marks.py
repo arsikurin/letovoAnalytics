@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Union
 
 from pydantic import BaseModel
 
@@ -67,7 +67,7 @@ class DataList(BaseModel):
     # summative_dynamic_status: str
     group_avg_mark: Optional[str]
     # target_mark: Optional[int]
-    final_mark_list: list[FinalMarkList]
+    final_mark_list: Union[dict, list[FinalMarkList]]
     result_final_mark: Optional[str]
     group: Group
 

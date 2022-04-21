@@ -1,5 +1,3 @@
-#!/usr/bin/python3.10
-
 from fastapi import FastAPI
 from fastapi.exceptions import HTTPException, StarletteHTTPException, ValidationError
 from fastapi.requests import Request
@@ -16,7 +14,7 @@ app = FastAPI(
 )
 
 app.mount("/static", StaticFiles(directory="./app/static"), name="static")
-templates = Jinja2Templates(directory="./app/templates")
+templates = Jinja2Templates(directory="./app/api/templates")
 application_json = "application/json"
 error_page_t = "pageError.html"
 app.include_router(login_router, tags=["login"], prefix="/api")
