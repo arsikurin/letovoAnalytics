@@ -60,8 +60,6 @@ I
 app/bot/handlers/dev_6.py,9/5/95f4f7cbabb728dcd5f5f3d7d60ff2fbfdc59431
 N
 app/bot/handlers/homework_4.py,d/e/de0bd5ceaf68a0f63931ae9b7bfe1e2f167c17ef
-G
-app/dependencies/web.py,2/2/2285712a844bafccc48ea239e067136cadf2ed18
 L
 app/dependencies/__init__.py,9/1/91dc6134e15a04bd1249542b12e858a7500c0f77
 7
@@ -120,8 +118,6 @@ L
 app/bot/handlers/__init__.py,7/6/760e0d9ec6b043553c59d37ab141a04ac941b23e
 =
 app/pinger.py,4/7/47be40247f87156c5a9f341307f2dabcb6b8de10
-J
-app/api/endpoints/login.py,5/f/5f23380c3ed4f43ac54ad5d9388e709171f1d7f8
 6
 go.mod,c/4/c47645c391ad0571c40779079363c9d48412e18b
 L
@@ -134,5 +130,14 @@ J
 app/bot/handlers/core_1.py,5/c/5cdbc63397087b637fa1057e874dd6dd2b0acd27
 H
 app/bot/callbackquery.py,7/2/72f5e3c022aa0ea62f06c5a79e1ecddf925a3677
+J
+app/api/endpoints/login.py,5/f/5f23380c3ed4f43ac54ad5d9388e709171f1d7f8
+:
+
+terms.html,2/c/2c40cae6aa564ffb60c44dd3798e023279e9a4e4
+<
+privacy.html,0/3/0394c97ae270b6b4ed93bc6173b6755895e9b338
 8
 Procfile,b/c/bc3c68e880d1a01632bce79f69dd1387c7ba9c54
+G
+app/dependencies/web.py,2/2/2285712a844bafccc48ea239e067136cadf2ed18

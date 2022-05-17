@@ -1,3 +1,4 @@
+import asyncio
 import datetime
 import typing
 
@@ -391,12 +392,16 @@ class CallbackQuerySenders:
         sender: types.User = await event.get_sender()
         try:
             teachers_resp = await self._web.receive_marks_and_teachers(sender_id=str(sender.id))
-        except errors_l.UnauthorizedError as err:
+        except (errors_l.UnauthorizedError, errors_l.NothingFoundError, aiohttp.ClientConnectionError) as err:
             return await event.answer(f"[✘] {err}", alert=True)
-        except errors_l.NothingFoundError as err:
-            return await event.answer(f"[✘] {err}", alert=True)
-        except aiohttp.ClientConnectionError as err:
-            return await event.answer(f"[✘] {err}", alert=True)
+        except asyncio.TimeoutError as err:
+            return await self.client.send_message(
+                entity=sender,
+                message=f"[✘] {err.__str__()}",
+                parse_mode="md",
+                silent=True,
+                link_preview=False
+            )
 
         teachers_response = TeachersResponse.parse_obj(teachers_resp)
         for subject in teachers_response.data:
@@ -430,7 +435,8 @@ class CallbackQuerySenders:
             event (events.CallbackQuery.Event): a return object of CallbackQuery
             specific_day (types_l.Weekdays): day of the week
         """
-        if int(datetime.datetime.now(tz=settings().timezone).strftime("%w")) == 0:
+        if specific_day == types_l.Weekdays.Sunday:
+            # if int(datetime.datetime.now(tz=settings().timezone).strftime("%w")) == 0:
             return await event.answer("Congrats! It's Sunday, no lessons", alert=False)
 
         sender: types.User = await event.get_sender()
@@ -445,6 +451,14 @@ class CallbackQuerySenders:
                 )
         except (errors_l.UnauthorizedError, errors_l.NothingFoundError, aiohttp.ClientConnectionError) as err:
             return await event.answer(f"[✘] {err}", alert=True)
+        except asyncio.TimeoutError as err:
+            return await self.client.send_message(
+                entity=sender,
+                message=f"[✘] {err.__str__()}",
+                parse_mode="md",
+                silent=True,
+                link_preview=False
+            )
 
         old_wd = ""
         msg_ids = []
@@ -527,6 +541,14 @@ class CallbackQuerySenders:
                 )
         except (errors_l.UnauthorizedError, errors_l.NothingFoundError, aiohttp.ClientConnectionError) as err:
             return await event.answer(f"[✘] {err}", alert=True)
+        except asyncio.TimeoutError as err:
+            return await self.client.send_message(
+                entity=sender,
+                message=f"[✘] {err.__str__()}",
+                parse_mode="md",
+                silent=True,
+                link_preview=False
+            )
 
         old_wd = ""
         homework_response = ScheduleAndHWResponse.parse_obj(homework_resp)
@@ -793,6 +815,14 @@ class CallbackQuerySenders:
             marks_resp = await self._web.receive_marks_and_teachers(sender_id=str(sender.id))
         except (errors_l.UnauthorizedError, errors_l.NothingFoundError, aiohttp.ClientConnectionError) as err:
             return await event.answer(f"[✘] {err}", alert=True)
+        except asyncio.TimeoutError as err:
+            return await self.client.send_message(
+                entity=sender,
+                message=f"[✘] {err.__str__()}",
+                parse_mode="md",
+                silent=True,
+                link_preview=False
+            )
 
         marks_response = MarksResponse.parse_obj(marks_resp)
         if specific == types_l.MarkTypes.SUMMATIVE:
