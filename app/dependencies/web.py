@@ -1,3 +1,4 @@
+import asyncio
 import datetime
 import logging as log
 import typing
@@ -10,6 +11,7 @@ from config import settings
 
 creds_not_found = "Credentials not found in the database.\nConsider entering /start and registering afterwards"
 no_conn = "Cannot establish connection to s.letovo.ru"
+too_long_conn = "s.letovo.ru takes too long to respond\n"
 
 
 @typing.final
@@ -93,6 +95,9 @@ class Web:
                 return f'{resp_j["data"]["token_type"]} {resp_j["data"]["token"]}'
         except aiohttp.ClientConnectionError:
             raise aiohttp.ClientConnectionError(no_conn)
+        except asyncio.TimeoutError as err:
+            log.error(err)
+            raise asyncio.TimeoutError(too_long_conn)
 
     async def receive_student_id(
             self, sender_id: str | None = None, token: str | None = None
@@ -132,6 +137,9 @@ class Web:
                 return int(resp_j["data"]["user"]["student_id"])
         except aiohttp.ClientConnectionError:
             raise aiohttp.ClientConnectionError(no_conn)
+        except asyncio.TimeoutError as err:
+            log.error(err)
+            raise asyncio.TimeoutError(too_long_conn)
 
     async def receive_schedule_and_hw(
             self, sender_id: str, specific_day: types_l.Weekdays, *, week: bool = True
@@ -177,13 +185,16 @@ class Web:
             "Authorization": token,
         }
         try:
-            async with self.session.get(url=url, headers=headers) as resp:
+            async with self.session.get(url=url, headers=headers, timeout=10) as resp:
                 if resp.status != 200:
                     raise errors_l.UnauthorizedError(f"Cannot get data from s.letovo.ru. Error {resp.status}")
                 return await resp.json(loads=orjson.loads)
         except aiohttp.ClientConnectionError as err:
             log.error(err)
             raise aiohttp.ClientConnectionError(no_conn)
+        except asyncio.TimeoutError as err:
+            log.error(err)
+            raise asyncio.TimeoutError(too_long_conn)
 
     async def receive_marks_and_teachers(
             self, sender_id: str
@@ -221,10 +232,13 @@ class Web:
             "Authorization": token,
         }
         try:
-            async with self.session.get(url=url, headers=headers) as resp:
+            async with self.session.get(url=url, headers=headers, timeout=10) as resp:
                 if resp.status != 200:
                     raise errors_l.UnauthorizedError(f"Cannot get data from s.letovo.ru. Error {resp.status}")
                 return await resp.json(loads=orjson.loads)
         except aiohttp.ClientConnectionError as err:
             log.error(err)
             raise aiohttp.ClientConnectionError(no_conn)
+        except asyncio.TimeoutError as err:
+            log.error(err)
+            raise asyncio.TimeoutError(too_long_conn)
