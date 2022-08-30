@@ -28,3 +28,20 @@ class UnauthorizedError(Exception):
             super().__init__(
                 detail
             )
+
+
+class StopPropagation(Exception):
+    """
+    Occurs when it is required to stop the execution.
+    It can be seen as the ``StopIteration`` in a for loop
+    """
+
+    def __init__(self, detail: str | None = None, fix: str | None = None):
+        if detail is None:
+            super().__init__(
+                "Stop execution"
+            )
+        else:
+            super().__init__(
+                detail
+            )

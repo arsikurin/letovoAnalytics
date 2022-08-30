@@ -5,7 +5,7 @@ description = "Letovo Analytics bot helps letovians access s.letovo.ru resources
 authors = ["arsikurin <arseny.kurin@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = "3.10.3"
+python = "3.10.5"
 orjson = "^3.6.4"
 fastapi = "^0.75.0"
 firebase-admin = "^5.1.0"
@@ -19,9 +19,16 @@ uvloop = "^0.16.0"
 aiorun = "^2021.10.1"
 aiohttp = "^3.8.0"
 uvicorn = { extras = ["standard"], version = "^0.17.0" }
-psycopg = { extras = ["c"], version = "^3.0.4" }
 Telethon = "^1.23.0"
 pydantic = "^1.8.2"
+#pandas = "^1.4.3"
+#openpyxl = "^3.0.10"
+#geopy = "^2.2.0"
+#matplotlib = "^3.5.3"
+#shapely = "^1.8.2"
+#geopandas = "^0.11.1"
+#plotly = "^5.10.0"
+psycopg = {extras = ["c"], version = "^3.0.17"}
 
 [tool.poetry.dev-dependencies]
 pylint = "^2.11.1"
