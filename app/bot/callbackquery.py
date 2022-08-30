@@ -1,5 +1,6 @@
 import asyncio
 import datetime
+import logging
 import typing
 
 import aiohttp
@@ -11,8 +12,8 @@ from app.dependencies import (
 from app.schemas import MarksResponse, MarksDataList, ScheduleAndHWResponse, TeachersResponse
 from config import settings
 
-choose_an_option_below = "Choose an option below ↴"
-back = "« Back"
+choose_an_option_below_text = "Choose an option below ↴"
+back_btn_text = "« Back"
 
 
 class CallbackQuerySenders:
@@ -102,18 +103,18 @@ class CallbackQuerySenders:
             ]
         )
 
-    async def send_start_page(self, sender: types.User) -> types.Message:
-        return await self.client.send_message(
-            entity=sender,
-            message="I will help you access s.letovo.ru resources via Telegram.\n"
-                    "  Initially, you should provide your **school** credentials.\n"
-                    "  To do that click the **Log In** button below\n\n"
-                    "__After logging into your account, click **Options** button__",
-            parse_mode="md",
-            buttons=[
-                Button.url(text="Click here to log in", url=f"{settings().URL_LOGIN_LOCAL}?sender_id={sender.id}")
-            ]
-        )
+    # async def send_start_page(self, sender: types.User) -> types.Message:
+    #     return await self.client.send_message(
+    #         entity=sender,
+    #         message="I will help you access s.letovo.ru resources via Telegram.\n"
+    #                 "  Initially, you should provide your **school** credentials.\n"
+    #                 "  To do that click the **Log In** button below\n\n"
+    #                 "__After logging into your account, click **Options** button__",
+    #         parse_mode="md",
+    #         buttons=[
+    #             Button.url(text="Click here to log in", url=f"{settings().URL_LOGIN_LOCAL}?sender_id={sender.id}")
+    #         ]
+    #     )
 
     async def send_help_page(self, sender: types.User) -> types.Message:
         """
@@ -186,7 +187,7 @@ class CallbackQuerySenders:
             if not any((
                     resp.schedule_counter, resp.homework_counter, resp.marks_counter, resp.holidays_counter,
                     resp.options_counter, resp.help_counter, resp.about_counter
-            )): continue  # noqa
+            )): continue  # noqa: more beautiful imho
 
             name, surname, login = await run_parallel(
                 self._fs.get_name(resp.sender_id),
@@ -266,7 +267,7 @@ class CallbackQuerySenders:
         """
         return await self.client.send_message(
             entity=sender,
-            message=choose_an_option_below,
+            message=choose_an_option_below_text,
             parse_mode="md",
             buttons=[
                 [
@@ -335,7 +336,7 @@ class CallbackQuerySenders:
         """
         return await self.client.send_message(
             entity=sender,
-            message=choose_an_option_below,
+            message=choose_an_option_below_text,
             parse_mode="md",
             buttons=[
                 [
@@ -391,19 +392,10 @@ class CallbackQuerySenders:
         """
         sender: types.User = await event.get_sender()
         try:
-            teachers_resp = await self._web.receive_marks_and_teachers(sender_id=str(sender.id))
-        except (errors_l.UnauthorizedError, errors_l.NothingFoundError, aiohttp.ClientConnectionError) as err:
-            return await event.answer(f"[✘] {err}", alert=True)
-        except asyncio.TimeoutError as err:
-            return await self.client.send_message(
-                entity=sender,
-                message=f"[✘] {err.__str__()}",
-                parse_mode="md",
-                silent=True,
-                link_preview=False
-            )
-
-        teachers_response = TeachersResponse.parse_obj(teachers_resp)
+            response = await self._handle_errors(self._web.receive_marks_and_teachers, event, sender)
+        except errors_l.StopPropagation:
+            return
+        teachers_response = TeachersResponse.parse_obj(response)
         for subject in teachers_response.data:
             if subject.group.group_teachers:
                 if subject.group.subject.subject_name_eng:
@@ -441,28 +433,12 @@ class CallbackQuerySenders:
 
         sender: types.User = await event.get_sender()
         try:
-            if specific_day != types_l.Weekdays.ALL:
-                schedule_resp = await self._web.receive_schedule_and_hw(
-                    sender_id=str(sender.id), specific_day=specific_day, week=False
-                )
-            else:
-                schedule_resp = await self._web.receive_schedule_and_hw(
-                    sender_id=str(sender.id), specific_day=specific_day
-                )
-        except (errors_l.UnauthorizedError, errors_l.NothingFoundError, aiohttp.ClientConnectionError) as err:
-            return await event.answer(f"[✘] {err}", alert=True)
-        except asyncio.TimeoutError as err:
-            return await self.client.send_message(
-                entity=sender,
-                message=f"[✘] {err.__str__()}",
-                parse_mode="md",
-                silent=True,
-                link_preview=False
-            )
-
+            response = await self._handle_errors(self._web.receive_schedule_and_hw, event, sender, specific_day)
+        except errors_l.StopPropagation:
+            return
+        schedule_response = ScheduleAndHWResponse.parse_obj(response)
         old_wd = ""
         msg_ids = []
-        schedule_response = ScheduleAndHWResponse.parse_obj(schedule_resp)
         for day in schedule_response.data:
             if day.schedules and specific_day.value in {int(day.period_num_day), -10}:
                 wd = types_l.Weekdays(int(day.period_num_day)).name
@@ -531,27 +507,11 @@ class CallbackQuerySenders:
 
         sender: types.User = await event.get_sender()
         try:
-            if specific_day != types_l.Weekdays.ALL:
-                homework_resp = await self._web.receive_schedule_and_hw(
-                    sender_id=str(sender.id), specific_day=specific_day, week=False
-                )
-            else:
-                homework_resp = await self._web.receive_schedule_and_hw(
-                    sender_id=str(sender.id), specific_day=specific_day
-                )
-        except (errors_l.UnauthorizedError, errors_l.NothingFoundError, aiohttp.ClientConnectionError) as err:
-            return await event.answer(f"[✘] {err}", alert=True)
-        except asyncio.TimeoutError as err:
-            return await self.client.send_message(
-                entity=sender,
-                message=f"[✘] {err.__str__()}",
-                parse_mode="md",
-                silent=True,
-                link_preview=False
-            )
-
+            response = await self._handle_errors(self._web.receive_marks_and_teachers, event, sender)
+        except errors_l.StopPropagation:
+            return
+        homework_response = ScheduleAndHWResponse.parse_obj(response)
         old_wd = ""
-        homework_response = ScheduleAndHWResponse.parse_obj(homework_resp)
         msg_ids = []
         for day in homework_response.data:
             if day.schedules and specific_day.value in {int(day.period_num_day), -10}:
@@ -800,6 +760,59 @@ class CallbackQuerySenders:
                     link_preview=False
                 )
 
+    async def _handle_errors(
+            self, func: typing.Callable[[...], typing.Coroutine[typing.Any, typing.Any, dict]],
+            event: events.CallbackQuery.Event, sender: types.User,
+            specific_day: types_l.Weekdays | None = None
+    ) -> dict:
+        """
+        Boilerplate for error handling of `self._web.receive_marks_and_teachers` and `self._web.receive_schedule_and_hw`
+        """
+        if func == self._web.receive_marks_and_teachers:
+            try:
+                resp = await self._web.receive_marks_and_teachers(str(sender.id))
+            except (errors_l.UnauthorizedError, errors_l.NothingFoundError, aiohttp.ClientConnectionError) as err:
+                await event.answer(f"[✘] {err}", alert=True)
+                raise errors_l.StopPropagation
+            except asyncio.TimeoutError as err:
+                await self.client.send_message(
+                    entity=sender,
+                    message=f"[✘] {err.__str__()}",
+                    parse_mode="md",
+                    silent=True,
+                    link_preview=False
+                )
+                raise errors_l.StopPropagation
+            return resp
+
+        elif func == self._web.receive_schedule_and_hw:
+            if specific_day is None:
+                logging.critical("Specific day value not provided!")
+                raise errors_l.StopPropagation
+
+            try:
+                if specific_day != types_l.Weekdays.ALL:
+                    resp = await self._web.receive_schedule_and_hw(
+                        sender_id=str(sender.id), specific_day=specific_day, week=False
+                    )
+                else:
+                    resp = await self._web.receive_schedule_and_hw(
+                        sender_id=str(sender.id), specific_day=specific_day
+                    )
+            except (errors_l.UnauthorizedError, errors_l.NothingFoundError, aiohttp.ClientConnectionError) as err:
+                await event.answer(f"[✘] {err}", alert=True)
+                raise errors_l.StopPropagation
+            except asyncio.TimeoutError as err:
+                await self.client.send_message(
+                    entity=sender,
+                    message=f"[✘] {err.__str__()}",
+                    parse_mode="md",
+                    silent=True,
+                    link_preview=False
+                )
+                raise errors_l.StopPropagation
+            return resp
+
     async def send_marks(
             self, event: events.CallbackQuery.Event, specific: types_l.MarkTypes
     ):
@@ -812,27 +825,29 @@ class CallbackQuerySenders:
         """
         sender: types.User = await event.get_sender()
         try:
-            marks_resp = await self._web.receive_marks_and_teachers(sender_id=str(sender.id))
-        except (errors_l.UnauthorizedError, errors_l.NothingFoundError, aiohttp.ClientConnectionError) as err:
-            return await event.answer(f"[✘] {err}", alert=True)
-        except asyncio.TimeoutError as err:
-            return await self.client.send_message(
-                entity=sender,
-                message=f"[✘] {err.__str__()}",
-                parse_mode="md",
-                silent=True,
-                link_preview=False
-            )
+            response = await self._handle_errors(self._web.receive_marks_and_teachers, event, sender)
+        except errors_l.StopPropagation:
+            return
+        marks_response = MarksResponse.parse_obj(response)
 
-        marks_response = MarksResponse.parse_obj(marks_resp)
-        if specific == types_l.MarkTypes.SUMMATIVE:
-            await self._send_summative_marks(_marks_response=marks_response, sender=sender)
-        elif specific == types_l.MarkTypes.FINAL:
-            await self._send_final_marks(_marks_response=marks_response, sender=sender)
-        elif specific == types_l.MarkTypes.RECENT:
-            await self._send_recent_marks(_marks_response=marks_response, sender=sender)
-        elif specific == types_l.MarkTypes.ALL:
-            await self._send_all_marks(_marks_response=marks_response, sender=sender)
+        match specific:  # TODO test required
+            case types_l.MarkTypes.SUMMATIVE:
+                await self._send_summative_marks(_marks_response=marks_response, sender=sender)
+            case types_l.MarkTypes.FINAL:
+                await self._send_final_marks(_marks_response=marks_response, sender=sender)
+            case types_l.MarkTypes.RECENT:
+                await self._send_recent_marks(_marks_response=marks_response, sender=sender)
+            case types_l.MarkTypes.ALL:
+                await self._send_all_marks(_marks_response=marks_response, sender=sender)
+
+        # if specific == types_l.MarkTypes.SUMMATIVE:
+        #     await self._send_summative_marks(_marks_response=marks_response, sender=sender)
+        # elif specific == types_l.MarkTypes.FINAL:
+        #     await self._send_final_marks(_marks_response=marks_response, sender=sender)
+        # elif specific == types_l.MarkTypes.RECENT:
+        #     await self._send_recent_marks(_marks_response=marks_response, sender=sender)
+        # elif specific == types_l.MarkTypes.ALL:
+        #     await self._send_all_marks(_marks_response=marks_response, sender=sender)
 
         del self._payload
         await event.answer()
@@ -841,8 +856,6 @@ class CallbackQuerySenders:
 class CallbackQueryEventEditors(CallbackQuerySenders):
     """
     Class for dealing with callback query events
-
-    .
     """
 
     @staticmethod
@@ -855,7 +868,7 @@ class CallbackQueryEventEditors(CallbackQuerySenders):
         """
         # TODO rename `main` page to `landing` page
         await event.edit(
-            choose_an_option_below,
+            choose_an_option_below_text,
             parse_mode="md",
             buttons=[
                 [
@@ -879,7 +892,7 @@ class CallbackQueryEventEditors(CallbackQuerySenders):
             event (events.CallbackQuery.Event): a return object of CallbackQuery
         """
         await event.edit(
-            choose_an_option_below,
+            choose_an_option_below_text,
             parse_mode="md",
             buttons=[
                 [
@@ -889,7 +902,7 @@ class CallbackQueryEventEditors(CallbackQuerySenders):
                 ], [
                     Button.inline("Specific Day »", b"specific_day_schedule"),
                 ], [
-                    Button.inline(back, b"main_page")
+                    Button.inline(back_btn_text, b"main_page")
                 ]
             ]
         )
@@ -903,7 +916,7 @@ class CallbackQueryEventEditors(CallbackQuerySenders):
             event (events.CallbackQuery.Event): a return object of CallbackQuery
         """
         await event.edit(
-            choose_an_option_below,
+            choose_an_option_below_text,
             parse_mode="md",
             buttons=[
                 [
@@ -913,7 +926,7 @@ class CallbackQueryEventEditors(CallbackQuerySenders):
                 ], [
                     Button.inline("Specific Day »", b"specific_day_homework"),
                 ], [
-                    Button.inline(back, b"main_page")
+                    Button.inline(back_btn_text, b"main_page")
                 ]
             ]
         )
@@ -927,7 +940,7 @@ class CallbackQueryEventEditors(CallbackQuerySenders):
             event (events.CallbackQuery.Event): a return object of CallbackQuery
         """
         await event.edit(
-            choose_an_option_below,
+            choose_an_option_below_text,
             parse_mode="md",
             buttons=[
                 [
@@ -938,7 +951,7 @@ class CallbackQueryEventEditors(CallbackQuerySenders):
                     Button.inline("Summatives", b"summative_marks"),
                     Button.inline("Finals", b"final_marks"),
                 ], [
-                    Button.inline(back, b"main_page")
+                    Button.inline(back_btn_text, b"main_page")
                 ]
             ]
         )
@@ -952,7 +965,7 @@ class CallbackQueryEventEditors(CallbackQuerySenders):
             event (events.CallbackQuery.Event): a return object of CallbackQuery
         """
         await event.edit(
-            choose_an_option_below,
+            choose_an_option_below_text,
             parse_mode="md",
             buttons=[
                 [
@@ -962,7 +975,7 @@ class CallbackQueryEventEditors(CallbackQuerySenders):
                 ], [
                     Button.inline("Holidays", b"holidays"),
                 ], [
-                    Button.inline(back, b"main_page")
+                    Button.inline(back_btn_text, b"main_page")
                 ]
             ]
         )
@@ -989,7 +1002,7 @@ class CallbackQueryEventEditors(CallbackQuerySenders):
                     Button.inline("Friday", b"friday_schedule"),
                     Button.inline("Saturday", b"saturday_schedule")
                 ], [
-                    Button.inline(back, b"schedule_page")
+                    Button.inline(back_btn_text, b"schedule_page")
                 ]
             ]
         )
@@ -1016,53 +1029,53 @@ class CallbackQueryEventEditors(CallbackQuerySenders):
                     Button.inline("Friday", b"friday_homework"),
                     Button.inline("Saturday", b"saturday_homework")
                 ], [
-                    Button.inline(back, b"homework_page")
+                    Button.inline(back_btn_text, b"homework_page")
                 ]
             ]
         )
 
-    @staticmethod
-    async def set_account(event: events.CallbackQuery.Event):
-        sender: types.User = await event.get_sender()
-        to_active = int(event.data.split(b"_")[-1])
-        buttons: types.ReplyInlineMarkup = (await event.get_message()).reply_markup
-        choices = {1, 2, 3}
-        choices.remove(to_active)
+    # @staticmethod
+    # async def set_account(event: events.CallbackQuery.Event):
+    #     sender: types.User = await event.get_sender()
+    #     to_active = int(event.data.split(b"_")[-1])
+    #     buttons: types.ReplyInlineMarkup = (await event.get_message()).reply_markup
+    #     choices = {1, 2, 3}
+    #     choices.remove(to_active)
+    #
+    #     if len(buttons.rows[to_active - 1].buttons) == 3:
+    #         await event.answer("Already in use!")
+    #     else:
+    #         choice = choices.pop()
+    #         if len(buttons.rows[choice - 1].buttons) == 3:
+    #             cur_active = choice - 1
+    #         else:
+    #             cur_active = choices.pop() - 1
+    #         buttons.rows[cur_active].buttons.pop(1)
+    #         buttons.rows[to_active - 1].buttons.insert(1, Button.inline("Active", event.data))
+    #         # TODO swap current active and future active accounts
+    #         await event.edit(
+    #             "settings",
+    #             parse_mode="md",
+    #             buttons=buttons
+    #         )
 
-        if len(buttons.rows[to_active - 1].buttons) == 3:
-            await event.answer("Already in use!")
-        else:
-            choice = choices.pop()
-            if len(buttons.rows[choice - 1].buttons) == 3:
-                cur_active = choice - 1
-            else:
-                cur_active = choices.pop() - 1
-            buttons.rows[cur_active].buttons.pop(1)
-            buttons.rows[to_active - 1].buttons.insert(1, Button.inline("Active", event.data))
-            # TODO swap current active and future active accounts
-            await event.edit(
-                "settings",
-                parse_mode="md",
-                buttons=buttons
-            )
-
-    @staticmethod
-    async def remove_account(event: events.CallbackQuery.Event):
-        sender: types.User = await event.get_sender()
-        to_remove = int(event.data.split(b"_")[-1])
-        buttons: types.ReplyInlineMarkup = (await event.get_message()).reply_markup
-
-        if len(buttons.rows[to_remove - 1].buttons) == 3:
-            await event.answer("Cannot remove address in use!")
-        else:
-            buttons.rows[to_remove - 1].buttons.clear()
-            buttons.rows[to_remove - 1].buttons.append(Button.url("Add", settings().URL_LOGIN_LOCAL))
-            # TODO remove account
-            await event.edit(
-                "settings",
-                parse_mode="md",
-                buttons=buttons
-            )
+    # @staticmethod
+    # async def remove_account(event: events.CallbackQuery.Event):
+    #     sender: types.User = await event.get_sender()
+    #     to_remove = int(event.data.split(b"_")[-1])
+    #     buttons: types.ReplyInlineMarkup = (await event.get_message()).reply_markup
+    #
+    #     if len(buttons.rows[to_remove - 1].buttons) == 3:
+    #         await event.answer("Cannot remove address in use!")
+    #     else:
+    #         buttons.rows[to_remove - 1].buttons.clear()
+    #         buttons.rows[to_remove - 1].buttons.append(Button.url("Add", settings().URL_LOGIN_LOCAL))
+    #         # TODO remove account
+    #         await event.edit(
+    #             "settings",
+    #             parse_mode="md",
+    #             buttons=buttons
+    #         )
 
 
 @typing.final

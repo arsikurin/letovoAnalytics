@@ -33,7 +33,7 @@ class Firestore:
 
     async def __aexit__(
             self,
-            exc_type: typing.Type[BaseException] | None,
+            exc_type: type[BaseException] | None,
             exc_val: BaseException | None,
             exc_tb: types.TracebackType | None,
     ):
@@ -98,12 +98,12 @@ class Firestore:
         self._client.close()
 
     @staticmethod
-    async def send_email_to(email: str, /) -> bytes:
+    async def send_email_to(email_addr: str, /) -> bytes:
         """
         Email a new user informing them that registration succeeded
 
         Args:
-            email (str): whom to send an email
+            email_addr (str): whom to send an email
 
         Returns:
             binary response
@@ -115,7 +115,7 @@ class Firestore:
         headers: dict = {
             "content-type": "application/json; charset=UTF-8"
         }
-        data = f'{{"requestType": "PASSWORD_RESET", "email": "{email}"}}'
+        data = f'{{"requestType": "PASSWORD_RESET", "email": "{email_addr}"}}'
 
         async with aiohttp.ClientSession() as session:
             async with session.post(url=api_url, headers=headers, data=data) as resp:
@@ -136,7 +136,7 @@ class Firestore:
         Update user's data in the database
 
         Warnings:
-            Fill in at least one param in each map!
+            Fill in at least one param in each hashmap!
             Otherwise, all data will be erased there
         """
         space = ""
@@ -241,7 +241,7 @@ class Firestore:
         """
         return self._client.collection("users").stream()
 
-    async def get_student_id(self, sender_id: str) -> int | typing.Type[errors_l.NothingFoundError]:
+    async def get_student_id(self, sender_id: str) -> int | type[errors_l.NothingFoundError]:
         """
         Get user's student ID
 
@@ -259,7 +259,7 @@ class Firestore:
         except KeyError:
             return errors_l.NothingFoundError
 
-    async def get_token(self, sender_id: str) -> str | typing.Type[errors_l.NothingFoundError]:
+    async def get_token(self, sender_id: str) -> str | type[errors_l.NothingFoundError]:
         """
         Get user's auth token
 
@@ -277,7 +277,7 @@ class Firestore:
         except KeyError:
             return errors_l.NothingFoundError
 
-    async def get_password(self, sender_id: str) -> str | typing.Type[errors_l.NothingFoundError]:
+    async def get_password(self, sender_id: str) -> str | type[errors_l.NothingFoundError]:
         """
         Get user's password
 
@@ -295,7 +295,7 @@ class Firestore:
         except KeyError:
             return errors_l.NothingFoundError
 
-    async def get_login(self, sender_id: str) -> str | typing.Type[errors_l.NothingFoundError]:
+    async def get_login(self, sender_id: str) -> str | type[errors_l.NothingFoundError]:
         """
         Get user's login
 
@@ -313,7 +313,7 @@ class Firestore:
         except KeyError:
             return errors_l.NothingFoundError
 
-    async def get_name(self, sender_id: str) -> str | typing.Type[errors_l.NothingFoundError]:
+    async def get_name(self, sender_id: str) -> str | type[errors_l.NothingFoundError]:
         """
         Get user's name
 
@@ -331,7 +331,7 @@ class Firestore:
         except KeyError:
             return errors_l.NothingFoundError
 
-    async def get_surname(self, sender_id: str) -> str | typing.Type[errors_l.NothingFoundError]:
+    async def get_surname(self, sender_id: str) -> str | type[errors_l.NothingFoundError]:
         """
         Get user's surname
 
