@@ -11,7 +11,6 @@ fastapi = "^0.75.0"
 firebase-admin = "^5.1.0"
 colourlib = "^0.5.3"
 PyYAML = "^6.0"
-cryptg = "^0.2.post4"
 Jinja2 = "^3.0.2"
 #aiofiles = "^0.8.0"
 python-multipart = "^0.0.5"
@@ -29,6 +28,8 @@ pydantic = "^1.8.2"
 #geopandas = "^0.11.1"
 #plotly = "^5.10.0"
 psycopg = {extras = ["c"], version = "^3.0.17"}
+Pyrogram = "^2.0.43"
+TgCrypto = "^1.2.3"
 
 [tool.poetry.dev-dependencies]
 pylint = "^2.11.1"

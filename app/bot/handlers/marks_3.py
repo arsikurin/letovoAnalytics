@@ -1,33 +1,33 @@
 import functools as ft
-
-from telethon import events, types, TelegramClient
-
+import re
+import pyrogram
+from pyrogram import Client, types
 from app.bot import CallbackQuery
 from app.dependencies import types as types_l, Postgresql
 
 
-async def init(client: TelegramClient, cbQuery: CallbackQuery, db: Postgresql):
-    @client.on(events.CallbackQuery(data=b"marks_page"))
-    async def _marks_page(event: events.CallbackQuery.Event):
-        await cbQuery.to_marks_page(event=event)
-        raise events.StopPropagation
+async def init(client: Client, cbQuery: CallbackQuery, db: Postgresql):
+    @client.on_callback_query(pyrogram.filters.regex(re.compile(r"^marks_page$")))
+    async def _marks_page(_client: Client, callback_query: types.CallbackQuery):
+        await cbQuery.to_marks_page(event=callback_query)
+        raise pyrogram.StopPropagation
 
-    @client.on(events.CallbackQuery(pattern=r"(?i).*marks"))
-    async def _marks(event: events.CallbackQuery.Event):
-        sender: types.User = await event.get_sender()
+    @client.on_callback_query(pyrogram.filters.regex(re.compile(r"(?i).*marks")))
+    async def _marks(_client: Client, callback_query: types.CallbackQuery):
+        sender: types.User = callback_query.from_user
         sender_id = str(sender.id)
         send_marks = ft.partial(
             cbQuery.send_marks,
-            event=event
+            event=callback_query
         )
-        match event.data:
-            case b"all_marks":
+        match callback_query.data:
+            case "all_marks":
                 await send_marks(specific=types_l.MarkTypes.ALL)
-            case b"summative_marks":
+            case "summative_marks":
                 await send_marks(specific=types_l.MarkTypes.SUMMATIVE)
-            case b"final_marks":
+            case "final_marks":
                 await send_marks(specific=types_l.MarkTypes.FINAL)
-            case b"recent_marks":
+            case "recent_marks":
                 await send_marks(specific=types_l.MarkTypes.RECENT)
         await db.increase_marks_counter(sender_id=sender_id)
-        raise events.StopPropagation
+        raise pyrogram.StopPropagation

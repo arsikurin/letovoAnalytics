@@ -1,50 +1,50 @@
 import datetime
 import functools as ft
-
-from telethon import events, TelegramClient, types
-
+import re
+import pyrogram
+from pyrogram import Client, types
 from app.bot import CallbackQuery
 from app.dependencies import Postgresql, types as types_l
 from config import settings
 
 
-async def init(client: TelegramClient, cbQuery: CallbackQuery, db: Postgresql):
-    @client.on(events.CallbackQuery(data=b"schedule_page"))
-    async def _schedule_page(event: events.CallbackQuery.Event):
-        await cbQuery.to_schedule_page(event=event)
-        raise events.StopPropagation
+async def init(client: Client, cbQuery: CallbackQuery, db: Postgresql):
+    @client.on_callback_query(pyrogram.filters.regex(re.compile(r"^schedule_page$")))
+    async def _schedule_page(_client: Client, callback_query: types.CallbackQuery):
+        await cbQuery.to_schedule_page(event=callback_query)
+        raise pyrogram.StopPropagation
 
-    @client.on(events.CallbackQuery(data=b"specific_day_schedule"))
-    async def _specific_day_schedule(event: events.CallbackQuery.Event):
-        await cbQuery.to_specific_day_schedule_page(event=event)
-        raise events.StopPropagation
+    @client.on_callback_query(pyrogram.filters.regex(re.compile(r"^specific_day_schedule$")))
+    async def _specific_day_schedule(_client: Client, callback_query: types.CallbackQuery):
+        await cbQuery.to_specific_day_schedule_page(event=callback_query)
+        raise pyrogram.StopPropagation
 
-    @client.on(events.CallbackQuery(pattern=r"(?i).*schedule"))
-    async def _schedule(event: events.CallbackQuery.Event):
-        sender: types.User = await event.get_sender()
+    @client.on_callback_query(pyrogram.filters.regex(re.compile(r"(?i).*schedule")))
+    async def _schedule(_client: Client, callback_query: types.CallbackQuery):
+        sender: types.User = callback_query.from_user
         sender_id = str(sender.id)
         send_schedule = ft.partial(
             cbQuery.send_schedule,
-            event=event
+            event=callback_query
         )
-        match event.data:
-            case b"today_schedule":
+        match callback_query.data:
+            case "today_schedule":
                 await send_schedule(specific_day=types_l.Weekdays(
                     int(datetime.datetime.now(tz=settings().timezone).strftime("%w"))
                 ))
-            case b"entire_schedule":
+            case "entire_schedule":
                 await send_schedule(specific_day=types_l.Weekdays.ALL)
-            case b"monday_schedule":
+            case "monday_schedule":
                 await send_schedule(specific_day=types_l.Weekdays.Monday)
-            case b"tuesday_schedule":
+            case "tuesday_schedule":
                 await send_schedule(specific_day=types_l.Weekdays.Tuesday)
-            case b"wednesday_schedule":
+            case "wednesday_schedule":
                 await send_schedule(specific_day=types_l.Weekdays.Wednesday)
-            case b"thursday_schedule":
+            case "thursday_schedule":
                 await send_schedule(specific_day=types_l.Weekdays.Thursday)
-            case b"friday_schedule":
+            case "friday_schedule":
                 await send_schedule(specific_day=types_l.Weekdays.Friday)
-            case b"saturday_schedule":
+            case "saturday_schedule":
                 await send_schedule(specific_day=types_l.Weekdays.Saturday)
         await db.increase_schedule_counter(sender_id=sender_id)
-        raise events.StopPropagation
+        raise pyrogram.StopPropagation
