@@ -6,14 +6,15 @@ import logging as log
 import os
 import time
 
-from telethon import TelegramClient, events, types
+import pyrogram
+from pyrogram import Client, types
 
 from app.bot import CallbackQuery, InlineQuery
 from app.dependencies import Postgresql, Firestore, run_parallel
 
 
 async def init(
-        client: TelegramClient, cbQuery: CallbackQuery, iQuery: InlineQuery, db: Postgresql, fs: Firestore
+        client: Client, cbQuery: CallbackQuery, iQuery: InlineQuery, db: Postgresql, fs: Firestore
 ):
     handlers = [
         # Dynamically import
@@ -38,14 +39,13 @@ async def init(
     # Plugins may not have a valid init so those need to be filtered out
     await run_parallel(*(filter(None, to_init)))
 
-    @client.on(events.NewMessage())
-    async def _delete(event: events.NewMessage.Event):
-        sender: types.User = await event.get_sender()
+    @client.on_message()
+    async def _delete(_client: Client, message: types.Message):
         message, _, = await run_parallel(
-            cbQuery.send_common_page(sender=sender),
-            event.delete()
+            cbQuery.send_common_page(sender=message.from_user),
+            message.delete()
         )
-        raise events.StopPropagation
+        raise pyrogram.StopPropagation
 
 
 def get_init_coro(handler, /, **kwargs):

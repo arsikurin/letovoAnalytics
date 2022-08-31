@@ -39,8 +39,7 @@ else:
                f"\n[%(name)s] — (%(filename)s).%(funcName)s(%(lineno)d)\n",
         level=log.DEBUG, stream=sys.stdout
     )
-    log.getLogger("telethon.network.mtprotosender").setLevel(log.INFO)
-    log.getLogger("telethon.extensions.messagepacker").setLevel(log.INFO)
+    log.getLogger("pyrogram.session.session").setLevel(log.INFO)
     log.getLogger("aiorun").setLevel(log.INFO)
     # log.getLogger("urllib3.connectionpool").disabled = True
     # log.getLogger("multipart.multipart").disabled = True
