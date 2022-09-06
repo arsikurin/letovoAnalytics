@@ -1,38 +1,41 @@
-from telethon import events, TelegramClient, types
+import re
+
+import pyrogram
+from pyrogram import Client, types
 
 from app.bot import CallbackQuery
 from app.dependencies import Postgresql, run_parallel
 
 
-async def init(client: TelegramClient, cbQuery: CallbackQuery, db: Postgresql):
-    @client.on(events.CallbackQuery(data=b"others_page"))
-    async def _others_page(event: events.CallbackQuery.Event):
-        await cbQuery.to_others_page(event=event)
-        raise events.StopPropagation
+async def init(client: Client, cbQuery: CallbackQuery, db: Postgresql):
+    @client.on_callback_query(pyrogram.filters.regex(re.compile(r"^others_page$")))
+    async def _others_page(_client: Client, callback_query: types.CallbackQuery):
+        await cbQuery.to_others_page(event=callback_query)
+        raise pyrogram.StopPropagation
 
-    @client.on(events.CallbackQuery(data=b"teachers"))
-    async def _teachers(event: events.CallbackQuery.Event):
+    @client.on_callback_query(pyrogram.filters.regex(re.compile(r"^teachers$")))
+    async def _teachers(_client: Client, callback_query: types.CallbackQuery):
         await run_parallel(
-            cbQuery.send_teachers(event=event),
+            cbQuery.send_teachers(event=callback_query),
             # db.increase_teachers_counter(sender_id=sender_id)
         )
-        raise events.StopPropagation
+        raise pyrogram.StopPropagation
 
-    @client.on(events.CallbackQuery(data=b"diploma"))
-    async def _diploma(event: events.CallbackQuery.Event):
+    @client.on_callback_query(pyrogram.filters.regex(re.compile(r"^diploma$")))
+    async def _diploma(_client: Client, callback_query: types.CallbackQuery):
         # await run_parallel(
         #     cbQuery.send_...(event=event),
         #     # db.increase_..._counter(sender_id=sender_id)
         # )
-        await event.answer("Not implemented!")
-        raise events.StopPropagation
+        await callback_query.answer("Not implemented!")
+        raise pyrogram.StopPropagation
 
-    @client.on(events.CallbackQuery(data=b"holidays"))
-    async def _holidays(event: events.CallbackQuery.Event):
-        sender: types.User = await event.get_sender()
+    @client.on_callback_query(pyrogram.filters.regex(re.compile(r"^holidays$")))
+    async def _holidays(_client: Client, callback_query: types.CallbackQuery):
+        sender: types.User = callback_query.from_user
         sender_id = str(sender.id)
         await run_parallel(
-            cbQuery.send_holidays(event=event),
+            cbQuery.send_holidays(event=callback_query),
             db.increase_holidays_counter(sender_id=sender_id)
         )
-        raise events.StopPropagation
+        raise pyrogram.StopPropagation

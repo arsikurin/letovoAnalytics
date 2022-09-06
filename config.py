@@ -12,7 +12,7 @@ class AppSettings(BaseSettings):
     EPS: float = 2.220446049250313e-16
     URL_MAIN_LETOVO: HttpUrl = "https://s.letovo.ru"
     URL_MAIN_API: HttpUrl = "https://letovo-analytics-api.herokuapp.com"
-    URL_MAIN_LOCAL: HttpUrl = "https://letovo-analytics.web.app/"
+    URL_MAIN_LOCAL: HttpUrl = "https://letovo-analytics.web.app"
     URL_LOGIN_LETOVO: HttpUrl = "https://s-api.letovo.ru/api/login"
     URL_LOGIN_LOCAL: HttpUrl = "https://letovo-analytics.web.app/login"
     GOOGLE_FS_KEY: str
@@ -23,7 +23,7 @@ class AppSettings(BaseSettings):
     DATABASE_URL: PostgresDsn
     WEB_CONCURRENCY: int = 4
     PORT: int = 8084
-    debug: bool = False
+    production: bool = True
     title_api: str = "Letovo Analytics Bot API"
     favicon_path: str = "app/static/images/icons/api-icon.png"
     timezone: ZoneInfo = ZoneInfo("Europe/Moscow")
@@ -37,6 +37,6 @@ class AppSettings(BaseSettings):
 @cache
 def settings() -> AppSettings:
     """
-    `settings.cache_clear()` to dump cache
+    ``settings.cache_clear()`` to dump cache
     """
     return AppSettings()
