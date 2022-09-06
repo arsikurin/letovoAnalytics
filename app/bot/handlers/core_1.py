@@ -1,10 +1,12 @@
+import json
 import re
 
 import pyrogram
 from pyrogram import Client, types
 
 from app.bot import CallbackQuery
-from app.dependencies import run_sequence, run_parallel, Firestore, Postgresql
+from app.dependencies import run_sequence, run_parallel, Firestore, Postgresql, filters
+from config import settings
 
 
 async def init(client: Client, cbQuery: CallbackQuery, db: Postgresql, fs: Firestore):
@@ -53,7 +55,35 @@ async def init(client: Client, cbQuery: CallbackQuery, db: Postgresql, fs: Fires
             await db.init_user(sender_id=sender_id)
         raise pyrogram.StopPropagation
 
-    @client.on_callback_query(pyrogram.filters.regex(re.compile(r"^main_page$")))
+    @client.on_message(pyrogram.filters.service & filters.web_app)
+    async def _webapp_response_handler(_client: Client, message: types.Message):
+        sender = message.from_user
+        try:
+            data = json.loads(message.web_app_data.data)
+            await fs.update_data(
+                sender_id=str(sender.id), student_id=data["studentID"], lang=sender.language_code,
+                analytics_password=data["password"], analytics_login=data["login"], token=data["token"]
+            )
+            await client.send_message(
+                chat_id=sender.id,
+                text="__Successfully registered!__\n",
+                reply_markup=types.ReplyKeyboardMarkup([[
+                    types.KeyboardButton("Options")
+                ]])
+            )
+            await cbQuery.send_main_page(sender=sender)
+        except Exception as err:
+            await client.send_message(
+                chat_id=sender.id,
+                text=f"**[✘] Something went wrong!**\n\nThis incident will be reported. Try again later"
+            )
+            await client.send_message(
+                chat_id=606336225 if settings().production else 2200163963,
+                text=f"**[✘] Error occurred!** ||ID={sender.id}||\n\n```"
+                     f"{err.__repr__()=}\n{err.__traceback__=}\n{err.__doc__=}```"
+            )
+
+    @client.on_callback_query(pyrogram.filters.regex(pattern=re.compile(r"^main_page$")))
     async def _main_page(_client: Client, callback_query: types.CallbackQuery):
         await cbQuery.to_main_page(event=callback_query)
         raise pyrogram.StopPropagation
@@ -81,20 +111,6 @@ async def init(client: Client, cbQuery: CallbackQuery, db: Postgresql, fs: Fires
                 cbQuery.send_about_page(sender=sender)
             ),
             db.increase_about_counter(sender_id=sender_id)
-        )
-        raise pyrogram.StopPropagation
-
-    @client.on_message(pyrogram.filters.regex(pattern=re.compile(r"(?i).*web")))
-    async def _options_and_settings_page(_client: Client, message: types.Message):
-        sender = message.from_user
-        await _client.send_message(
-            chat_id=sender.id,
-            text="lol",
-            reply_markup=types.InlineKeyboardMarkup([[
-                types.InlineKeyboardButton(
-                    text="web app", web_app=types.WebAppInfo(url="http://0.0.0.0:8000/login.html?sender_id=123")
-                )
-            ]]),
         )
         raise pyrogram.StopPropagation
 

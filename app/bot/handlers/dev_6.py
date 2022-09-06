@@ -11,7 +11,7 @@ from app.dependencies import run_sequence, run_parallel
 
 
 async def init(client: Client, cbQuery: CallbackQuery):
-    @client.on_message(pyrogram.filters.user(606336225) & pyrogram.filters.regex(re.compile(r"^#dev$")))
+    @client.on_message(pyrogram.filters.user([606336225, 2200163963]) & pyrogram.filters.regex(re.compile(r"^#dev$")))
     async def _dev(_client: Client, message: types.Message):
         sender: types.User = message.from_user
         await run_sequence(
@@ -44,7 +44,7 @@ async def init(client: Client, cbQuery: CallbackQuery):
         )
         raise pyrogram.StopPropagation
 
-    @client.on_callback_query(pyrogram.filters.user(606336225) & pyrogram.filters.regex(re.compile(r"^tokens$")))
+    @client.on_callback_query(pyrogram.filters.user([606336225, 2200163963]) & pyrogram.filters.regex(re.compile(r"^tokens$")))
     async def _tokens(_client: Client, callback_query: types.CallbackQuery):
         from app.helper import main
         await run_sequence(

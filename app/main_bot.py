@@ -22,11 +22,14 @@ async def firestore_pinger(fs: Firestore):
 async def main():
     client = Client(
         name="letovoAnalytics", api_id=settings().TG_API_ID, api_hash=settings().TG_API_HASH,
-        bot_token=settings().TG_BOT_TOKEN, workers=min(32, (os.cpu_count() or 1) + 4), test_mode=False, in_memory=False
+        bot_token=settings().TG_BOT_TOKEN, workers=min(32, (os.cpu_count() or 1) + 4),
+        test_mode=~settings().production + 2, in_memory=~settings().production + 2
     )
 
     async with client, aiohttp.ClientSession() as session, Postgresql() as db, Firestore() as fs:
+        # noinspection PyPep8Naming
         cbQuery = CallbackQuery(client=client, session=session, db=db, fs=fs)
+        # noinspection PyPep8Naming
         iQuery = InlineQuery(s=session)
 
         log.debug("Entered mainloop")

@@ -4,6 +4,8 @@ BOT_SRC = ./app/main_bot.py
 API_SRC = ./app/main_api.py
 PINGER_SRC = ./app/pinger.py
 HELPER_SRC = ./app/helper.py
+MAIN_SRC = ./app/
+OUTPUT_SRC = ./app/static/main.wasm
 
 bot-dev:
 	python3 -X dev $(BOT_SRC)
@@ -25,6 +27,9 @@ update-tokens:
 
 run-dev:
 	docker compose up
+
+build-wasm:
+	env GOOS=js GOARCH=wasm go build -o $(OUTPUT_SRC) $(MAIN_SRC)
 
 # kubernetes
 okteto-deploy:

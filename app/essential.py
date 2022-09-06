@@ -26,23 +26,13 @@ from config import settings  # noqa
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 # initialize logger
-if settings().debug:
-    log.basicConfig(
-        format=f"{Style.Bold}(%(levelname)s) {Fg.Green}%(asctime)s{Fg.Reset} {Style.Bold}%(message)s{Style.Reset}"
-               f"\n[%(name)s]\n",
-        level=log.DEBUG
-    )
-
-else:
-    log.basicConfig(
-        format=f"{Style.Bold}(%(levelname)s) {Fg.Green}%(asctime)s{Fg.Reset} {Style.Bold}%(message)s{Style.Reset}"
-               f"\n[%(name)s] — (%(filename)s).%(funcName)s(%(lineno)d)\n",
-        level=log.DEBUG, stream=sys.stdout
-    )
-    log.getLogger("pyrogram.session.session").setLevel(log.INFO)
-    log.getLogger("aiorun").setLevel(log.INFO)
-    # log.getLogger("urllib3.connectionpool").disabled = True
-    # log.getLogger("multipart.multipart").disabled = True
+log.basicConfig(
+    format=f"{Style.Bold}(%(levelname)s) {Fg.Green}%(asctime)s{Fg.Reset} {Style.Bold}%(message)s{Style.Reset}"
+           f"\n[%(name)s] — (%(filename)s).%(funcName)s(%(lineno)d)\n",
+    level=log.DEBUG, stream=sys.stdout
+)
+log.getLogger("pyrogram.session.session").setLevel(log.INFO)
+log.getLogger("aiorun").setLevel(log.INFO)
 
 # fpath = os.path.join(os.path.dirname(__file__), 'utils')
 # sys.path.append(fpath)
