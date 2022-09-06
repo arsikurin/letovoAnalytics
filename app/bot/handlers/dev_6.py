@@ -1,56 +1,54 @@
 import asyncio
 import datetime
+import re
 import time
 
-from telethon import events, types, TelegramClient
+import pyrogram
+from pyrogram import Client, types
 
 from app.bot import CallbackQuery
 from app.dependencies import run_sequence, run_parallel
 
 
-async def init(client: TelegramClient, cbQuery: CallbackQuery):
-    @client.on(events.NewMessage(pattern=r"#dev", from_users=(606336225,)))
-    async def _dev(event: events.NewMessage.Event):
-        sender: types.User = await event.get_sender()
+async def init(client: Client, cbQuery: CallbackQuery):
+    @client.on_message(pyrogram.filters.user([606336225, 2200163963]) & pyrogram.filters.regex(re.compile(r"^#dev$")))
+    async def _dev(_client: Client, message: types.Message):
+        sender: types.User = message.from_user
         await run_sequence(
             cbQuery.send_greeting(sender=sender),
             cbQuery.send_dev_page(sender=sender)
         )
-        raise events.StopPropagation
+        raise pyrogram.StopPropagation
 
-    @client.on(events.NewMessage(pattern="#ping", forwards=False))
-    async def _ping(event: events.NewMessage.Event):
+    @client.on_message(pyrogram.filters.regex(re.compile(r"^#ping$")))
+    async def _ping(_client: Client, message: types.Message):
         start_time = time.perf_counter()
-        message = await event.reply("Pong!")
+        message_pong = await message.reply("Pong!")
         took = datetime.timedelta(seconds=time.perf_counter() - start_time)
         await run_parallel(
-            event.delete(),
+            message.delete(),
             run_sequence(
-                message.edit(f"Pong! __(reply took {took.total_seconds()}s)__"),
+                message_pong.edit(f"Pong! __(reply took {took.total_seconds()}s)__"),
                 asyncio.sleep(5),
-                message.delete()
+                message_pong.delete()
             )
         )
-        raise events.StopPropagation
+        raise pyrogram.StopPropagation
 
-    @client.on(events.CallbackQuery(data=b"stats"))
-    async def _stats(event: events.CallbackQuery.Event):
-        sender: types.User = await event.get_sender()
+    @client.on_callback_query(pyrogram.filters.regex(re.compile(r"^stats$")))
+    async def _stats(_client: Client, callback_query: types.CallbackQuery):
+        sender: types.User = callback_query.from_user
         await run_sequence(
             cbQuery.send_stats(sender=sender),
-            event.answer("Has been sent")
+            callback_query.answer("Has been sent")
         )
-        raise events.StopPropagation
+        raise pyrogram.StopPropagation
 
-    @client.on(events.CallbackQuery(data=b"tokens"))
-    async def _tokens(event: events.CallbackQuery.Event):
-        sender: types.User = await event.get_sender()
-        sender_id = str(sender.id)
-        if sender_id not in ("606336225",):
-            raise events.StopPropagation
+    @client.on_callback_query(pyrogram.filters.user([606336225, 2200163963]) & pyrogram.filters.regex(re.compile(r"^tokens$")))
+    async def _tokens(_client: Client, callback_query: types.CallbackQuery):
         from app.helper import main
         await run_sequence(
             main(),
-            event.answer("Tokens updated in the Database")
+            callback_query.answer("Tokens updated in the Database")
         )
-        raise events.StopPropagation
+        raise pyrogram.StopPropagation
