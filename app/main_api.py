@@ -6,7 +6,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 import essential  # noqa
-from app.api.endpoints import login_router
+# from app.api.endpoints import login_router
 from config import settings
 
 app = FastAPI(
@@ -14,15 +14,21 @@ app = FastAPI(
 )
 
 app.mount("/static", StaticFiles(directory="./app/static"), name="static")
+
 templates = Jinja2Templates(directory="./app/api/templates")
 application_json = "application/json"
 error_page_t = "pageError.html"
-app.include_router(login_router, tags=["login"], prefix="/api")
+# app.include_router(login_router, tags=["login"], prefix="/api")
 
 
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
     return templates.TemplateResponse("indexAPI.html", {"request": request})
+
+
+@app.get("/webview", response_class=HTMLResponse)
+async def index(request: Request):
+    return templates.TemplateResponse("webview.html", {"request": request})
 
 
 @app.exception_handler(StarletteHTTPException)
@@ -225,8 +231,6 @@ async def bad_request(request: Request, error: HTTPException) -> templates.Templ
 if __name__ == "__main__":
     import uvicorn
 
-    # import sys
-    # port = int(sys.argv[1]),
     c = uvicorn.Config(
         app=app, host="0.0.0.0", port=settings().PORT, workers=settings().WEB_CONCURRENCY, http="httptools",
         loop="uvloop"
