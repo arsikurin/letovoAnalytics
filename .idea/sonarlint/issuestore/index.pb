@@ -34,16 +34,10 @@ R
 .gitignore,a/5/a5cc2925ca8258af241be7e5b0381edf30266302
 K
 .github/workflows/test.yaml,a/6/a60e2382fd0c34cb06177a3d7034264e22531192
-@
-app/api/utils.py,3/5/352060e690e20468709e6ce67711a906e70ebc0b
-C
-app/api/__init__.py,4/0/407bde4b68f04669686373519bb18966abda13b9
 L
 app/dependencies/__init__.py,9/1/91dc6134e15a04bd1249542b12e858a7500c0f77
 7
 tox.ini,6/1/61be067c7cf3bdbf8a6b021a2b5167eb30612d0c
-M
-app/api/endpoints/__init__.py,5/3/53f74166a0a52796a7e4b699d309f3f15ff1001d
 6
 go.sum,5/a/5aa1ac64de2b0c4821af9393b44965020e4a521d
 G
@@ -58,8 +52,6 @@ D
 app/helper.py,0/6/06a2a9cefed22737d2d1fd7e2c591eb7412996ba
 ?
 app/__init__.py,6/b/6b5a07a517e9a3845a279675e888c81b77b9d712
-O
-app/api/templates/indexAPI.html,f/f/ff09cade9b3628dfea5d35ac17c67d35f375aba0
 G
 app/schemas/__init__.py,7/5/7501a9306d02b3a60f7536482442b11b2a950344
 G
@@ -68,10 +60,6 @@ G
 app/pinger.py,4/7/47be40247f87156c5a9f341307f2dabcb6b8de10
 6
 go.mod,c/4/c47645c391ad0571c40779079363c9d48412e18b
-J
-app/api/endpoints/login.py,5/f/5f23380c3ed4f43ac54ad5d9388e709171f1d7f8
-?
-app/main_api.py,1/4/142ed3d04270118b10adefd8fe93f6eeb1123f67
 8
 Procfile,b/c/bc3c68e880d1a01632bce79f69dd1387c7ba9c54
 C
@@ -94,8 +82,6 @@ I
 database.json,7/0/70ce63583630b19bbe3e0f9ec2c79804f70d4baa
 >
 database2.json,d/0/d07f99f87adbdfcac27b7d705a9750d7778f1b66
-8
-Makefile,8/3/836efb6e25a091dcb4ff8e1dbb2f0be6a5cbf14c
 w
 G.idea/sonarlint/issuestore/8/7/87837dddac4617928ecedd08a5fc7eeb710ece5a,e/7/e73f2a8fd5d076b91a6ed50191c566038ce58fa5
 w
@@ -194,4 +180,56 @@ C
 
 terms.html,2/c/2c40cae6aa564ffb60c44dd3798e023279e9a4e4
 F
-.env.development.local,0/f/0fe212be3a1410c8c1b84c710d79d55e3d8f0e1e
+app/bot/inlinequery.py,6/b/6b4f48e076da4edc40a2c1d7a121a47d8cf4618c
+L
+app/bot/handlers/iquery_7.py,a/d/ad6d5f176d172a0d7aedfe93ea2fae945fa0c6ab
+K
+app/bot/handlers/marks_3.py,b/d/bd2dd2d80373328e5593546c1d5881c71a9cce5d
+L
+app/bot/handlers/__init__.py,7/6/760e0d9ec6b043553c59d37ab141a04ac941b23e
+P
+ app/api/templates/pageError.html,f/2/f2aeaf33f67c54b91d79bc37d2b9fcce9467a7e2
+N
+app/bot/handlers/schedule_2.py,0/b/0bb90cfd6e94e190505c9787438b2d5599ebce11
+N
+app/bot/handlers/homework_4.py,d/e/de0bd5ceaf68a0f63931ae9b7bfe1e2f167c17ef
+L
+app/bot/handlers/others_5.py,d/0/d0aeae8eb0be5344517f9818e669e3675fbb9a55
+;
+poetry.lock,0/0/0068a1506b061a8948c37d78b0dd5697211558d3
+>
+pyproject.toml,5/d/5d07e7d72637aa0d59c89d381fe6dc4cf46e2491
+G
+app/dependencies/web.py,2/2/2285712a844bafccc48ea239e067136cadf2ed18
+?
+app/main_bot.py,3/0/302adff66845dbeb55156260e5eca7cd67859b2a
+I
+app/bot/handlers/dev_6.py,9/5/95f4f7cbabb728dcd5f5f3d7d60ff2fbfdc59431
+@
+app/api/utils.py,3/5/352060e690e20468709e6ce67711a906e70ebc0b
+C
+app/api/__init__.py,4/0/407bde4b68f04669686373519bb18966abda13b9
+M
+app/api/endpoints/__init__.py,5/3/53f74166a0a52796a7e4b699d309f3f15ff1001d
+J
+app/api/endpoints/login.py,5/f/5f23380c3ed4f43ac54ad5d9388e709171f1d7f8
+8
+Makefile,8/3/836efb6e25a091dcb4ff8e1dbb2f0be6a5cbf14c
+O
+app/api/templates/indexAPI.html,f/f/ff09cade9b3628dfea5d35ac17c67d35f375aba0
+;
+app/main.go,d/2/d2a6d45f180563daa10332156aad7e1e43c1387f
+B
+app/static/main.js,8/6/869519bf6a4224c9f998837a06289a4397e58397
+@
+app/essential.py,9/e/9e913b2e7e335ecf82b791bfc4924f020c7d8b81
+J
+app/bot/handlers/core_1.py,5/c/5cdbc63397087b637fa1057e874dd6dd2b0acd27
+H
+app/bot/callbackquery.py,7/2/72f5e3c022aa0ea62f06c5a79e1ecddf925a3677
+L
+app/api/templates/login.html,1/6/1617ca88b0b98317f7042b88d934cf18694aa6d4
+9
+	config.py,1/a/1a1b9769344cb239f2e540e1e6ee1efa2d3034ea
+?
+app/main_api.py,1/4/142ed3d04270118b10adefd8fe93f6eeb1123f67

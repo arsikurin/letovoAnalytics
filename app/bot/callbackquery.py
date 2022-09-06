@@ -95,11 +95,9 @@ class CallbackQuerySenders:
         return await self.client.send_message(
             chat_id=sender.id,
             text=f"Greetings, **{payload}**!",
-            reply_markup=types.ReplyKeyboardMarkup([
-                [
-                    types.KeyboardButton("Options")
-                ]
-            ])
+            reply_markup=types.ReplyKeyboardMarkup([[
+                types.KeyboardButton("Options")
+            ]])
         )
 
     # async def send_start_page(self, sender: types.User) -> types.Message:
@@ -166,11 +164,17 @@ class CallbackQuerySenders:
                  "• **7A** means **7** for Summative **A**\n"
                  "• **5B** means **5** for Summative **B**\n"
                  "• **6F** means **6** for Formative\n",
-            reply_markup=types.InlineKeyboardMarkup([[
-                types.InlineKeyboardButton(text="Click here to register",
-                                           url=f"{settings().URL_LOGIN_LOCAL}?sender_id={sender.id}")
-            ]]),
-            disable_web_page_preview=False
+            reply_markup=types.ReplyKeyboardMarkup([[
+                types.KeyboardButton(
+                    text="Click here to register",
+                    web_app=types.WebAppInfo(url="https://letovo-analytics.web.app/webview")
+                )
+            ]], resize_keyboard=True),
+            # reply_markup=types.InlineKeyboardMarkup([[
+            #     types.InlineKeyboardButton(text="Click here to register",
+            #                                url=f"{settings().URL_LOGIN_LOCAL}?sender_id={sender.id}")
+            # ]]),
+            disable_web_page_preview=True
         )
 
     async def send_stats(self, sender: types.User):
@@ -400,7 +404,7 @@ class CallbackQuerySenders:
                     chat_id=sender.id,
                     text=payload,
                     disable_notification=True,
-                    disable_web_page_preview=False
+                    disable_web_page_preview=True
                 )
         await event.answer()
 
@@ -456,7 +460,7 @@ class CallbackQuerySenders:
                     text=payload,
                     parse_mode=enums.ParseMode.HTML,
                     disable_notification=True,
-                    disable_web_page_preview=False
+                    disable_web_page_preview=True
                 )
                 msg_ids.append(msg.id)
                 old_wd = wd
@@ -546,7 +550,7 @@ class CallbackQuerySenders:
                     text=payload,
                     parse_mode=enums.ParseMode.HTML,
                     disable_notification=True,
-                    disable_web_page_preview=False
+                    disable_web_page_preview=True
                 )
                 msg_ids.append(msg.id)
 
@@ -679,7 +683,7 @@ class CallbackQuerySenders:
                     chat_id=sender.id,
                     text=self._payload,
                     disable_notification=True,
-                    disable_web_page_preview=False
+                    disable_web_page_preview=True
                 )
 
     async def _send_recent_marks(self, _marks_response: MarksResponse, sender: types.User):
@@ -710,7 +714,7 @@ class CallbackQuerySenders:
                     chat_id=sender.id,
                     text=self._payload,
                     disable_notification=True,
-                    disable_web_page_preview=False
+                    disable_web_page_preview=True
                 )
 
     async def _send_all_marks(self, _marks_response: MarksResponse, sender: types.User):
@@ -736,7 +740,7 @@ class CallbackQuerySenders:
                     chat_id=sender.id,
                     text=self._payload,
                     disable_notification=True,
-                    disable_web_page_preview=False
+                    disable_web_page_preview=True
                 )
 
     async def _handle_errors(
@@ -758,7 +762,7 @@ class CallbackQuerySenders:
                     chat_id=sender.id,
                     text=f"[✘] {err.__str__()}",
                     disable_notification=True,
-                    disable_web_page_preview=False
+                    disable_web_page_preview=True
                 )
                 raise errors_l.StopPropagation
             return resp
@@ -785,7 +789,7 @@ class CallbackQuerySenders:
                     chat_id=sender.id,
                     text=f"[✘] {err.__str__()}",
                     disable_notification=True,
-                    disable_web_page_preview=False
+                    disable_web_page_preview=True
                 )
                 raise errors_l.StopPropagation
             return resp
