@@ -97,7 +97,7 @@ class CallbackQuerySenders:
             text=f"Greetings, **{payload}**!",
             reply_markup=types.ReplyKeyboardMarkup([[
                 types.KeyboardButton("Options")
-            ]])
+            ]], resize_keyboard=True)
         )
 
     # async def send_start_page(self, sender: types.User) -> types.Message:
@@ -128,7 +128,7 @@ class CallbackQuerySenders:
                  "If you're new here, please see the [Terms of Use](https://example.com) and "
                  "provide your **school** credentials, i.e. login and password,"
                  " to begin enjoying the service.\n"
-                 "To do this, click the **button below the message**.\n"
+                 "To do this, click the **button below**.\n"
                  "\n"
                  "\n"
                  "**You can control the bot by sending these commands**\n"
@@ -251,7 +251,7 @@ class CallbackQuerySenders:
                 [
                     types.KeyboardButton("Options")
                 ]
-            ])
+            ], resize_keyboard=True)
         )
 
     async def send_main_page(self, sender: types.User) -> types.Message:

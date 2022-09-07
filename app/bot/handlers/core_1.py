@@ -69,7 +69,7 @@ async def init(client: Client, cbQuery: CallbackQuery, db: Postgresql, fs: Fires
                 text="__Successfully registered!__\n",
                 reply_markup=types.ReplyKeyboardMarkup([[
                     types.KeyboardButton("Options")
-                ]])
+                ]], resize_keyboard=True)
             )
             await cbQuery.send_main_page(sender=sender)
         except Exception as err:
