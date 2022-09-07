@@ -87,8 +87,6 @@ G.idea/sonarlint/issuestore/8/7/87837dddac4617928ecedd08a5fc7eeb710ece5a,e/7/e7
 w
 G.idea/sonarlint/issuestore/8/e/8e5b1c08dc85d155ed7cf4dd6949ea7ef7d6c0a0,5/5/5542b21556e5fe37f45c5f90377146f8619ae57a
 w
-G.idea/sonarlint/issuestore/1/4/142ed3d04270118b10adefd8fe93f6eeb1123f67,b/9/b98711847f9bd3855eeaa0c467ce6425c7c6b10e
-w
 G.idea/sonarlint/issuestore/0/6/06a2a9cefed22737d2d1fd7e2c591eb7412996ba,8/2/8258a8d7d2cc50f32e88973a938ab7f613325a27
 w
 G.idea/sonarlint/issuestore/6/b/6b5a07a517e9a3845a279675e888c81b77b9d712,0/d/0d4b49a2dd4e9e06c83f8c9e11d8468035ab577e
@@ -104,8 +102,6 @@ w
 G.idea/sonarlint/issuestore/4/7/47be40247f87156c5a9f341307f2dabcb6b8de10,5/5/55d35a76231e0705a92b1e79ee69c1a58a4af1d4
 w
 G.idea/sonarlint/issuestore/2/a/2a64350c28aa37ca0f8a85df5dbdf86b487b71e6,4/1/416ef47e8d72b968430ebf64af7d66a72badc909
-L
-app/dependencies/firebase.py,6/b/6b1c4b59608a4b10fd367358fe9fd5a5ebe982a4
 w
 G.idea/sonarlint/issuestore/f/2/f2aeaf33f67c54b91d79bc37d2b9fcce9467a7e2,e/6/e6ff1d36ee6c8191d98d2e4d5161083f64403d58
 J
@@ -154,8 +150,6 @@ w
 G.idea/sonarlint/issuestore/c/3/c3f8643b2ddc712688caf3ab64ebd9688fdbfc30,7/e/7e00eb6c20dfb05d2a4f44607d08e10be854abf4
 w
 G.idea/sonarlint/issuestore/1/8/182c17f09c9dbb84021557352e9738b136158dbd,e/f/effe8da13b5fcf3c9796460574be930dbaa6810f
-w
-G.idea/sonarlint/issuestore/9/5/95f4f7cbabb728dcd5f5f3d7d60ff2fbfdc59431,c/d/cd06e7f97463b50a713778738708083d5ba64aac
 w
 G.idea/sonarlint/issuestore/3/7/37e479da2902e14c74a879e6f3fbe39d2c5b4158,8/b/8bdbedd347454a21b66cbb232736aba03dc5e42b
 w
@@ -211,25 +205,25 @@ C
 app/api/__init__.py,4/0/407bde4b68f04669686373519bb18966abda13b9
 M
 app/api/endpoints/__init__.py,5/3/53f74166a0a52796a7e4b699d309f3f15ff1001d
-J
-app/api/endpoints/login.py,5/f/5f23380c3ed4f43ac54ad5d9388e709171f1d7f8
 8
 Makefile,8/3/836efb6e25a091dcb4ff8e1dbb2f0be6a5cbf14c
 O
 app/api/templates/indexAPI.html,f/f/ff09cade9b3628dfea5d35ac17c67d35f375aba0
 ;
 app/main.go,d/2/d2a6d45f180563daa10332156aad7e1e43c1387f
+J
+app/api/endpoints/login.py,5/f/5f23380c3ed4f43ac54ad5d9388e709171f1d7f8
+?
+app/main_api.py,1/4/142ed3d04270118b10adefd8fe93f6eeb1123f67
 B
 app/static/main.js,8/6/869519bf6a4224c9f998837a06289a4397e58397
+H
+app/bot/callbackquery.py,7/2/72f5e3c022aa0ea62f06c5a79e1ecddf925a3677
+9
+	config.py,1/a/1a1b9769344cb239f2e540e1e6ee1efa2d3034ea
 @
 app/essential.py,9/e/9e913b2e7e335ecf82b791bfc4924f020c7d8b81
 J
 app/bot/handlers/core_1.py,5/c/5cdbc63397087b637fa1057e874dd6dd2b0acd27
-H
-app/bot/callbackquery.py,7/2/72f5e3c022aa0ea62f06c5a79e1ecddf925a3677
 L
-app/api/templates/login.html,1/6/1617ca88b0b98317f7042b88d934cf18694aa6d4
-9
-	config.py,1/a/1a1b9769344cb239f2e540e1e6ee1efa2d3034ea
-?
-app/main_api.py,1/4/142ed3d04270118b10adefd8fe93f6eeb1123f67
+app/dependencies/firebase.py,6/b/6b1c4b59608a4b10fd367358fe9fd5a5ebe982a4
