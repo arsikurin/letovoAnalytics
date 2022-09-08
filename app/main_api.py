@@ -13,9 +13,9 @@ app = FastAPI(
     title=settings().title_api,
 )
 
-app.mount("/static", StaticFiles(directory="./app/static"), name="static")
+app.mount("/static", StaticFiles(directory="./app/api/static"), name="static")
 
-templates = Jinja2Templates(directory="./app/api/templates")
+templates = Jinja2Templates(directory="./app/api/static/templates")
 application_json = "application/json"
 error_page_t = "pageError.html"
 # app.include_router(login_router, tags=["login"], prefix="/api")
@@ -24,11 +24,6 @@ error_page_t = "pageError.html"
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
     return templates.TemplateResponse("indexAPI.html", {"request": request})
-
-
-@app.get("/webview", response_class=HTMLResponse)
-async def index(request: Request):
-    return templates.TemplateResponse("webview.html", {"request": request})
 
 
 @app.exception_handler(StarletteHTTPException)

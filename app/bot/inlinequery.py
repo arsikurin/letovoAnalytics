@@ -1,7 +1,7 @@
 import typing
 
 import requests as rq
-from telethon import types, events
+from pyrogram import types
 
 from app.dependencies import errors as errors_l, types as types_l, Web, Firestore
 
@@ -12,7 +12,7 @@ class InlineQueryEventEditors:
     """
 
     @staticmethod
-    async def to_main_page(event: events.InlineQuery.Event):
+    async def to_main_page(event):
         """
         display main page in inline query
         """
@@ -49,7 +49,7 @@ class InlineQuerySenders:
         self.session = s
 
     async def send_schedule(  # TODO
-            self, event: events.InlineQuery.Event, specific_day: int, fs: Firestore
+            self, event, specific_day: int, fs: Firestore
     ):
         """
         parse and send specific day(s) from schedule to inline query

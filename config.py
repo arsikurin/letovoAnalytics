@@ -25,7 +25,6 @@ class AppSettings(BaseSettings):
     PORT: int = 8084
     production: bool = True
     title_api: str = "Letovo Analytics Bot API"
-    favicon_path: str = "app/static/images/icons/api-icon.png"
     timezone: ZoneInfo = ZoneInfo("Europe/Moscow")
 
     class Config:

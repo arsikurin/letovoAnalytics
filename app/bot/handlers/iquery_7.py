@@ -1,13 +1,13 @@
 import datetime
 import functools as ft
 
-from telethon import events, types, TelegramClient
+from pyrogram import Client, types
 
 from app.bot import InlineQuery
 from app.dependencies import types as types_l, Firestore
 
 
-async def init(client: TelegramClient, iQuery: InlineQuery, fs: Firestore):
+async def init(client: Client, iQuery: InlineQuery, fs: Firestore):
     raise NotImplementedError
 
     @client.on(events.InlineQuery())  # TODO NOT WORKING CURRENTLY

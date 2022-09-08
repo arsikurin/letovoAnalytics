@@ -53,7 +53,7 @@ class AcceptContent:
                 return await get(request.app, route, request)
         raise HTTPException(406)
 
-    def accept(self, accept_content):
+    def accept_content_f(self, accept_content):
 
         @ft.wraps(accept_content)
         def wrapper(func):
@@ -65,4 +65,4 @@ class AcceptContent:
 
 def accept(accept_content):
     """Use as decorator. Manages Accept header from requests"""
-    return AcceptContent().accept(accept_content)
+    return AcceptContent().accept_content_f(accept_content)

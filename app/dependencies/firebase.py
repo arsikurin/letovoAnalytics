@@ -199,23 +199,6 @@ class Firestore:
         doc_ref: AsyncDocumentReference = self._client.collection("names").document(sender_id)
         await doc_ref.set(yaml.full_load(request_payload), merge=True)
 
-    async def is_inited(self, sender_id: str) -> bool:
-        """
-        Check the user's presence in the database
-
-        Notes:
-            Instead, use `is_logged` because current method requires more time to execute
-            and cannot verify the registration status
-
-        Args:
-            sender_id (str): user's Telegram ID
-
-        Returns:
-            bool
-        """
-        docs = self._client.collection("users").stream()
-        return sender_id in [doc.id async for doc in docs]
-
     async def is_logged(self, sender_id: str) -> bool:
         """
         Check the user's presence in the database.
