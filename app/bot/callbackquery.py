@@ -665,10 +665,10 @@ class CallbackQuerySenders:
                         self._payload += f"**{mark.final_value}**{mark.final_criterion} "
                 else:
                     for mark in subject.final_mark_list.values():
-                        if mark['final_criterion'] != "Y":
+                        if mark["final_criterion"] != "Y":
                             self._payload += f"**{mark['final_value']}**{mark['final_criterion']} "
                         else:
-                            year_mark = mark['final_value']
+                            year_mark = mark["final_value"]
 
                 if subject.group_avg_mark:
                     self._payload += f" | __group_avg:__ **{subject.group_avg_mark}**"
