@@ -1,4 +1,4 @@
-letovoAnalytics.session
+*.session
 __pycache__
 .env.development.local
 .pytest_cache
