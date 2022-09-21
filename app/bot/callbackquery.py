@@ -7,7 +7,7 @@ import aiohttp
 from pyrogram import Client, types, enums
 
 from app.dependencies import (
-    types as types_l, errors as errors_l, Web, Postgresql, Firestore, run_parallel
+    types as types_l, errors as errors_l, API, Postgresql, Firestore, run_parallel
 )
 from app.schemas import MarksResponse, MarksDataList, ScheduleAndHWResponse, TeachersResponse
 from config import settings
@@ -32,7 +32,7 @@ class CallbackQuerySenders:
             self, client: Client, session: aiohttp.ClientSession, db: Postgresql, fs: Firestore
     ):
         self.client: Client = client
-        self._web: Web = Web(session=session, fs=fs)
+        self._web: API = API(session=session, fs=fs)
         self._db: Postgresql = db
         self._fs: Firestore = fs
         self._payload: str = ""
@@ -46,11 +46,11 @@ class CallbackQuerySenders:
         self._client = value
 
     @property
-    def _web(self) -> Web:
+    def _web(self) -> API:
         return self.__web
 
     @_web.setter
-    def _web(self, value: Web):
+    def _web(self, value: API):
         self.__web = value
 
     @property
@@ -81,48 +81,61 @@ class CallbackQuerySenders:
     def _payload(self):
         self.__payload = ""
 
-    async def send_greeting(self, sender: types.User) -> types.Message:
+    async def send_greeting(self, sender: types.User, client: Client | None = None) -> types.Message:
         """
         Send a greeting to the end user
 
         Args:
             sender (types.User): end user
+            client (Client | None): custom client
 
         Returns:
             types.Message
         """
+        if client is None:
+            client = self.client
+
         payload = f'{fn if (fn := sender.first_name) else ""} {ln if (ln := sender.last_name) else ""}'.strip()
-        return await self.client.send_message(
+        return await client.send_message(
             chat_id=sender.id,
             text=f"Greetings, **{payload}**!",
-            reply_markup=types.ReplyKeyboardMarkup([[
-                types.KeyboardButton("Options")
-            ]], resize_keyboard=True)
+            reply_markup=types.ReplyKeyboardMarkup([
+                [
+                    types.KeyboardButton("Options")
+                ]
+            ], resize_keyboard=True)
         )
 
-    # async def send_start_page(self, sender: types.User) -> types.Message:
-    #     return await self.client.send_message(
-    #         chat_id=sender.id,
-    #         text="I will help you access s.letovo.ru resources via Telegram.\n"
-    #                 "  Initially, you should provide your **school** credentials.\n"
-    #                 "  To do that click the **Log In** button below\n\n"
-    #                 "__After logging into your account, click **Options** button__",
-    #         reply_markup=types.ReplyKeyboardMarkup([
-    #             Button.url(text="Click here to log in", url=f"{settings().URL_LOGIN_LOCAL}?sender_id={sender.id}")
-    #         ]
-    #     )
-
-    async def send_help_page(self, sender: types.User) -> types.Message:
+    async def send_help_page(
+            self, sender: types.User, no_register: bool = False, client: Client | None = None
+    ) -> types.Message:
         """
         Send help page
 
         Args:
             sender (types.User): end user
+            no_register (bool): either add button for registering or not
+            client (Client | None): custom client
 
         Returns:
             types.Message
         """
-        return await self.client.send_message(
+        if client is None:
+            client = self.client
+
+        if not no_register:
+            reply_markup = types.ReplyKeyboardMarkup([
+                [
+                    types.KeyboardButton(
+                        text="Click here to register",
+                        web_app=types.WebAppInfo(url="https://letovo-analytics.web.app/webview")
+                    )
+                ]
+            ], resize_keyboard=True)
+        else:
+            reply_markup = None
+
+        return await client.send_message(
             chat_id=sender.id,
             text="I can help you access s.letovo.ru resources via Telegram.\n"
                  "If you're new here, please see the [Terms of Use](https://example.com) and "
@@ -164,16 +177,7 @@ class CallbackQuerySenders:
                  "• **7A** means **7** for Summative **A**\n"
                  "• **5B** means **5** for Summative **B**\n"
                  "• **6F** means **6** for Formative\n",
-            reply_markup=types.ReplyKeyboardMarkup([[
-                types.KeyboardButton(
-                    text="Click here to register",
-                    web_app=types.WebAppInfo(url="https://letovo-analytics.web.app/webview")
-                )
-            ]], resize_keyboard=True),
-            # reply_markup=types.InlineKeyboardMarkup([[
-            #     types.InlineKeyboardButton(text="Click here to register",
-            #                                url=f"{settings().URL_LOGIN_LOCAL}?sender_id={sender.id}")
-            # ]]),
+            reply_markup=reply_markup,
             disable_web_page_preview=True
         )
 
@@ -231,30 +235,30 @@ class CallbackQuerySenders:
                  "• [Telegram](https://t.me/arsikurin)\n",
         )
 
-    async def send_common_page(self, sender: types.User) -> types.Message:
-        """
-        Send `small help` page
+    # async def send_common_page(self, sender: types.User) -> types.Message:
+    #     """
+    #     Send `small help` page
+    #
+    #     Args:
+    #         sender (types.User): end user
+    #
+    #     Returns:
+    #         types.Message
+    #     """
+    #     return await self.client.send_message(
+    #         chat_id=sender.id,
+    #         text="**What you can do:**\n"
+    #              "\n"
+    #              "• Enter **/options** or click the **Options** button below\n"
+    #              "• Enter **/help** to view the manual",
+    #         reply_markup=types.ReplyKeyboardMarkup([
+    #             [
+    #                 types.KeyboardButton("Options")
+    #             ]
+    #         ], resize_keyboard=True)
+    #     )
 
-        Args:
-            sender (types.User): end user
-
-        Returns:
-            types.Message
-        """
-        return await self.client.send_message(
-            chat_id=sender.id,
-            text="**What you can do:**\n"
-                 "\n"
-                 "• Enter **/options** or click the **Options** button below\n"
-                 "• Enter **/help** to view the manual",
-            reply_markup=types.ReplyKeyboardMarkup([
-                [
-                    types.KeyboardButton("Options")
-                ]
-            ], resize_keyboard=True)
-        )
-
-    async def send_main_page(self, sender: types.User) -> types.Message:
+    async def send_landing_page(self, sender: types.User) -> types.Message:
         """
         Send landing page
 
@@ -419,7 +423,6 @@ class CallbackQuerySenders:
             specific_day (types_l.Weekdays): day of the week
         """
         if specific_day == types_l.Weekdays.Sunday:
-            # if int(datetime.datetime.now(tz=settings().timezone).strftime("%w")) == 0:
             return await event.answer("Congrats! It's Sunday, no lessons", show_alert=False)
 
         sender: types.User = event.from_user
@@ -466,20 +469,27 @@ class CallbackQuerySenders:
                 old_wd = wd
 
         if specific_day != types_l.Weekdays.ALL:
-            start_of_week = datetime.datetime.fromisoformat(schedule_response.data[0].date)
-            msg = await self.client.send_message(
-                chat_id=sender.id,
-                text=f'__{specific_day.name}, '
-                     f'{start_of_week.strftime("%d.%m.%Y")}__\n',
-                reply_markup=types.InlineKeyboardMarkup([[
-                    types.InlineKeyboardButton("Close", b"close")
-                ]]),
-                disable_notification=True
+            msg = await self._send_close_message(
+                sender, specific_day, schedule_response
             )
             msg_ids.append(msg.id)
             await self._db.set_msg_ids(sender_id=str(sender.id), msg_ids=" ".join(map(str, msg_ids)))
 
         await event.answer()
+
+    async def _send_close_message(
+            self, sender: types.User, specific_day: types_l.Weekdays, schedule_response: ScheduleAndHWResponse
+    ) -> types.Message:
+        start_of_week = datetime.datetime.fromisoformat(schedule_response.data[0].date)
+        return await self.client.send_message(
+            chat_id=sender.id,
+            text=f"__{specific_day.name}, "
+                 f"{start_of_week:%d.%m.%Y}__\n",
+            reply_markup=types.InlineKeyboardMarkup([[
+                types.InlineKeyboardButton("Close", b"close")
+            ]]),
+            disable_notification=True
+        )
 
     async def send_homework(
             self, event: types.CallbackQuery, specific_day: types_l.Weekdays
@@ -496,9 +506,11 @@ class CallbackQuerySenders:
 
         sender: types.User = event.from_user
         try:
-            response = await self._handle_errors(self._web.receive_marks_and_teachers, event, sender)
+            response = await self._handle_errors(self._web.receive_schedule_and_hw, event, sender, specific_day)
         except errors_l.StopPropagation:
             return
+        await event.answer("Homework might not be displayed properly as it is in beta")
+
         homework_response = ScheduleAndHWResponse.parse_obj(response)
         old_wd = ""
         msg_ids = []
@@ -553,24 +565,14 @@ class CallbackQuerySenders:
                     disable_web_page_preview=True
                 )
                 msg_ids.append(msg.id)
-
                 old_wd = wd
 
         if specific_day != types_l.Weekdays.ALL:
-            start_of_week = datetime.datetime.fromisoformat(homework_response.data[0].date)
-            msg = await self.client.send_message(
-                chat_id=sender.id,
-                text=f'__{specific_day.name}, '
-                     f'{start_of_week.strftime("%d.%m.%Y")}__\n',
-                reply_markup=types.InlineKeyboardMarkup([[
-                    types.InlineKeyboardButton("Close", b"close")
-                ]]),
-                disable_notification=True
+            msg = await self._send_close_message(
+                sender, specific_day, homework_response
             )
             msg_ids.append(msg.id)
             await self._db.set_msg_ids(sender_id=str(sender.id), msg_ids=" ".join(map(str, msg_ids)))
-
-        await event.answer("Homework might not be displayed properly as it is in beta")
 
     async def _prepare_summative_marks(self, subject: MarksDataList, *, check_date: bool = False):
         """
@@ -636,7 +638,11 @@ class CallbackQuerySenders:
         """
         for subject in _marks_response.data:
             if subject.summative_list:
-                self._payload = f"**{subject.group.subject.subject_name_eng}**\n"
+                if subject.group.subject.subject_name_eng:
+                    subject_name = subject.group.subject.subject_name_eng
+                else:
+                    subject_name = subject.group.subject.subject_name
+                self._payload = f"**{subject_name}**\n"
                 await self._prepare_summative_marks(subject)
 
                 await self.client.send_message(
@@ -656,8 +662,11 @@ class CallbackQuerySenders:
         for subject in _marks_response.data:
             if subject.final_mark_list:
                 year_mark = None
-                # TODO subject name not only eng should be
-                self._payload = f"**{subject.group.subject.subject_name_eng}**\n"
+                if subject.group.subject.subject_name_eng:
+                    subject_name = subject.group.subject.subject_name_eng
+                else:
+                    subject_name = subject.group.subject.subject_name
+                self._payload = f"**{subject_name}**\n"
 
                 # TODO sort final marks
                 if isinstance(subject.final_mark_list, list):
@@ -696,7 +705,11 @@ class CallbackQuerySenders:
         """
         for subject in _marks_response.data:
             flag = False
-            self._payload = f"**{subject.group.subject.subject_name_eng}**\n"
+            if subject.group.subject.subject_name_eng:
+                subject_name = subject.group.subject.subject_name_eng
+            else:
+                subject_name = subject.group.subject.subject_name
+            self._payload = f"**{subject_name}**\n"
 
             if subject.formative_list:
                 for mark in subject.formative_list:
@@ -726,7 +739,11 @@ class CallbackQuerySenders:
             sender (types.User): end user
         """
         for subject in _marks_response.data:
-            self._payload = f"**{subject.group.subject.subject_name_eng}**\n"
+            if subject.group.subject.subject_name_eng:
+                subject_name = subject.group.subject.subject_name_eng
+            else:
+                subject_name = subject.group.subject.subject_name
+            self._payload = f"**{subject_name}**\n"
 
             if subject.formative_list:
                 for mark in subject.formative_list:
@@ -811,7 +828,7 @@ class CallbackQuerySenders:
             return
         marks_response = MarksResponse.parse_obj(response)
 
-        match specific:  # TODO test required
+        match specific:
             case types_l.MarkTypes.SUMMATIVE:
                 await self._send_summative_marks(_marks_response=marks_response, sender=sender)
             case types_l.MarkTypes.FINAL:
@@ -820,15 +837,6 @@ class CallbackQuerySenders:
                 await self._send_recent_marks(_marks_response=marks_response, sender=sender)
             case types_l.MarkTypes.ALL:
                 await self._send_all_marks(_marks_response=marks_response, sender=sender)
-
-        # if specific == types_l.MarkTypes.SUMMATIVE:
-        #     await self._send_summative_marks(_marks_response=marks_response, sender=sender)
-        # elif specific == types_l.MarkTypes.FINAL:
-        #     await self._send_final_marks(_marks_response=marks_response, sender=sender)
-        # elif specific == types_l.MarkTypes.RECENT:
-        #     await self._send_recent_marks(_marks_response=marks_response, sender=sender)
-        # elif specific == types_l.MarkTypes.ALL:
-        #     await self._send_all_marks(_marks_response=marks_response, sender=sender)
 
         del self._payload
         await event.answer()
@@ -840,14 +848,13 @@ class CallbackQueryEventEditors(CallbackQuerySenders):
     """
 
     @staticmethod
-    async def to_main_page(event: types.CallbackQuery):
+    async def to_landing_page(event: types.CallbackQuery):
         """
-        Display `main` page
+        Display `landing` page
 
         Args:
             event (types.CallbackQuery): a return object of CallbackQuery
         """
-        # TODO rename `main` page to `landing` page
         await event.edit_message_text(
             choose_an_option_below_text,
             reply_markup=types.InlineKeyboardMarkup([
@@ -910,6 +917,7 @@ class CallbackQueryEventEditors(CallbackQuerySenders):
                 ]
             ])
         )
+        await event.answer()
 
     @staticmethod
     async def to_marks_page(event: types.CallbackQuery):
@@ -934,6 +942,7 @@ class CallbackQueryEventEditors(CallbackQuerySenders):
                 ]
             ])
         )
+        await event.answer()
 
     @staticmethod
     async def to_others_page(event: types.CallbackQuery):
@@ -957,6 +966,7 @@ class CallbackQueryEventEditors(CallbackQuerySenders):
                 ]
             ])
         )
+        await event.answer()
 
     @staticmethod
     async def to_specific_day_schedule_page(event: types.CallbackQuery):
@@ -983,6 +993,7 @@ class CallbackQueryEventEditors(CallbackQuerySenders):
                 ]
             ])
         )
+        await event.answer()
 
     @staticmethod
     async def to_specific_day_homework_page(event: types.CallbackQuery):
@@ -1009,6 +1020,7 @@ class CallbackQueryEventEditors(CallbackQuerySenders):
                 ]
             ])
         )
+        await event.answer()
 
     # @staticmethod
     # async def set_account(event: types.CallbackQuery):

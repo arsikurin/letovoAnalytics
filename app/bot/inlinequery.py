@@ -3,7 +3,7 @@ import typing
 import requests as rq
 from pyrogram import types
 
-from app.dependencies import errors as errors_l, types as types_l, Web, Firestore
+from app.dependencies import errors as errors_l, types as types_l, API
 
 
 class InlineQueryEventEditors:
@@ -12,44 +12,39 @@ class InlineQueryEventEditors:
     """
 
     @staticmethod
-    async def to_main_page(event):
+    async def to_main_page(event: types.InlineQuery):
         """
         display main page in inline query
         """
         await event.answer(
             results=[
-                event.builder.article(
+                types.InlineQueryResultArticle(
                     title="Holidays",
                     description="send message with vacations terms",
-                    text="__after__ **unit I**\n31.10.2021 — 07.11.2021\n\n"
-                         "__after__ **unit II**\n26.12.2021 — 09.01.2022\n\n"
-                         "__after__ **unit III**\n13.03.2022 — 20.03.2022\n\n"
-                         "__after__ **unit IV**\n22.05.2022 — 31.08.2022",
-                    thumb=types.InputWebDocument(
-                        url="https://letovo-analytics.web.app/static/images/icons/calendar-icon.png",
-                        size=512,
-                        mime_type="image/jpg",
-                        attributes=[
-                            types.DocumentAttributeImageSize(
-                                w=512,
-                                h=512
-                            )
-                        ]
-                    )
+                    input_message_content=types.InputTextMessageContent(
+                        "__after__ **unit I**\n31.10.2021 — 07.11.2021\n\n"
+                        "__after__ **unit II**\n26.12.2021 — 09.01.2022\n\n"
+                        "__after__ **unit III**\n13.03.2022 — 20.03.2022\n\n"
+                        "__after__ **unit IV**\n22.05.2022 — 31.08.2022"),
+                    thumb_url="https://letovo-analytics.web.app/static/images/icons/calendar-icon.png",
                 ),
-                event.builder.photo(file="static/images/icons/schedule.jpg")
-            ], switch_pm="Log in", switch_pm_param="inlineMode"
+                types.InlineQueryResultPhoto(
+                    title="schedule",
+                    photo_url="https://letovo-analytics.web.app/static/images/icons/letovo-transp.png"
+                ),
+            ], switch_pm_text="Register", switch_pm_parameter="inlineMode", is_gallery=False, cache_time=0
         )
 
 
 class InlineQuerySenders:
+    # TODO implement search of lessons
     __slots__ = ("session",)
 
     def __init__(self, s):
         self.session = s
 
-    async def send_schedule(  # TODO
-            self, event, specific_day: int, fs: Firestore
+    async def send_schedule(
+            self, event: types.InlineQuery, specific_day: int
     ):
         """
         parse and send specific day(s) from schedule to inline query
@@ -58,7 +53,7 @@ class InlineQuerySenders:
         :param event: a return object of InlineQuery
         :param specific_day: day number or -10 to send entire schedule
         """
-        schedule_future = await Web.receive_data(self.session, sender_id=str(event.sender_id), fs=fs)
+        schedule_future = await API.receive_schedule_and_hw(sender_id=str(event.from_user.id))
         if schedule_future == errors_l.UnauthorizedError:
             return await event.answer(
                 results=[
@@ -66,7 +61,7 @@ class InlineQuerySenders:
                         title="[✘] Cannot get data from s.letovo.ru",
                         text="[✘] Cannot get data from s.letovo.ru"
                     )
-                ], switch_pm="Log in", switch_pm_param="inlineMode"
+                ], switch_pm="Register", switch_pm_param="inlineMode"
             )
 
         if schedule_future == errors_l.NothingFoundError:
@@ -76,7 +71,7 @@ class InlineQuerySenders:
                         title="[✘] Nothing found in database for this user.\nPlease, enter /start and register",
                         text="[✘] Nothing found in database for this user.\nPlease, enter /start and register"
                     )
-                ], switch_pm="Log in", switch_pm_param="inlineMode"
+                ], switch_pm="Register", switch_pm_param="inlineMode"
             )
 
         if schedule_future == rq.ConnectionError:
@@ -86,14 +81,14 @@ class InlineQuerySenders:
                         title="[✘] Cannot establish connection to s.letovo.ru",
                         text="[✘] Cannot establish connection to s.letovo.ru"
                     )
-                ], switch_pm="Log in", switch_pm_param="inlineMode"
+                ], switch_pm="Register", switch_pm_param="inlineMode"
             )
 
         # if specific_day == 0:
         #     return await event.answer(
         #         results=[
         #             event.builder.article(title=f"{day_name} lessons", text="Congrats! It's Sunday, no lessons")
-        #         ], switch_pm="Log in", switch_pm_param="inlineMode"
+        #         ], switch_pm="Register", switch_pm_param="inlineMode"
         #     )
         payload = ""
         old_wd = 0
@@ -118,8 +113,9 @@ class InlineQuerySenders:
 
         await event.answer(
             results=[
-                event.builder.article(title=f'{types_l.Weekdays(specific_day).name} lessons', text=payload, parse_mode="html")
-            ], switch_pm="Log in", switch_pm_param="inlineMode"
+                event.builder.article(title=f'{types_l.Weekdays(specific_day).name} lessons', text=payload,
+                                      parse_mode="html")
+            ], switch_pm="Register", switch_pm_param="inlineMode"
         )
 
 

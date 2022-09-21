@@ -7,10 +7,12 @@ import pyrogram
 from pyrogram import Client, types
 
 from app.bot import CallbackQuery
-from app.dependencies import run_sequence, run_parallel
+from app.dependencies import run_sequence, run_parallel, types as types_l
 
 
-async def init(client: Client, cbQuery: CallbackQuery):
+async def init(clients: types_l.Clients[Client], cbQuery: CallbackQuery):
+    client = clients.client
+
     @client.on_message(pyrogram.filters.user([606336225, 2200163963]) & pyrogram.filters.regex(re.compile(r"^#dev$")))
     async def _dev(_client: Client, message: types.Message):
         sender: types.User = message.from_user
@@ -21,6 +23,7 @@ async def init(client: Client, cbQuery: CallbackQuery):
         raise pyrogram.StopPropagation
 
     @client.on_message(pyrogram.filters.regex(re.compile(r"^#ping$")))
+    @clients.client_i.on_message(pyrogram.filters.regex(re.compile(r"^#ping$")))
     async def _ping(_client: Client, message: types.Message):
         start_time = time.perf_counter()
         message_pong = await message.reply("Pong!")
@@ -44,7 +47,8 @@ async def init(client: Client, cbQuery: CallbackQuery):
         )
         raise pyrogram.StopPropagation
 
-    @client.on_callback_query(pyrogram.filters.user([606336225, 2200163963]) & pyrogram.filters.regex(re.compile(r"^tokens$")))
+    @client.on_callback_query(
+        pyrogram.filters.user([606336225, 2200163963]) & pyrogram.filters.regex(re.compile(r"^tokens$")))
     async def _tokens(_client: Client, callback_query: types.CallbackQuery):
         from app.helper import main
         await run_sequence(

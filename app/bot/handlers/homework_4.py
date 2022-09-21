@@ -1,14 +1,18 @@
 import datetime
 import functools as ft
 import re
+
 import pyrogram
 from pyrogram import Client, types
+
 from app.bot import CallbackQuery
 from app.dependencies import Postgresql, types as types_l
 from config import settings
 
 
-async def init(client: Client, cbQuery: CallbackQuery, db: Postgresql):
+async def init(clients: types_l.Clients[Client], cbQuery: CallbackQuery, db: Postgresql):
+    client = clients.client
+
     @client.on_callback_query(pyrogram.filters.regex(re.compile(r"^homework_page$")))
     async def _homework_page(_client: Client, callback_query: types.CallbackQuery):
         await cbQuery.to_homework_page(event=callback_query)

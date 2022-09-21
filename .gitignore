@@ -1,11 +1,12 @@
 *.session
+*.session-journal
 __pycache__
 .env.development.local
 .pytest_cache
 .coverage
 .tox
 .mypy_cache
-
+.idea/sonarlint
 # Added by cargo
 
 /target

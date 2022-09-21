@@ -3,15 +3,16 @@ import logging as log
 
 import aiohttp
 
-import essential  # noqa
-from app.dependencies import Web, Postgresql, Firestore, errors as errors_l
+# noinspection PyUnresolvedReferences
+import essential
+from app.dependencies import API, Postgresql, Firestore, errors as errors_l
 
 
 async def main():
     log.info("Updating tokens in Firebase")
     async with aiohttp.ClientSession() as session, Postgresql() as db, Firestore(app_name="helper") as fs:
         log.debug("established connections to the databases")
-        web = Web(session=session, fs=fs)
+        web = API(session=session, fs=fs)
         if __name__ == "__main__":
             await db.reset_analytics()
             log.debug("done reset analytics")

@@ -10,11 +10,11 @@ import pyrogram
 from pyrogram import Client, types
 
 from app.bot import CallbackQuery, InlineQuery
-from app.dependencies import Postgresql, Firestore, run_parallel
+from app.dependencies import Postgresql, Firestore, run_parallel, types as types_l
 
 
 async def init(
-        client: Client, cbQuery: CallbackQuery, iQuery: InlineQuery, db: Postgresql, fs: Firestore
+        clients: types_l.Clients[Client], cbQuery: CallbackQuery, iQuery: InlineQuery, db: Postgresql, fs: Firestore
 ):
     handlers = [
         # Dynamically import
@@ -32,20 +32,43 @@ async def init(
 
     # All kwargs provided to get_init_args are those that handlers may access
     to_init = (
-        get_init_coro(handler, client=client, cbQuery=cbQuery, iQuery=iQuery, db=db, fs=fs, modules=modules)
+        get_init_coro(handler, clients=clients, cbQuery=cbQuery, iQuery=iQuery, db=db, fs=fs, modules=modules)
         for handler in handlers
     )
 
     # Plugins may not have a valid init so those need to be filtered out
     await run_parallel(*(filter(None, to_init)))
 
-    @client.on_message()
-    async def _delete(_client: Client, message: types.Message):
-        message, _, = await run_parallel(
-            cbQuery.send_common_page(sender=message.from_user),
-            message.delete()
-        )
-        raise pyrogram.StopPropagation
+    for client in clients:
+        @client.on_message()
+        async def _delete(_client: Client, message: types.Message):
+            if _client.name == "letovoAnalytics":
+                text = (
+                    "**What you can do:**\n"
+                    "\n"
+                    "• Enter **/options** or click the **Options** button below\n"
+                    "• Enter **/help** to view the manual"
+                )
+            else:
+                text = (
+                    "**This bot is used only for inline query**, i.e. `@l3tovobot [query]`\n"
+                    "\n"
+                    "Consider following @LetovoAnalyticsBot link"
+                )
+
+            await run_parallel(
+                _client.send_message(
+                    chat_id=message.from_user.id,
+                    text=text,
+                    reply_markup=types.ReplyKeyboardMarkup([
+                        [
+                            types.KeyboardButton("Options")
+                        ]
+                    ], resize_keyboard=True)
+                ),
+                message.delete()
+            )
+            raise pyrogram.StopPropagation
 
 
 def get_init_coro(handler, /, **kwargs):
