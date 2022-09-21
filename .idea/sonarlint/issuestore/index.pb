@@ -47,8 +47,6 @@ J
 app/tests/test_unittest.py,4/2/42e2cf386919ff91e660724c8606c250a7ec2ea1
 H
 app/tests/test_pytest.py,7/9/79bc96eefeff50432cd9135cb3ff467e1088b202
-E
-app/tests/conftest.py,9/f/9f467a9fcd7ffe82aaeae615d9ddff23c4b4f90c
 L
 app/dependencies/database.py,e/f/efd82d6b5893028ad00dca7d1540f837ac7f56e5
 I
@@ -71,8 +69,6 @@ H
 .idea/copyright/test.xml,3/f/3f30f9391629b0b03861dde866a06d5cd1ca5d60
 w
 G.idea/sonarlint/issuestore/2/a/2a64350c28aa37ca0f8a85df5dbdf86b487b71e6,4/1/416ef47e8d72b968430ebf64af7d66a72badc909
-J
-app/dependencies/errors.py,2/3/23cb45a7ed3c7410b0737d8fcf73c476f0fa392a
 w
 G.idea/sonarlint/issuestore/d/d/dd4cbd5bae2856080323f378773a8754a7afc8fb,5/6/56befb78e41b9dec22e788513010c85da768398e
 w
@@ -122,8 +118,6 @@ G.idea/sonarlint/issuestore/b/7/b7fe50f648ce84c03ec53348cf07faa9ed023d88,0/9/09
 terms.html,2/c/2c40cae6aa564ffb60c44dd3798e023279e9a4e4
 8
 Makefile,8/3/836efb6e25a091dcb4ff8e1dbb2f0be6a5cbf14c
-C
-app/bot/__init__.py,e/9/e9f6b277e939d65a41b31370495c48afd7ea6e31
 @
 app/essential.py,9/e/9e913b2e7e335ecf82b791bfc4924f020c7d8b81
 =
@@ -140,9 +134,5 @@ V
 &app/api/static/templates/indexAPI.html,7/1/71b8bbc4dab5b9906a8d8d98ad7c675317b5ea0f
 W
 'app/api/static/templates/pageError.html,3/9/39cb6e837ef03a8514272599aca4ad28578f8fb0
-;
-poetry.lock,0/0/0068a1506b061a8948c37d78b0dd5697211558d3
->
-pyproject.toml,5/d/5d07e7d72637aa0d59c89d381fe6dc4cf46e2491
 D
 app/schemas/marks.py,9/7/97fbf3327d40eabbec68aaacbf6136cde8685bd8

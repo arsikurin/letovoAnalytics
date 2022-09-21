@@ -141,6 +141,54 @@ class API:
             log.error(err)
             raise asyncio.TimeoutError(too_long_conn_text)
 
+    async def receive_schedule_ics(
+            self, sender_id: str
+    ) -> bytes:
+        """
+        Receive schedule in ics from s.letovo.ru
+
+        Args:
+            sender_id (str): user's Telegram ID
+
+        Raises:
+            aiohttp.ClientConnectionError: if connection cannot be established to s.letovo.ru
+            UnauthorizedError: if any other error caught during connection to s.letovo.ru
+            NothingFoundError: if credentials cannot be found in the provided DB
+
+        Returns:
+            bytes
+        """
+        student_id, token = await run_parallel(
+            self.fs.get_student_id(sender_id=sender_id),
+            self.fs.get_token(sender_id=sender_id)
+        )
+        if errors_l.NothingFoundError in {student_id, token}:
+            raise errors_l.NothingFoundError(
+                creds_not_found_text
+            )
+
+        if int(datetime.datetime.now(tz=settings().timezone).strftime("%w")) == 0:
+            date = (datetime.datetime.now(tz=settings().timezone) + datetime.timedelta(1))
+        else:
+            date = datetime.datetime.now(tz=settings().timezone)
+
+        url = f"https://s-api.letovo.ru/api/schedule/{student_id}/week/ics?schedule_date={date:%Y-%m-%d}"
+
+        headers = {
+            "Authorization": token,
+        }
+        try:
+            async with self.session.get(url=url, headers=headers, timeout=10) as resp:
+                if resp.status != 200:
+                    raise errors_l.UnauthorizedError(f"Cannot get data from s.letovo.ru. Error {resp.status}")
+                return await resp.read()
+        except aiohttp.ClientConnectionError as err:
+            log.error(err)
+            raise aiohttp.ClientConnectionError(no_conn_text)
+        except asyncio.TimeoutError as err:
+            log.error(err)
+            raise asyncio.TimeoutError(too_long_conn_text)
+
     async def receive_schedule_and_hw(
             self, sender_id: str, specific_day: types_l.Weekdays, *, week: bool = True
     ) -> dict:

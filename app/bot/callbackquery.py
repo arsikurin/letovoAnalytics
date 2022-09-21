@@ -2,8 +2,10 @@ import asyncio
 import datetime
 import logging
 import typing
+from io import BytesIO
 
 import aiohttp
+from ics import Calendar
 from pyrogram import Client, types, enums
 
 from app.dependencies import (
@@ -32,7 +34,7 @@ class CallbackQuerySenders:
             self, client: Client, session: aiohttp.ClientSession, db: Postgresql, fs: Firestore
     ):
         self.client: Client = client
-        self._web: API = API(session=session, fs=fs)
+        self._api: API = API(session=session, fs=fs)
         self._db: Postgresql = db
         self._fs: Firestore = fs
         self._payload = ""
@@ -47,11 +49,11 @@ class CallbackQuerySenders:
         self._client = value
 
     @property
-    def _web(self) -> API:
+    def _api(self) -> API:
         return self.__web
 
-    @_web.setter
-    def _web(self, value: API):
+    @_api.setter
+    def _api(self, value: API):
         self.__web = value
 
     @property
@@ -173,7 +175,7 @@ class CallbackQuerySenders:
                  "\n"
                  "Other info:\n"
                  "**/options » Others » Teachers' info** — get teachers' names and emails\n"
-                 "**/options » Others » Letovo Diploma** — get Letovo Diploma progress\n"
+                 "**/options » Others » Schedule to calendar (.ics)** — get .ics file with current week schedule\n"
                  "**/options » Others » Holidays** — get holidays periods\n"
                  "\n"
                  "\n"
@@ -247,29 +249,6 @@ class CallbackQuerySenders:
                  "• [Github](https://github.com/arsikurin)\n"
                  "• [Telegram](https://t.me/arsikurin)\n",
         )
-
-    # async def send_common_page(self, sender: types.User) -> types.Message:
-    #     """
-    #     Send `small help` page
-    #
-    #     Args:
-    #         sender (types.User): end user
-    #
-    #     Returns:
-    #         types.Message
-    #     """
-    #     return await self.client.send_message(
-    #         chat_id=sender.id,
-    #         text="**What you can do:**\n"
-    #              "\n"
-    #              "• Enter **/options** or click the **Options** button below\n"
-    #              "• Enter **/help** to view the manual",
-    #         reply_markup=types.ReplyKeyboardMarkup([
-    #             [
-    #                 types.KeyboardButton("Options")
-    #             ]
-    #         ], resize_keyboard=True)
-    #     )
 
     async def send_landing_page(self, sender: types.User) -> types.Message:
         """
@@ -390,6 +369,45 @@ class CallbackQuerySenders:
         )
         await event.answer()
 
+    async def send_schedule_ics(
+            self, event: types.CallbackQuery
+    ):
+        """
+        Parse & send schedule .ics file
+
+        Args:
+            event (types.CallbackQuery): a return object of CallbackQuery
+        """
+        sender: types.User = event.from_user
+        try:
+            response = await self._api.receive_schedule_ics(sender_id=str(sender.id))
+        except (errors_l.UnauthorizedError, errors_l.NothingFoundError, aiohttp.ClientConnectionError) as err:
+            await event.answer(f"[✘] {err}", show_alert=True)
+            return
+        except asyncio.TimeoutError as err:
+            await self.client.send_message(
+                chat_id=sender.id,
+                text=f"[✘] {err.__str__()}",
+                disable_notification=True,
+                disable_web_page_preview=True
+            )
+            return
+
+        c = Calendar(response.decode())
+        for lesson in c.timeline:
+            lesson.name = lesson.name.split("(")[0].split(":")[-1].strip()
+
+            description = lesson.description.split(";")[0].split("(")[0].strip()
+            link = lesson.description.split(";")[-1].split(":")[-1].strip()
+            if link == "no link":
+                description += f"\nZoom: {link}"
+            lesson.description = description
+
+        file = BytesIO(c.serialize().encode())
+        file.name = "schedule.ics"
+        await self.client.send_document(sender.id, file)
+        await event.answer()
+
     async def send_teachers(
             self, event: types.CallbackQuery
     ):
@@ -401,7 +419,7 @@ class CallbackQuerySenders:
         """
         sender: types.User = event.from_user
         try:
-            response = await self._handle_errors(self._web.receive_marks_and_teachers, event, sender)
+            response = await self._handle_errors(self._api.receive_marks_and_teachers, event, sender)
         except errors_l.StopPropagation:
             return
         teachers_response = TeachersResponse.parse_obj(response)
@@ -440,7 +458,7 @@ class CallbackQuerySenders:
 
         sender: types.User = event.from_user
         try:
-            response = await self._handle_errors(self._web.receive_schedule_and_hw, event, sender, specific_day)
+            response = await self._handle_errors(self._api.receive_schedule_and_hw, event, sender, specific_day)
         except errors_l.StopPropagation:
             return
 
@@ -513,7 +531,7 @@ class CallbackQuerySenders:
 
         sender: types.User = event.from_user
         try:
-            response = await self._handle_errors(self._web.receive_schedule_and_hw, event, sender, specific_day)
+            response = await self._handle_errors(self._api.receive_schedule_and_hw, event, sender, specific_day)
         except errors_l.StopPropagation:
             return
         await event.answer("Homework might not be displayed properly as it is in beta")
@@ -616,7 +634,7 @@ class CallbackQuerySenders:
         """
         sender: types.User = event.from_user
         try:
-            response = await self._handle_errors(self._web.receive_marks_and_teachers, event, sender)
+            response = await self._handle_errors(self._api.receive_marks_and_teachers, event, sender)
         except errors_l.StopPropagation:
             return
         marks_response = MarksResponse.parse_obj(response)
@@ -868,11 +886,12 @@ class CallbackQuerySenders:
             specific_day: types_l.Weekdays | None = None
     ) -> dict:
         """
-        Boilerplate for error handling of `self._web.receive_marks_and_teachers` and `self._web.receive_schedule_and_hw`
+        Boilerplate for error handling of
+                         ``self._web.receive_marks_and_teachers`` and ``self._web.receive_schedule_and_hw``
         """
-        if func == self._web.receive_marks_and_teachers:
+        if func == self._api.receive_marks_and_teachers:
             try:
-                resp = await self._web.receive_marks_and_teachers(str(sender.id))
+                resp = await self._api.receive_marks_and_teachers(str(sender.id))
             except (errors_l.UnauthorizedError, errors_l.NothingFoundError, aiohttp.ClientConnectionError) as err:
                 await event.answer(f"[✘] {err}", show_alert=True)
                 raise errors_l.StopPropagation
@@ -886,18 +905,18 @@ class CallbackQuerySenders:
                 raise errors_l.StopPropagation
             return resp
 
-        elif func == self._web.receive_schedule_and_hw:
+        elif func == self._api.receive_schedule_and_hw:
             if specific_day is None:
                 logging.critical("Specific day value not provided!")
                 raise errors_l.StopPropagation
 
             try:
                 if specific_day != types_l.Weekdays.Week:
-                    resp = await self._web.receive_schedule_and_hw(
+                    resp = await self._api.receive_schedule_and_hw(
                         sender_id=str(sender.id), specific_day=specific_day, week=False
                     )
                 else:
-                    resp = await self._web.receive_schedule_and_hw(
+                    resp = await self._api.receive_schedule_and_hw(
                         sender_id=str(sender.id), specific_day=specific_day
                     )
             except (errors_l.UnauthorizedError, errors_l.NothingFoundError, aiohttp.ClientConnectionError) as err:
@@ -1030,7 +1049,7 @@ class CallbackQueryEventEditors(CallbackQuerySenders):
                 [
                     types.InlineKeyboardButton("Teachers' info", b"teachers")
                 ], [
-                    types.InlineKeyboardButton("Letovo Diploma", b"diploma"),
+                    types.InlineKeyboardButton("Schedule to calendar (.ics)", b"schedule_ics"),
                 ], [
                     types.InlineKeyboardButton("Holidays", b"holidays"),
                 ], [
