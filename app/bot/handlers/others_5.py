@@ -4,10 +4,12 @@ import pyrogram
 from pyrogram import Client, types
 
 from app.bot import CallbackQuery
-from app.dependencies import Postgresql, run_parallel
+from app.dependencies import Postgresql, run_parallel, types as types_l
 
 
-async def init(client: Client, cbQuery: CallbackQuery, db: Postgresql):
+async def init(clients: types_l.Clients[Client], cbQuery: CallbackQuery, db: Postgresql):
+    client = clients.client
+
     @client.on_callback_query(pyrogram.filters.regex(re.compile(r"^others_page$")))
     async def _others_page(_client: Client, callback_query: types.CallbackQuery):
         await cbQuery.to_others_page(event=callback_query)

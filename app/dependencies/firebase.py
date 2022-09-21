@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import contextlib
 import types
 import typing
 
 import aiohttp
 import firebase_admin
 import yaml
+from firebase_admin import auth
 from firebase_admin import credentials, _DEFAULT_APP_NAME
 from google.cloud.firestore_v1.async_client import AsyncClient, AsyncDocumentReference, DocumentSnapshot
 
@@ -97,8 +99,13 @@ class Firestore:
         """
         self._client.close()
 
+    async def send_email_to(self, analytics_login: str, /):
+        with contextlib.suppress(auth.EmailAlreadyExistsError):
+            auth.create_user(email=f"{analytics_login}@student.letovo.ru")
+        await self._send_email_unsafe(email_addr=f"{analytics_login}@student.letovo.ru")
+
     @staticmethod
-    async def send_email_to(email_addr: str, /) -> bytes:
+    async def _send_email_unsafe(email_addr: str) -> bytes:
         """
         Email a new user informing them that registration succeeded
 

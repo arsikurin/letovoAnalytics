@@ -20,6 +20,7 @@ class AppSettings(BaseSettings):
     TG_API_ID: int
     TG_API_HASH: str
     TG_BOT_TOKEN: str
+    TG_BOT_TOKEN_INLINE: str
     DATABASE_URL: PostgresDsn
     WEB_CONCURRENCY: int = 4
     PORT: int = 8084

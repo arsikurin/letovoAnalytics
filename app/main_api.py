@@ -5,7 +5,8 @@ from fastapi.responses import ORJSONResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-import essential  # noqa
+# noinspection PyUnresolvedReferences
+import essential
 # from app.api.endpoints import login_router
 from config import settings
 

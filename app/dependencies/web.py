@@ -15,7 +15,7 @@ too_long_conn_text = "s.letovo.ru takes too long to respond\n"
 
 
 @typing.final
-class Web:
+class API:
     """
     Class for dealing with web API of s.letovo.ru
 

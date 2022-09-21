@@ -3,7 +3,8 @@ import logging as log
 
 import aiohttp
 
-import essential  # noqa
+# noinspection PyUnresolvedReferences
+import essential
 from config import settings
 
 
