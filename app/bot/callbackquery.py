@@ -478,7 +478,8 @@ class CallbackQuerySenders:
             payload = ""
             if day.schedules:
                 payload += f"{day.period_name} | <em>{day.schedules[0].room.room_name}</em>:"
-                if day.schedules[0].lessons[0].attendance:
+
+                if day.schedules[0].lessons and day.schedules[0].lessons[0].attendance:
                     payload += "  Ditched\n"
                 else:
                     payload += "\n"
