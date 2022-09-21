@@ -23,7 +23,7 @@ async def init(clients: types_l.Clients[Client], cbQuery: CallbackQuery, db: Pos
         await cbQuery.to_specific_day_schedule_page(event=callback_query)
         raise pyrogram.StopPropagation
 
-    @client.on_callback_query(pyrogram.filters.regex(re.compile(r"(?i).*schedule")))
+    @client.on_callback_query(pyrogram.filters.regex(re.compile(r"(?i).*schedule$")))
     async def _schedule(_client: Client, callback_query: types.CallbackQuery):
         sender: types.User = callback_query.from_user
         sender_id = str(sender.id)

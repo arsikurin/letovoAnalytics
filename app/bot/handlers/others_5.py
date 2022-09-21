@@ -23,13 +23,12 @@ async def init(clients: types_l.Clients[Client], cbQuery: CallbackQuery, db: Pos
         )
         raise pyrogram.StopPropagation
 
-    @client.on_callback_query(pyrogram.filters.regex(re.compile(r"^diploma$")))
-    async def _diploma(_client: Client, callback_query: types.CallbackQuery):
-        # await run_parallel(
-        #     cbQuery.send_...(event=event),
-        #     # db.increase_..._counter(sender_id=sender_id)
-        # )
-        await callback_query.answer("Not implemented!")
+    @client.on_callback_query(pyrogram.filters.regex(re.compile(r"^schedule_ics$")))
+    async def _schedule_ics(_client: Client, callback_query: types.CallbackQuery):
+        await run_parallel(
+            cbQuery.send_schedule_ics(event=callback_query),
+            # db.increase_..._counter(sender_id=sender_id)
+        )
         raise pyrogram.StopPropagation
 
     @client.on_callback_query(pyrogram.filters.regex(re.compile(r"^holidays$")))
