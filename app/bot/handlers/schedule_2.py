@@ -37,7 +37,7 @@ async def init(clients: types_l.Clients[Client], cbQuery: CallbackQuery, db: Pos
                     int(datetime.datetime.now(tz=settings().timezone).strftime("%w"))
                 ))
             case "entire_schedule":
-                await send_schedule(specific_day=types_l.Weekdays.ALL)
+                await send_schedule(specific_day=types_l.Weekdays.Week)
             case "monday_schedule":
                 await send_schedule(specific_day=types_l.Weekdays.Monday)
             case "tuesday_schedule":

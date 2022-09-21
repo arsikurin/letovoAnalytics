@@ -26,7 +26,7 @@ class CallbackQuerySenders:
         db (Postgresql): connection to the database with users' usage analytics
         fs (Firestore): connection to the database with users' credentials
     """
-    __slots__ = ("_client", "__web", "__db", "__fs", "__payload")
+    __slots__ = ("_client", "__web", "__db", "__fs", "__payload", "__msg_ids")
 
     def __init__(
             self, client: Client, session: aiohttp.ClientSession, db: Postgresql, fs: Firestore
@@ -35,7 +35,8 @@ class CallbackQuerySenders:
         self._web: API = API(session=session, fs=fs)
         self._db: Postgresql = db
         self._fs: Firestore = fs
-        self._payload: str = ""
+        self._payload = ""
+        self._msg_ids = []
 
     @property
     def client(self) -> Client:
@@ -80,6 +81,18 @@ class CallbackQuerySenders:
     @_payload.deleter
     def _payload(self):
         self.__payload = ""
+
+    @property
+    def _msg_ids(self) -> list:
+        return self.__msg_ids
+
+    @_msg_ids.setter
+    def _msg_ids(self, value: list):
+        self.__msg_ids = value
+
+    @_msg_ids.deleter
+    def _msg_ids(self):
+        self.__msg_ids.clear()
 
     async def send_greeting(self, sender: types.User, client: Client | None = None) -> types.Message:
         """
@@ -430,21 +443,23 @@ class CallbackQuerySenders:
             response = await self._handle_errors(self._web.receive_schedule_and_hw, event, sender, specific_day)
         except errors_l.StopPropagation:
             return
+
         schedule_response = ScheduleAndHWResponse.parse_obj(response)
         old_wd = ""
         msg_ids = []
         for day in schedule_response.data:
-            if day.schedules and specific_day.value in {int(day.period_num_day), -10}:
-                wd = types_l.Weekdays(int(day.period_num_day)).name
-                if specific_day == types_l.Weekdays.ALL and wd != old_wd:
-                    msg = await self.client.send_message(
-                        chat_id=sender.id,
-                        text=f"\n**=={wd}==**\n",
-                        disable_notification=True
-                    )
-                    msg_ids.append(msg.id)
+            wd = types_l.Weekdays(int(day.period_num_day)).name
+            if specific_day == types_l.Weekdays.Week and wd != old_wd:
+                msg = await self.client.send_message(
+                    chat_id=sender.id,
+                    text=f"\n==={wd}===\n",
+                    disable_notification=True
+                )
+                msg_ids.append(msg.id)
 
-                payload = f"{day.period_name} | <em>{day.schedules[0].room.room_name}</em>:"
+            payload = ""
+            if day.schedules:
+                payload += f"{day.period_name} | <em>{day.schedules[0].room.room_name}</em>:"
                 if day.schedules[0].lessons[0].attendance:
                     payload += "  Ditched\n"
                 else:
@@ -458,6 +473,14 @@ class CallbackQuerySenders:
                 payload += f"{day.period_start} — {day.period_end}\n"
                 if day.schedules[0].zoom_meetings:
                     payload += f"<a href='{day.schedules[0].zoom_meetings.meeting_url}'>ZOOM</a>"
+
+            elif day.period_start == "08:25":
+                payload += f"{day.period_name}:\n"
+                payload += f"{day.period_start} — {day.period_end}\n"
+
+            old_wd = wd
+
+            if payload != "":
                 msg = await self.client.send_message(
                     chat_id=sender.id,
                     text=payload,
@@ -466,30 +489,14 @@ class CallbackQuerySenders:
                     disable_web_page_preview=True
                 )
                 msg_ids.append(msg.id)
-                old_wd = wd
 
-        if specific_day != types_l.Weekdays.ALL:
-            msg = await self._send_close_message(
-                sender, specific_day, schedule_response
-            )
-            msg_ids.append(msg.id)
-            await self._db.set_msg_ids(sender_id=str(sender.id), msg_ids=" ".join(map(str, msg_ids)))
+        msg = await self._send_close_message_sch_and_hw(
+            sender, specific_day, schedule_response
+        )
+        msg_ids.append(msg.id)
+        await self._db.set_msg_ids(sender_id=str(sender.id), msg_ids=" ".join(map(str, msg_ids)))
 
         await event.answer()
-
-    async def _send_close_message(
-            self, sender: types.User, specific_day: types_l.Weekdays, schedule_response: ScheduleAndHWResponse
-    ) -> types.Message:
-        start_of_week = datetime.datetime.fromisoformat(schedule_response.data[0].date)
-        return await self.client.send_message(
-            chat_id=sender.id,
-            text=f"__{specific_day.name}, "
-                 f"{start_of_week:%d.%m.%Y}__\n",
-            reply_markup=types.InlineKeyboardMarkup([[
-                types.InlineKeyboardButton("Close", b"close")
-            ]]),
-            disable_notification=True
-        )
 
     async def send_homework(
             self, event: types.CallbackQuery, specific_day: types_l.Weekdays
@@ -515,16 +522,17 @@ class CallbackQuerySenders:
         old_wd = ""
         msg_ids = []
         for day in homework_response.data:
-            if day.schedules and specific_day.value in {int(day.period_num_day), -10}:
+            wd = types_l.Weekdays(int(day.period_num_day)).name
+            if specific_day == types_l.Weekdays.Week and wd != old_wd:
+                msg = await self.client.send_message(
+                    chat_id=sender.id,
+                    text=f"\n==={wd}===\n",
+                    disable_notification=True
+                )
+                msg_ids.append(msg.id)
+
+            if day.schedules:
                 flag = False
-                wd = types_l.Weekdays(int(day.period_num_day)).name
-                if specific_day == types_l.Weekdays.ALL and wd != old_wd:
-                    msg = await self.client.send_message(
-                        chat_id=sender.id,
-                        text=f"\n**=={wd}==**\n",
-                        disable_notification=True
-                    )
-                    msg_ids.append(msg.id)
 
                 if day.schedules[0].group.subject.subject_name_eng:
                     subject = day.schedules[0].group.subject.subject_name_eng
@@ -565,68 +573,72 @@ class CallbackQuerySenders:
                     disable_web_page_preview=True
                 )
                 msg_ids.append(msg.id)
-                old_wd = wd
+            old_wd = wd
 
-        if specific_day != types_l.Weekdays.ALL:
-            msg = await self._send_close_message(
-                sender, specific_day, homework_response
+        msg = await self._send_close_message_sch_and_hw(
+            sender, specific_day, homework_response
+        )
+        msg_ids.append(msg.id)
+        await self._db.set_msg_ids(sender_id=str(sender.id), msg_ids=" ".join(map(str, msg_ids)))
+
+    async def _send_close_message_sch_and_hw(
+            self, sender: types.User, specific_day: types_l.Weekdays, schedule_response: ScheduleAndHWResponse
+    ) -> types.Message:
+        date_of_lessons = datetime.datetime.fromisoformat(schedule_response.data[0].date)
+        if specific_day == types_l.Weekdays.Week:
+            payload = (
+                f"__{specific_day.name}, "
+                f"{date_of_lessons:%d.%m.%Y} — {(date_of_lessons + datetime.timedelta(6)):%d.%m.%Y}__\n"
             )
-            msg_ids.append(msg.id)
-            await self._db.set_msg_ids(sender_id=str(sender.id), msg_ids=" ".join(map(str, msg_ids)))
+        else:
+            payload = (
+                f"__{specific_day.name}, "
+                f"{date_of_lessons:%d.%m.%Y}__\n"
+            )
+        return await self.client.send_message(
+            chat_id=sender.id,
+            text=payload,
+            reply_markup=types.InlineKeyboardMarkup([[
+                types.InlineKeyboardButton("Close", b"close")
+            ]]),
+            disable_notification=True
+        )
 
-    async def _prepare_summative_marks(self, subject: MarksDataList, *, check_date: bool = False):
+    async def send_marks(
+            self, event: types.CallbackQuery, specific: types_l.MarkTypes
+    ):
         """
-        Parse summative marks
+        Send marks to the end user
 
         Args:
-            subject (MarksDataList): school subject
-            check_date (bool): check for recency or not
+            event (types.CallbackQuery): a return object of CallbackQuery
+            specific (types_l.MarkTypes): Week, SUMMATIVE, FINAL, RECENT
         """
-        mark_a, mark_b, mark_c, mark_d = [0, 0], [0, 0], [0, 0], [0, 0]
-        for mark in subject.summative_list:
-            if mark.mark_value.isdigit():
-                if mark.mark_criterion == "A":
-                    mark_a[0] += int(mark.mark_value)
-                    mark_a[1] += 1
-                elif mark.mark_criterion == "B":
-                    mark_b[0] += int(mark.mark_value)
-                    mark_b[1] += 1
-                elif mark.mark_criterion == "C":
-                    mark_c[0] += int(mark.mark_value)
-                    mark_c[1] += 1
-                elif mark.mark_criterion == "D":
-                    mark_d[0] += int(mark.mark_value)
-                    mark_d[1] += 1
-            if not check_date or (
-                    datetime.datetime.now(tz=settings().timezone) -
-                    datetime.datetime.fromisoformat(mark.created_at).replace(tzinfo=settings().timezone)
-            ).days < 8:
-                self._payload += f"**{mark.mark_value}**{mark.mark_criterion} "
+        sender: types.User = event.from_user
+        try:
+            response = await self._handle_errors(self._web.receive_marks_and_teachers, event, sender)
+        except errors_l.StopPropagation:
+            return
+        marks_response = MarksResponse.parse_obj(response)
 
-        if mark_a[1] == 0:
-            mark_a[1] = 1
-        if mark_b[1] == 0:
-            mark_b[1] = 1
-        if mark_c[1] == 0:
-            mark_c[1] = 1
-        if mark_d[1] == 0:
-            mark_d[1] = 1
+        match specific:
+            case types_l.MarkTypes.SUMMATIVE:
+                await self._send_summative_marks(_marks_response=marks_response, sender=sender)
+            case types_l.MarkTypes.FINAL:
+                await self._send_final_marks(_marks_response=marks_response, sender=sender)
+            case types_l.MarkTypes.RECENT:
+                await self._send_recent_marks(_marks_response=marks_response, sender=sender)
+            case types_l.MarkTypes.ALL:
+                await self._send_all_marks(_marks_response=marks_response, sender=sender)
 
-        mark_a_avg, mark_b_avg = f"{(mark_a[0] / mark_a[1]):.2g}", f"{(mark_b[0] / mark_b[1]):.2g}"
-        mark_c_avg, mark_d_avg = f"{(mark_c[0] / mark_c[1]):.2g}", f"{(mark_d[0] / mark_d[1]):.2g}"
+        if self._msg_ids:
+            msg = await self._send_close_message_marks(sender, specific)
+            self._msg_ids.append(msg.id)
+            await self._db.set_msg_ids(sender_id=str(sender.id), msg_ids=" ".join(map(str, self._msg_ids)))
 
-        if self._payload[-2] == "*":
-            self._payload += "no recent marks"
-
-        self._payload += " | __avg:__ "
-        if float(mark_a_avg) > 0:
-            self._payload += f"**{mark_a_avg}**A "
-        if float(mark_b_avg) > 0:
-            self._payload += f"**{mark_b_avg}**B "
-        if float(mark_c_avg) > 0:
-            self._payload += f"**{mark_c_avg}**C "
-        if float(mark_d_avg) > 0:
-            self._payload += f"**{mark_d_avg}**D "
+        del self._payload
+        del self._msg_ids
+        await event.answer()
 
     async def _send_summative_marks(self, _marks_response: MarksResponse, sender: types.User):
         """
@@ -645,11 +657,74 @@ class CallbackQuerySenders:
                 self._payload = f"**{subject_name}**\n"
                 await self._prepare_summative_marks(subject)
 
-                await self.client.send_message(
+                msg = await self.client.send_message(
                     chat_id=sender.id,
                     text=self._payload,
                     disable_notification=True
                 )
+                self._msg_ids.append(msg.id)
+
+    async def _prepare_summative_marks(self, subject: MarksDataList, *, check_date: bool = False):
+        """
+        Parse summative marks
+
+        Args:
+            subject (MarksDataList): school subject
+            check_date (bool): check for recency or not
+        """
+        mark_a, mark_b, mark_c, mark_d, mark_s = [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]
+        for mark in subject.summative_list:
+            if mark.mark_value.isdigit():
+                if mark.mark_criterion == "A":
+                    mark_a[0] += int(mark.mark_value)
+                    mark_a[1] += 1
+                elif mark.mark_criterion == "B":
+                    mark_b[0] += int(mark.mark_value)
+                    mark_b[1] += 1
+                elif mark.mark_criterion == "C":
+                    mark_c[0] += int(mark.mark_value)
+                    mark_c[1] += 1
+                elif mark.mark_criterion == "D":
+                    mark_d[0] += int(mark.mark_value)
+                    mark_d[1] += 1
+                elif mark.mark_criterion == "S":
+                    mark_s[0] += int(mark.mark_value)
+                    mark_s[1] += 1
+            if not check_date or (
+                    datetime.datetime.now(tz=settings().timezone) -
+                    datetime.datetime.fromisoformat(mark.created_at).replace(tzinfo=settings().timezone)
+            ).days < 8:
+                self._payload += f"**{mark.mark_value}**{mark.mark_criterion} "
+
+        if mark_a[1] == 0:
+            mark_a[1] = 1
+        if mark_b[1] == 0:
+            mark_b[1] = 1
+        if mark_c[1] == 0:
+            mark_c[1] = 1
+        if mark_d[1] == 0:
+            mark_d[1] = 1
+        if mark_s[1] == 0:
+            mark_s[1] = 1
+
+        mark_a_avg, mark_b_avg = f"{(mark_a[0] / mark_a[1]):.2g}", f"{(mark_b[0] / mark_b[1]):.2g}"
+        mark_c_avg, mark_d_avg = f"{(mark_c[0] / mark_c[1]):.2g}", f"{(mark_d[0] / mark_d[1]):.2g}"
+        mark_s_avg = f"{(mark_s[0] / mark_s[1]):.2g}"
+
+        if self._payload[-2] == "*":
+            self._payload += "no recent marks"
+
+        self._payload += " | __avg:__ "
+        if float(mark_a_avg) > 0:
+            self._payload += f"**{mark_a_avg}**A "
+        if float(mark_b_avg) > 0:
+            self._payload += f"**{mark_b_avg}**B "
+        if float(mark_c_avg) > 0:
+            self._payload += f"**{mark_c_avg}**C "
+        if float(mark_d_avg) > 0:
+            self._payload += f"**{mark_d_avg}**D "
+        if float(mark_s_avg) > 0:
+            self._payload += f"**{mark_s_avg}**S "
 
     async def _send_final_marks(self, _marks_response: MarksResponse, sender: types.User):
         """
@@ -688,12 +763,13 @@ class CallbackQuerySenders:
                 if year_mark is not None:
                     self._payload += f" | __year:__ **{year_mark}**"
 
-                await self.client.send_message(
+                msg = await self.client.send_message(
                     chat_id=sender.id,
                     text=self._payload,
                     disable_notification=True,
                     disable_web_page_preview=True
                 )
+                self._msg_ids.append(msg.id)
 
     async def _send_recent_marks(self, _marks_response: MarksResponse, sender: types.User):
         """
@@ -723,12 +799,13 @@ class CallbackQuerySenders:
                 await self._prepare_summative_marks(subject, check_date=True)
 
             if flag or subject.summative_list:
-                await self.client.send_message(
+                msg = await self.client.send_message(
                     chat_id=sender.id,
                     text=self._payload,
                     disable_notification=True,
                     disable_web_page_preview=True
                 )
+                self._msg_ids.append(msg.id)
 
     async def _send_all_marks(self, _marks_response: MarksResponse, sender: types.User):
         """
@@ -753,12 +830,37 @@ class CallbackQuerySenders:
                 await self._prepare_summative_marks(subject)
 
             if subject.summative_list or subject.formative_list:
-                await self.client.send_message(
+                msg = await self.client.send_message(
                     chat_id=sender.id,
                     text=self._payload,
                     disable_notification=True,
                     disable_web_page_preview=True
                 )
+                self._msg_ids.append(msg.id)
+
+    async def _send_close_message_marks(self, sender: types.User, specific: types_l.MarkTypes.SUMMATIVE):
+        now = datetime.datetime.now(tz=settings().timezone)
+        if specific == types_l.MarkTypes.RECENT:
+            payload = (
+                f"__{specific.name.capitalize()} marks, "
+                f"{(now - datetime.timedelta(7)) :%d.%m.%Y} — {now:%d.%m.%Y}__\n"
+            )
+        elif specific == types_l.MarkTypes.FINAL:
+            payload = (
+                f"__{specific.name.capitalize()} marks, semester__\n"
+            )
+        else:
+            payload = (
+                f"__{specific.name.capitalize()} marks, {now:%d.%m.%Y}__\n"
+            )
+        return await self.client.send_message(
+            chat_id=sender.id,
+            text=payload,
+            reply_markup=types.InlineKeyboardMarkup([[
+                types.InlineKeyboardButton("Close", b"close")
+            ]]),
+            disable_notification=True
+        )
 
     async def _handle_errors(
             self, func: typing.Callable[[...], typing.Coroutine[typing.Any, typing.Any, dict]],
@@ -790,7 +892,7 @@ class CallbackQuerySenders:
                 raise errors_l.StopPropagation
 
             try:
-                if specific_day != types_l.Weekdays.ALL:
+                if specific_day != types_l.Weekdays.Week:
                     resp = await self._web.receive_schedule_and_hw(
                         sender_id=str(sender.id), specific_day=specific_day, week=False
                     )
@@ -810,36 +912,6 @@ class CallbackQuerySenders:
                 )
                 raise errors_l.StopPropagation
             return resp
-
-    async def send_marks(
-            self, event: types.CallbackQuery, specific: types_l.MarkTypes
-    ):
-        """
-        Send marks to the end user
-
-        Args:
-            event (types.CallbackQuery): a return object of CallbackQuery
-            specific (types_l.MarkTypes): ALL, SUMMATIVE, FINAL, RECENT
-        """
-        sender: types.User = event.from_user
-        try:
-            response = await self._handle_errors(self._web.receive_marks_and_teachers, event, sender)
-        except errors_l.StopPropagation:
-            return
-        marks_response = MarksResponse.parse_obj(response)
-
-        match specific:
-            case types_l.MarkTypes.SUMMATIVE:
-                await self._send_summative_marks(_marks_response=marks_response, sender=sender)
-            case types_l.MarkTypes.FINAL:
-                await self._send_final_marks(_marks_response=marks_response, sender=sender)
-            case types_l.MarkTypes.RECENT:
-                await self._send_recent_marks(_marks_response=marks_response, sender=sender)
-            case types_l.MarkTypes.ALL:
-                await self._send_all_marks(_marks_response=marks_response, sender=sender)
-
-        del self._payload
-        await event.answer()
 
 
 class CallbackQueryEventEditors(CallbackQuerySenders):
