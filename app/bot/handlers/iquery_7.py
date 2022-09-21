@@ -44,6 +44,6 @@ async def init(clients: types_l.Clients[Client], iQuery: InlineQuery, fs: Firest
         #     case types_l.MatchWeekdays(saturday=True):
         #         await send_schedule(specific_day=types_l.Weekdays.Saturday.value)
         #     case types_l.MatchWeekdays(entire=True):
-        #         await send_schedule(specific_day=types_l.Weekdays.ALL.value)
+        #         await send_schedule(specific_day=types_l.Weekdays.Week.value)
         #     case _:
         #         await iQuery.to_main_page(event=inline_query)

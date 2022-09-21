@@ -37,7 +37,7 @@ async def init(clients: types_l.Clients[Client], cbQuery: CallbackQuery, db: Pos
                     int(datetime.datetime.now(tz=settings().timezone).strftime("%w")) + 1)
                 )
             case "entire_homework":
-                await send_homework(specific_day=types_l.Weekdays.ALL)
+                await send_homework(specific_day=types_l.Weekdays.Week)
             case "monday_homework":
                 await send_homework(specific_day=types_l.Weekdays.Monday)
             case "tuesday_homework":

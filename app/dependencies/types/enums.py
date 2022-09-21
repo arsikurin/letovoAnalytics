@@ -18,7 +18,7 @@ class Weekdays(Enum):
     Saturday = 6
     SundayHW = 7
     Sunday = 0
-    ALL = -10
+    Week = -10
 
 
 class MatchWeekdays:

@@ -49,8 +49,6 @@ H
 app/tests/test_pytest.py,7/9/79bc96eefeff50432cd9135cb3ff467e1088b202
 E
 app/tests/conftest.py,9/f/9f467a9fcd7ffe82aaeae615d9ddff23c4b4f90c
-O
-app/dependencies/types/enums.py,a/d/add192dd5900bbc6abb219898117113ab4898b5b
 L
 app/dependencies/database.py,e/f/efd82d6b5893028ad00dca7d1540f837ac7f56e5
 I
@@ -126,8 +124,6 @@ terms.html,2/c/2c40cae6aa564ffb60c44dd3798e023279e9a4e4
 Makefile,8/3/836efb6e25a091dcb4ff8e1dbb2f0be6a5cbf14c
 C
 app/bot/__init__.py,e/9/e9f6b277e939d65a41b31370495c48afd7ea6e31
-G
-app/schemas/schedule.py,9/6/96c011d5ff1bf463e51c727c7749b4decd5aa48f
 @
 app/essential.py,9/e/9e913b2e7e335ecf82b791bfc4924f020c7d8b81
 =
@@ -148,7 +144,5 @@ W
 poetry.lock,0/0/0068a1506b061a8948c37d78b0dd5697211558d3
 >
 pyproject.toml,5/d/5d07e7d72637aa0d59c89d381fe6dc4cf46e2491
-;
-app/main.go,d/2/d2a6d45f180563daa10332156aad7e1e43c1387f
 D
 app/schemas/marks.py,9/7/97fbf3327d40eabbec68aaacbf6136cde8685bd8
