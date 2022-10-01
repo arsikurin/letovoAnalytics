@@ -1,15 +1,23 @@
+import asyncio
+import logging as log
+from io import BytesIO
+
+import aiohttp
 from fastapi import FastAPI
 from fastapi.exceptions import HTTPException, StarletteHTTPException, ValidationError
 from fastapi.requests import Request
-from fastapi.responses import ORJSONResponse, HTMLResponse
+from fastapi.responses import ORJSONResponse, HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from ics import Calendar
 
 # noinspection PyUnresolvedReferences
 import essential
-# from app.api.endpoints import login_router
+from app.dependencies import API, Firestore, run_parallel, errors as errors_l
 from config import settings
 
+api: API
+fs: Firestore
 app = FastAPI(
     title=settings().title_api,
 )
@@ -19,12 +27,64 @@ app.mount("/static", StaticFiles(directory="./app/api/static"), name="static")
 templates = Jinja2Templates(directory="./app/api/static/templates")
 application_json = "application/json"
 error_page_t = "pageError.html"
-# app.include_router(login_router, tags=["login"], prefix="/api")
+
+
+@app.on_event("startup")
+async def on_startup():
+    global api, fs
+    fs = await Firestore.create()
+    api = API(session=aiohttp.ClientSession(), fs=fs)
+
+
+@app.on_event("shutdown")
+async def on_shutdown():
+    await run_parallel(
+        api.session.close(),
+        fs.disconnect()
+    )
 
 
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
     return templates.TemplateResponse("indexAPI.html", {"request": request})
+
+
+@app.get("/ics/{user_id}")
+async def lol(user_id: int):
+    try:
+        response = await api.receive_schedule_ics(sender_id=str(user_id))
+    except (errors_l.UnauthorizedError, errors_l.NothingFoundError, aiohttp.ClientConnectionError) as err:
+        log.error(err)
+        raise HTTPException(
+            status_code=400, detail=err.__str__(),
+            headers={"fix": ""}
+        )
+    except asyncio.TimeoutError as err:
+        log.error(err)
+        raise HTTPException(
+            status_code=400, detail=err.__str__(),
+            headers={"fix": "Try again later"}
+        )
+
+    c = Calendar(response.decode())
+    for lesson in c.timeline:
+        long_name = lesson.name.split("(")[0].split(":")[-1].strip()
+        room = lesson.description.split(";")[0].split("(")[0].split(":")[-1].strip()
+        lesson.name = long_name
+        lesson.location = room
+
+        link = lesson.description.split(";")[-1].split(":")[-1].strip()
+        if link != "no link":
+            lesson.description = f"Zoom: {link}"
+        else:
+            lesson.description = ""
+
+    file = BytesIO(c.serialize().encode())
+    file.name = "schedule.ics"
+
+    return StreamingResponse(file, headers={
+        "Content-disposition": "attachment; filename=schedule.ics", "Content-type": "text/calendar; charset=utf-8"
+    })
 
 
 @app.exception_handler(StarletteHTTPException)

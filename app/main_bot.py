@@ -45,7 +45,6 @@ async def main():
             handlers.init(
                 clients=types_l.Clients(client=client, client_i=client_i), cbQuery=cbQuery, iQuery=iQuery, db=db, fs=fs
             ),
-            # compose([client, client_i])
             aiorun.shutdown_waits_for(compose([client, client_i]))
         )
 
