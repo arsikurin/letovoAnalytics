@@ -175,7 +175,7 @@ class CallbackQuerySenders:
                  "\n"
                  "Other info:\n"
                  "**/options » Others » Teachers' info** — get teachers' names and emails\n"
-                 "**/options » Others » Schedule to calendar (.ics)** — get .ics file with current week schedule\n"
+                 "**/options » Others » Subscribe to schedule** — receive latest schedule everyday\n"
                  "**/options » Others » Holidays** — get holidays periods\n"
                  "\n"
                  "\n"
@@ -367,45 +367,6 @@ class CallbackQuerySenders:
             chat_id=sender.id,
             text="__after__ **unit IV**\n22.05.2022 — 31.08.2022",
         )
-        await event.answer()
-
-    async def send_schedule_ics(
-            self, event: types.CallbackQuery
-    ):
-        """
-        Parse & send schedule .ics file
-
-        Args:
-            event (types.CallbackQuery): a return object of CallbackQuery
-        """
-        sender: types.User = event.from_user
-        try:
-            response = await self._api.receive_schedule_ics(sender_id=str(sender.id))
-        except (errors_l.UnauthorizedError, errors_l.NothingFoundError, aiohttp.ClientConnectionError) as err:
-            await event.answer(f"[✘] {err}", show_alert=True)
-            return
-        except asyncio.TimeoutError as err:
-            await self.client.send_message(
-                chat_id=sender.id,
-                text=f"[✘] {err.__str__()}",
-                disable_notification=True,
-                disable_web_page_preview=True
-            )
-            return
-
-        c = Calendar(response.decode())
-        for lesson in c.timeline:
-            lesson.name = lesson.name.split("(")[0].split(":")[-1].strip()
-
-            description = lesson.description.split(";")[0].split("(")[0].strip()
-            link = lesson.description.split(";")[-1].split(":")[-1].strip()
-            if link == "no link":
-                description += f"\nZoom: {link}"
-            lesson.description = description
-
-        file = BytesIO(c.serialize().encode())
-        file.name = "schedule.ics"
-        await self.client.send_document(sender.id, file)
         await event.answer()
 
     async def send_teachers(
@@ -1050,7 +1011,10 @@ class CallbackQueryEventEditors(CallbackQuerySenders):
                 [
                     types.InlineKeyboardButton("Teachers' info", b"teachers")
                 ], [
-                    types.InlineKeyboardButton("Schedule to calendar (.ics)", b"schedule_ics"),
+                    types.InlineKeyboardButton(
+                        "Subscribe to schedule",
+                        url=f"https://letovo-analytics.web.app/get_ics?user_id={event.from_user.id}"
+                    ),
                 ], [
                     types.InlineKeyboardButton("Holidays", b"holidays"),
                 ], [
