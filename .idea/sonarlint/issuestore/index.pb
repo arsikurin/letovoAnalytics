@@ -101,17 +101,10 @@ w
 G.idea/sonarlint/issuestore/9/7/97fbf3327d40eabbec68aaacbf6136cde8685bd8,8/5/85184068eed665f48fe4298f36800c878bbfe8f0
 w
 G.idea/sonarlint/issuestore/b/7/b7fe50f648ce84c03ec53348cf07faa9ed023d88,0/9/0951acb2967857dbe364488cc2208624aca19187
-<
-privacy.html,0/3/0394c97ae270b6b4ed93bc6173b6755895e9b338
-:
-
-terms.html,2/c/2c40cae6aa564ffb60c44dd3798e023279e9a4e4
 @
 app/essential.py,9/e/9e913b2e7e335ecf82b791bfc4924f020c7d8b81
 =
 .dockerignore,0/5/05a721ebe3ba0754116825ed1359ff1785f4bbac
-9
-	.stignore,1/8/182c17f09c9dbb84021557352e9738b136158dbd
 Y
 )app/api/static/images/icons/forbidden.svg,7/0/70e56e791623d93683a0ba6921bd0a49930b156f
 U
@@ -127,10 +120,6 @@ D
 w
 G.idea/sonarlint/issuestore/0/3/03ba51b115cf5ba8b158cf459464ac4660e99910,7/1/71b18200d80b887db17ec42a990b1d311e3caa66
 w
-G.idea/sonarlint/issuestore/0/3/0394c97ae270b6b4ed93bc6173b6755895e9b338,b/8/b88ace0cf248f77201d0bdfcc3ea9f26d95807b7
-=
-app/helper.py,0/6/06a2a9cefed22737d2d1fd7e2c591eb7412996ba
-w
 G.idea/sonarlint/issuestore/f/9/f9b988d2a739571960ab5d678a359989bef5417a,8/9/8985f22f68e4cb8f51d2e8892a3005b08ae2805e
 w
 G.idea/sonarlint/issuestore/9/e/9e913b2e7e335ecf82b791bfc4924f020c7d8b81,f/0/f0109667c3d47e5b5080bdd26d49351ab1caef2a
@@ -140,8 +129,6 @@ w
 G.idea/sonarlint/issuestore/a/3/a33969cd40774190723d7e2506b6cbd79f2d7229,f/3/f3ee2b1dcef8dd9f663b0505599da84966adc35c
 w
 G.idea/sonarlint/issuestore/a/9/a95e0a6b76f73f3a414b8a4d1a10706d0c73bff3,c/3/c39703241a39b627bb7b10fd05166c86ad6a080f
-w
-G.idea/sonarlint/issuestore/1/8/182c17f09c9dbb84021557352e9738b136158dbd,e/f/effe8da13b5fcf3c9796460574be930dbaa6810f
 w
 G.idea/sonarlint/issuestore/9/8/98b36d73fdebb2dd687a24b8428bbd69eefeac61,d/8/d8266cb8723137c2a21795e10ce8cc9c71e0fd33
 w
@@ -212,8 +199,6 @@ G.idea/sonarlint/issuestore/3/5/35b545041a372ba92eebc00e4040c0687bb27b29,7/c/7c
 w
 G.idea/sonarlint/issuestore/3/0/308a364541eddbaac2671eac3a398e64e8c1b598,0/a/0a927e142c2600a9db61a401aa6948671de28a8c
 w
-G.idea/sonarlint/issuestore/2/c/2c40cae6aa564ffb60c44dd3798e023279e9a4e4,5/5/55455574bc8550338a90ae27ec233d6b5aa258c0
-w
 G.idea/sonarlint/issuestore/0/9/0951acb2967857dbe364488cc2208624aca19187,4/4/44bb92dfbe255840314bbd02da437e74efd7a25b
 ;
 app/main.go,d/2/d2a6d45f180563daa10332156aad7e1e43c1387f
@@ -245,8 +230,6 @@ B
 pyproject.toml,5/d/5d07e7d72637aa0d59c89d381fe6dc4cf46e2491
 F
 .env.development.local,0/f/0fe212be3a1410c8c1b84c710d79d55e3d8f0e1e
-8
-Procfile,b/c/bc3c68e880d1a01632bce79f69dd1387c7ba9c54
 9
 	README.md,8/e/8ec9a00bfd09b3190ac6b22251dbb1aa95a0579d
 8

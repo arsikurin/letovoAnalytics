@@ -45,3 +45,19 @@ class StopPropagation(Exception):
             super().__init__(
                 detail
             )
+
+
+class TooManyRequests(Exception):
+    """
+    Occurs when got 429 http.
+    """
+
+    def __init__(self, detail: str | None = None, fix: str | None = None):
+        if detail is None:
+            super().__init__(
+                "Too many requests"
+            )
+        else:
+            super().__init__(
+                detail
+            )
