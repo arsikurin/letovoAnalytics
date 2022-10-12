@@ -7,6 +7,23 @@ import aiohttp
 import essential
 from app.dependencies import API, Postgresql, Firestore, errors as errors_l
 
+counter = 0
+
+
+async def do_request(web: API, user_id: str) -> str:
+    global counter
+    try:
+        token = await web.receive_token(sender_id=user_id)
+    except errors_l.TooManyRequests:
+        await asyncio.sleep(25)
+        counter += 1
+        if counter > 3:
+            counter = 0
+            raise aiohttp.ClientConnectionError()
+        token = await do_request(web, user_id)
+
+    return token
+
 
 async def main():
     log.info("Updating tokens in Firebase")
@@ -19,7 +36,7 @@ async def main():
 
         async for user in await fs.get_users():
             try:
-                token = await web.receive_token(sender_id=user.id)
+                token = await do_request(web, user.id)
             except (errors_l.NothingFoundError, errors_l.UnauthorizedError, aiohttp.ClientConnectionError) as err:
                 log.info(f"Skipped {user.id} {err}")
                 continue

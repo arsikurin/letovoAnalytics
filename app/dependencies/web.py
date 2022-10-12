@@ -89,7 +89,9 @@ class API:
         }
         try:
             async with self.session.post(url=settings().URL_LOGIN_LETOVO, data=login_data) as resp:
-                if resp.status != 200:
+                if resp.status == 429:
+                    raise errors_l.TooManyRequests()
+                elif resp.status != 200:
                     raise errors_l.UnauthorizedError(f"Cannot get data from s.letovo.ru. Error {resp.status}")
                 resp_j = await resp.json(loads=orjson.loads)
                 return f'{resp_j["data"]["token_type"]} {resp_j["data"]["token"]}'
@@ -212,6 +214,7 @@ class API:
             self.fs.get_student_id(sender_id=sender_id),
             self.fs.get_token(sender_id=sender_id)
         )
+        print()
         if errors_l.NothingFoundError in {student_id, token}:
             raise errors_l.NothingFoundError(
                 creds_not_found_text
