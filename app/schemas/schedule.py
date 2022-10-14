@@ -57,7 +57,7 @@ class LessonsList(BaseModel):
     # lesson_group: str
     # lesson_date: str
     # lesson_num: int
-    lesson_topic: Optional[str] = Field(alias="lesson_theme")
+    lesson_topic: Optional[str] = Field(alias="lesson_thema")
     lesson_canvas: int
     lesson_url: Optional[str]
     lesson_hw: Optional[str]
@@ -74,16 +74,16 @@ class ZoomMeetings(BaseModel):
     # meeting_id: int
     # meeting_topic: str
     # meeting_group_id: int
-    # meeting_schedule_day: int
-    # meeting_schedule_lesson: str
+    # meeting_shedule_day: int
+    # meeting_shedule_lesson: str
     meeting_url: str
 
 
 class SchedulesList(BaseModel):
-    # id_schedule: int = Field(alias="id_schedule")
-    # schedule_period: int = Field(alias="schedule_period")
-    # schedule_group: int = Field(alias="schedule_group")
-    schedule_room: int = Field(alias="schedule_room")
+    # id_schedule: int = Field(alias="id_shedule")
+    # schedule_period: int = Field(alias="shedule_period")
+    # schedule_group: int = Field(alias="shedule_group")
+    schedule_room: int = Field(alias="shedule_room")
     lessons: list[LessonsList]
     zoom_meetings: Optional[ZoomMeetings]
     # program_dev_type: str
