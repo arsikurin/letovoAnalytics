@@ -16,7 +16,7 @@ class MarksList(BaseModel):
     # id_lesson: int
     # lesson_date: str
     # lesson_num: int
-    # lesson_thema: Optional[str]
+    # lesson_theme: Optional[str]
     # work_comment: Optional[str]
     form_name: Optional[str]
     form_description: Optional[str]
