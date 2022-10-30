@@ -1,16 +1,18 @@
 import asyncio
 import datetime
+import logging as log
 import re
 import time
 
+import aiohttp
 import pyrogram
 from pyrogram import Client, types
 
 from app.bot import CallbackQuery
-from app.dependencies import run_sequence, run_parallel, types as types_l
+from app.dependencies import API, Firestore, types as types_l, run_sequence, run_parallel
 
 
-async def init(clients: types_l.Clients[Client], cbQuery: CallbackQuery):
+async def init(clients: types_l.Clients[Client], cbQuery: CallbackQuery, fs: Firestore):
     client = clients.client
 
     @client.on_message(pyrogram.filters.user([606336225, 2200163963]) & pyrogram.filters.regex(re.compile(r"^#dev$")))
@@ -50,9 +52,15 @@ async def init(clients: types_l.Clients[Client], cbQuery: CallbackQuery):
     @client.on_callback_query(
         pyrogram.filters.user([606336225, 2200163963]) & pyrogram.filters.regex(re.compile(r"^tokens$")))
     async def _tokens(_client: Client, callback_query: types.CallbackQuery):
-        from app.helper import main
-        await run_sequence(
-            main(),
-            callback_query.answer("Tokens updated in the Database")
-        )
+        log.info("Updating tokens in the Firebase")
+        async with aiohttp.ClientSession() as session:
+            log.debug("Established connections to the databases")
+
+            api = API(session=session, fs=fs)
+            await run_sequence(
+                fs.update_tokens(api),
+                callback_query.answer("Tokens updated in the Database")
+            )
+            log.debug("Done reset analytics")
+
         raise pyrogram.StopPropagation

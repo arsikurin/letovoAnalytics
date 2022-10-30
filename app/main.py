@@ -56,5 +56,23 @@ elif sys.argv[-1].lower() == "api":
 
     uvicorn.Server(config=c).run()
 
+elif sys.argv[-1].lower() == "update":
+    import aiohttp
+    from app.dependencies import API, Postgresql, Firestore, run_immediately, run_parallel
+
+
+    @run_immediately
+    async def _():
+        log.info("Updating tokens in the Firebase")
+        async with aiohttp.ClientSession() as session, Postgresql() as db, Firestore(app_name="helper") as fs:
+            log.debug("established connections to the databases")
+
+            api = API(session=session, fs=fs)
+            await run_parallel(
+                fs.update_tokens(api),
+                db.reset_analytics()
+            )
+            log.debug("done reset analytics")
+
 else:
-    print("ERROR: Neither `bot` nor `api` provided")
+    print("ERROR: Neither `bot` nor `api` nor `update` provided")
