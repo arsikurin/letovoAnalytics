@@ -25,7 +25,7 @@ class CBQueryDev(CBQueryBase):
             )): continue  # noqa: more beautiful imho
 
             namesurname, login = await run_parallel(
-                self._fs.get_data(
+                self._fs.get_name(
                     sender_id=resp.sender_id, values=[types_l.FSNames.first_name, types_l.FSNames.last_name]
                 ),
                 self._fs.get_data(sender_id=resp.sender_id, values=[types_l.FSData.login])

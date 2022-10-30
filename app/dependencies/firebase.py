@@ -258,25 +258,19 @@ class Firestore:
         """
         return self._client.collection("users").stream()
 
-    async def get_data(self, sender_id: str, values: list[types_l.FSData] | list[types_l.FSNames]):
+    async def get_data(self, sender_id: str, values: list[types_l.FSData]):
         """
         Get user's data from the database
 
         Args:
             sender_id (str): user's Telegram ID
-            values (list of types_l.FSData | list of types_l.FSNames):
+            values (list of types_l.FSData):
 
         Returns:
             list of (asked value or `errors_l.NothingFoundError` if not found in the database)
         """
-
-        if isinstance(values[0], types_l.FSData):
-            collection = "users"
-        else:
-            collection = "names"
-
         resp = []
-        doc = (await self._client.collection(collection).document(sender_id).get()).to_dict()
+        doc = (await self._client.collection("users").document(sender_id).get()).to_dict()
         for value in values:
             try:
                 resp.append(get_nested_value(str(value.value), doc))
@@ -285,110 +279,23 @@ class Firestore:
 
         return resp
 
-    async def get_student_id(self, sender_id: str) -> int | type[errors_l.NothingFoundError]:
+    async def get_name(self, sender_id: str, values: list[types_l.FSNames]):
         """
-        Get user's student ID
+        Get user's data from the database
 
         Args:
             sender_id (str): user's Telegram ID
+            values (list of types_l.FSNames):
 
         Returns:
-            student ID (int) or `errors_l.NothingFoundError` if not found in the database
+            list of (asked value or `errors_l.NothingFoundError` if not found in the database)
         """
-        doc: DocumentSnapshot = await self._client.collection("users").document(sender_id).get()
-        try:
-            if not doc.exists:
-                return errors_l.NothingFoundError
-            return doc.get("data.student_id")
-        except KeyError:
-            return errors_l.NothingFoundError
+        resp = []
+        doc = (await self._client.collection("names").document(sender_id).get()).to_dict()
+        for value in values:
+            try:
+                resp.append(get_nested_value(str(value.value), doc))
+            except KeyError:
+                resp.append(errors_l.NothingFoundError)
 
-    async def get_token(self, sender_id: str) -> str | type[errors_l.NothingFoundError]:
-        """
-        Get user's auth token
-
-        Args:
-            sender_id (str): user's Telegram ID
-
-        Returns:
-            auth token (str) or `errors_l.NothingFoundError` if not found in the database
-        """
-        doc: DocumentSnapshot = await self._client.collection("users").document(sender_id).get()
-        try:
-            if not doc.exists:
-                return errors_l.NothingFoundError
-            return doc.get("data.token")
-        except KeyError:
-            return errors_l.NothingFoundError
-
-    async def get_password(self, sender_id: str) -> str | type[errors_l.NothingFoundError]:
-        """
-        Get user's password
-
-        Args:
-            sender_id (str): user's Telegram ID
-
-        Returns:
-            password (str) or `errors_l.NothingFoundError` if not found in the database
-        """
-        doc: DocumentSnapshot = await self._client.collection("users").document(sender_id).get()
-        try:
-            if not doc.exists:
-                return errors_l.NothingFoundError
-            return doc.get("data.analytics_password")
-        except KeyError:
-            return errors_l.NothingFoundError
-
-    async def get_login(self, sender_id: str) -> str | type[errors_l.NothingFoundError]:
-        """
-        Get user's login
-
-        Args:
-            sender_id (str): user's Telegram ID
-
-        Returns:
-            login (str) or `errors_l.NothingFoundError` if not found in the database
-        """
-        doc: DocumentSnapshot = await self._client.collection("users").document(sender_id).get()
-        try:
-            if not doc.exists:
-                return errors_l.NothingFoundError
-            return doc.get("data.analytics_login")
-        except KeyError:
-            return errors_l.NothingFoundError
-
-    async def get_name(self, sender_id: str) -> str | type[errors_l.NothingFoundError]:
-        """
-        Get user's name
-
-        Args:
-            sender_id (str): user's Telegram ID
-
-        Returns:
-            name (str) or `errors_l.NothingFoundError` if not found in the database
-        """
-        doc: DocumentSnapshot = await self._client.collection("names").document(sender_id).get()
-        try:
-            if not doc.exists:
-                return errors_l.NothingFoundError
-            return doc.get("data.first_name")
-        except KeyError:
-            return errors_l.NothingFoundError
-
-    async def get_surname(self, sender_id: str) -> str | type[errors_l.NothingFoundError]:
-        """
-        Get user's surname
-
-        Args:
-            sender_id (str): user's Telegram ID
-
-        Returns:
-            surname (str) or `errors_l.NothingFoundError` if not found in the database
-        """
-        doc: DocumentSnapshot = await self._client.collection("names").document(sender_id).get()
-        try:
-            if not doc.exists:
-                return errors_l.NothingFoundError
-            return doc.get("data.last_name")
-        except KeyError:
-            return errors_l.NothingFoundError
+        return resp
