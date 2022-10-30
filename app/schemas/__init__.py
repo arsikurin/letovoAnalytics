@@ -1,5 +1,5 @@
 from .marks import MarksResponse, DataList as MarksDataList
-from .schedule import ScheduleAndHWResponse
+from .schedule import ScheduleResponse as ScheduleAndHWResponse
 from .teachers import TeachersResponse
 
 __all__ = (

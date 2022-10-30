@@ -1,8 +1,6 @@
 
 9
 	.pylintrc,5/8/58278ca6e186f004b12621f8c3155064b4dc09b6
-A
-app/.dockerignore,2/a/2a64350c28aa37ca0f8a85df5dbdf86b487b71e6
 E
 app/tests/__init__.py,4/4/447707a821d80cc39e532ce0179db7ddffdf17c9
 >
@@ -13,16 +11,10 @@ E
 api.dockerfile,5/f/5f7e1b96a3e5b5ebfafa25bef5891dbc1c36c60e
 6
 go.sum,5/a/5aa1ac64de2b0c4821af9393b44965020e4a521d
-G
-app/schemas/teachers.py,b/7/b7fe50f648ce84c03ec53348cf07faa9ed023d88
 >
 SQL/create.sql,d/d/dd4cbd5bae2856080323f378773a8754a7afc8fb
 =
 SQL/alter.sql,c/3/c3f8643b2ddc712688caf3ab64ebd9688fdbfc30
-?
-app/__init__.py,6/b/6b5a07a517e9a3845a279675e888c81b77b9d712
-G
-app/schemas/__init__.py,7/5/7501a9306d02b3a60f7536482442b11b2a950344
 J
 app/tests/test_unittest.py,4/2/42e2cf386919ff91e660724c8606c250a7ec2ea1
 H
@@ -83,8 +75,6 @@ V
 &app/api/static/templates/indexAPI.html,7/1/71b8bbc4dab5b9906a8d8d98ad7c675317b5ea0f
 W
 'app/api/static/templates/pageError.html,3/9/39cb6e837ef03a8514272599aca4ad28578f8fb0
-D
-app/schemas/marks.py,9/7/97fbf3327d40eabbec68aaacbf6136cde8685bd8
 w
 G.idea/sonarlint/issuestore/0/3/03ba51b115cf5ba8b158cf459464ac4660e99910,7/1/71b18200d80b887db17ec42a990b1d311e3caa66
 w
@@ -113,9 +103,6 @@ B
 app/api/.gitignore,3/1/3145fcf2bea6c693578d39d85eb52ca2cdde89aa
 w
 G.idea/sonarlint/issuestore/3/5/352060e690e20468709e6ce67711a906e70ebc0b,f/9/f946c31abb8ee753e43b13d4c57aa99dfaed37ce
-:
-
-.gitignore,a/5/a5cc2925ca8258af241be7e5b0381edf30266302
 w
 G.idea/sonarlint/issuestore/7/0/70e56e791623d93683a0ba6921bd0a49930b156f,d/b/db2c9eda126cbd92dff36f220f145bb412699bc2
 K
@@ -166,11 +153,3 @@ E
 	README.md,8/e/8ec9a00bfd09b3190ac6b22251dbb1aa95a0579d
 K
 .github/workflows/test.yaml,a/6/a60e2382fd0c34cb06177a3d7034264e22531192
-J
-app/dependencies/errors.py,2/3/23cb45a7ed3c7410b0737d8fcf73c476f0fa392a
-F
-app/bot/inlinequery.py,6/b/6b4f48e076da4edc40a2c1d7a121a47d8cf4618c
-G
-app/schemas/schedule.py,9/6/96c011d5ff1bf463e51c727c7749b4decd5aa48f
-8
-Makefile,8/3/836efb6e25a091dcb4ff8e1dbb2f0be6a5cbf14c

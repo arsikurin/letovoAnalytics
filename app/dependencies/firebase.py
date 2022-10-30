@@ -281,7 +281,7 @@ class Firestore:
 
     async def get_name(self, sender_id: str, values: list[types_l.FSNames]):
         """
-        Get user's data from the database
+        Get user's name from the database
 
         Args:
             sender_id (str): user's Telegram ID

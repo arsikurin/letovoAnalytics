@@ -7,6 +7,10 @@ __pycache__
 .tox
 .mypy_cache
 .idea/sonarlint
-# Added by cargo
+privacy.html
+terms.html
 
-/target
+# __note__
+# redo postgres
+# new webcal
+# new bot UI

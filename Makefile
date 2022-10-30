@@ -1,35 +1,32 @@
 .PHONY: bot-dev api-dev bot-prod api-prod ping-api update-tokens run-dev okteto-deploy
 
-BOT_SRC = ./app/main_bot.py
-API_SRC = ./app/main_api.py
-PINGER_SRC = ./app/pinger.py
-HELPER_SRC = ./app/helper.py
-MAIN_SRC = ./app/
+MAIN_SRC = ./app/main.py
+ROOT_SRC = ./app/
 OUTPUT_SRC = ./app/static/main.wasm
 
 bot-dev:
-	python3 -X dev $(BOT_SRC)
+	python3 -X dev $(MAIN_SRC) bot
 
 api-dev:
-	python3 -X dev $(API_SRC)
+	python3 -X dev $(MAIN_SRC) api
 
 bot-prod:
-	python3 $(BOT_SRC)
+	python3 $(MAIN_SRC) bot
 
 api-prod:
-	python3 $(API_SRC)
+	python3 $(MAIN_SRC) api
 
 ping-api:
-	python3 $(PINGER_SRC)
+	python3 $(MAIN_SRC) ping
 
 update-tokens:
-	python3 $(HELPER_SRC)
+	python3 $(MAIN_SRC) update
 
 run-dev:
 	docker compose up
 
 build-wasm:
-	env GOOS=js GOARCH=wasm go build -o $(OUTPUT_SRC) $(MAIN_SRC)
+	env GOOS=js GOARCH=wasm go build -o $(OUTPUT_SRC) $(ROOT_SRC)
 
 # kubernetes
 okteto-deploy:
