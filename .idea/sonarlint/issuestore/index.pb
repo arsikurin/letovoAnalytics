@@ -5,16 +5,12 @@ A
 app/.dockerignore,2/a/2a64350c28aa37ca0f8a85df5dbdf86b487b71e6
 E
 app/tests/__init__.py,4/4/447707a821d80cc39e532ce0179db7ddffdf17c9
-C
-docker-compose.yaml,e/f/ef8def03dc8f162799089e9b5f4321201c8810d5
 >
 bot.dockerfile,3/7/37e479da2902e14c74a879e6f3fbe39d2c5b4158
 @
 .deepsource.toml,f/7/f7fdb5a735547cbe989626708a7eab7e182a2c6f
 >
 api.dockerfile,5/f/5f7e1b96a3e5b5ebfafa25bef5891dbc1c36c60e
-7
-tox.ini,6/1/61be067c7cf3bdbf8a6b021a2b5167eb30612d0c
 6
 go.sum,5/a/5aa1ac64de2b0c4821af9393b44965020e4a521d
 G
@@ -33,10 +29,6 @@ J
 app/tests/test_unittest.py,4/2/42e2cf386919ff91e660724c8606c250a7ec2ea1
 H
 app/tests/test_pytest.py,7/9/79bc96eefeff50432cd9135cb3ff467e1088b202
-L
-app/dependencies/database.py,e/f/efd82d6b5893028ad00dca7d1540f837ac7f56e5
-I
-app/dependencies/utils.py,6/4/64aa3860a93bfe6dcd4e04b26e95503044aad6b2
 =
 database.json,7/0/70ce63583630b19bbe3e0f9ec2c79804f70d4baa
 >
@@ -188,8 +180,6 @@ K
 .github/workflows/test.yaml,a/6/a60e2382fd0c34cb06177a3d7034264e22531192
 J
 app/dependencies/errors.py,2/3/23cb45a7ed3c7410b0737d8fcf73c476f0fa392a
-=
-app/helper.py,0/6/06a2a9cefed22737d2d1fd7e2c591eb7412996ba
 F
 app/bot/inlinequery.py,6/b/6b4f48e076da4edc40a2c1d7a121a47d8cf4618c
 G

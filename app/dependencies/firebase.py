@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import asyncio
 import contextlib
+import logging as log
 import types
 import typing
 
@@ -23,11 +25,12 @@ class Firestore:
     Args:
         app_name (str): name of the connection. If not specified, the default value will be used
     """
-    __slots__ = ("__client", "_app_name")
+    __slots__ = ("_client", "app_name", "__counter")
 
     def __init__(self, app_name: str = _DEFAULT_APP_NAME):
         self._client: AsyncClient = ...
         self.app_name = app_name
+        self._counter = 0
 
     async def __aenter__(self) -> Firestore:
         self._client = await self._connect()
@@ -42,23 +45,19 @@ class Firestore:
         self._client.close()
 
     @property
-    def _client(self) -> AsyncClient:
-        return self.__client
+    def _counter(self) -> int:
+        return self.__counter
 
-    @_client.setter
-    def _client(self, value: AsyncClient):
-        self.__client = value
+    @_counter.setter
+    def _counter(self, value: int):
+        self.__counter = value
 
-    @property
-    def app_name(self) -> str:
-        return self._app_name
+    @_counter.deleter
+    def _counter(self):
+        self.__counter = 0
 
-    @app_name.setter
-    def app_name(self, value: str):
-        self._app_name = value
-
-    @staticmethod
-    async def create(*, app_name: str = _DEFAULT_APP_NAME) -> Firestore:
+    @classmethod
+    async def create(cls, *, app_name: str = _DEFAULT_APP_NAME) -> Firestore:
         """
         Factory used for initializing database connection object
 
@@ -72,8 +71,7 @@ class Firestore:
         Returns:
             class instance with database connection
         """
-        self = Firestore()
-        self.app_name = app_name
+        self = cls(app_name=app_name)
         self._client = await self._connect()
         return self
 
@@ -102,15 +100,43 @@ class Firestore:
     async def send_email_to(self, analytics_login: str, /):
         with contextlib.suppress(auth.EmailAlreadyExistsError):
             auth.create_user(email=f"{analytics_login}@student.letovo.ru")
-        await self._send_email_unsafe(email_addr=f"{analytics_login}@student.letovo.ru")
+        await self._send_email_unsafe(email=f"{analytics_login}@student.letovo.ru")
+
+    async def update_tokens(self, api: "API"):
+        async for user in await self.get_users():
+            try:
+                token = await self._do_receive_token(api, user.id)
+            except (errors_l.NothingFoundError, errors_l.UnauthorizedError, aiohttp.ClientConnectionError) as err:
+                log.info(f"Skipped {user.id} {err}")
+                continue
+
+            await self.update_data(sender_id=user.id, token=token)
+            log.info(f"Updated {user.id}")
+
+        del self._counter
+
+    async def _do_receive_token(self, api: "API", user_id: str) -> str:
+        try:
+            token = await api.receive_token(sender_id=user_id)
+        except errors_l.TooManyRequests:
+            await asyncio.sleep(25)
+
+            if self._counter > 2:
+                self._counter = 0
+                raise aiohttp.ClientConnectionError()
+
+            self._counter += 1
+            token = await self._do_receive_token(api, user_id)
+
+        return token
 
     @staticmethod
-    async def _send_email_unsafe(email_addr: str) -> bytes:
+    async def _send_email_unsafe(email: str) -> bytes:
         """
         Email a new user informing them that registration succeeded
 
         Args:
-            email_addr (str): whom to send an email
+            email (str): whom to send an email
 
         Returns:
             binary response
@@ -122,7 +148,7 @@ class Firestore:
         headers: dict = {
             "content-type": "application/json; charset=UTF-8"
         }
-        data = f'{{"requestType": "PASSWORD_RESET", "email": "{email_addr}"}}'
+        data = f'{{"requestType": "PASSWORD_RESET", "email": "{email}"}}'
 
         async with aiohttp.ClientSession() as session:
             async with session.post(url=api_url, headers=headers, data=data) as resp:
