@@ -33,7 +33,7 @@ async def init(clients: types_l.Clients[Client], cbQuery: CallbackQuery, db: Pos
         sender = message.from_user
         sender_id = str(sender.id)
         _, il = await run_parallel(
-            cbQuery.send_greeting(sender=sender),
+            cbQuery.send_greeting(sender=sender, client=_client),
             fs.is_logged(sender_id=sender_id),
         )
         if not il:

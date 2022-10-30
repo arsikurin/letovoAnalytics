@@ -192,13 +192,13 @@ class API:
             raise asyncio.TimeoutError(too_long_conn_text)
 
     async def receive_schedule_and_hw(
-            self, sender_id: str, specific_day: types_l.Weekdays, *, week: bool = True
+            self, sender_id: str, specific_day: types_l.Weekdays = None, *, week: bool = True
     ) -> dict:
         """
         Receive homework & schedule from s.letovo.ru
 
         Args:
-            specific_day:
+            specific_day (types_l.Weekdays, optional):
             sender_id (str): user's Telegram ID
             week (bool, optional): receive schedule & hw for week or for current day
 
@@ -214,7 +214,7 @@ class API:
             self.fs.get_student_id(sender_id=sender_id),
             self.fs.get_token(sender_id=sender_id)
         )
-        print()
+
         if errors_l.NothingFoundError in {student_id, token}:
             raise errors_l.NothingFoundError(
                 creds_not_found_text

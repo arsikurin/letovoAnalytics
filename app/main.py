@@ -1,0 +1,60 @@
+import asyncio
+import logging as log
+import os
+import sys
+
+import uvloop
+from colourlib import Fg, Style
+
+"""
+add root folder of the project to the PYTHONPATH
+in order to access files using absolute paths
+
+for example:
+`import root.module.submodule`
+"""
+PROJECT_ROOT = os.path.abspath(
+    os.path.join(
+        os.path.dirname(__file__),
+        os.pardir
+    )
+)
+sys.path.append(PROJECT_ROOT)
+from config import settings  # noqa
+
+# set asyncio policy to use uvloop as event loop
+asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+
+# initialize logger
+log.basicConfig(
+    format=f"{Style.Bold}(%(levelname)s) {Fg.Green}%(asctime)s{Fg.Reset} {Style.Bold}%(message)s{Style.Reset}"
+           f"\n[%(name)s] — (%(filename)s).%(funcName)s(%(lineno)d)\n",
+    level=log.DEBUG, stream=sys.stdout
+)
+log.getLogger("pyrogram.session.session").setLevel(log.INFO)
+log.getLogger("aiorun").setLevel(log.INFO)
+
+# fpath = os.path.join(os.path.dirname(__file__), 'utils')
+# sys.path.append(fpath)
+
+# start_time = time.perf_counter()
+# datetime.timedelta(seconds=time.perf_counter() - start_time)
+
+if sys.argv[-1].lower() == "bot":
+    from app.bot.__main__ import main
+
+    asyncio.run(main())
+
+elif sys.argv[-1].lower() == "api":
+    import uvicorn
+    from app.api.__main__ import app
+
+    c = uvicorn.Config(
+        app=app, host="0.0.0.0", port=settings().PORT, workers=settings().CONCURRENCY, http="httptools",
+        loop="uvloop"
+    )  # limit_concurrency
+
+    uvicorn.Server(config=c).run()
+
+else:
+    print("ERROR: Neither `bot` nor `api` provided")

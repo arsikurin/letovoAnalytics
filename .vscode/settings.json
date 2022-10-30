@@ -1,7 +1,0 @@
-{
-    "files.autoSave": "onFocusChange",
-    "python.analysis.completeFunctionParens": true,
-    "python.analysis.typeCheckingMode": "strict",
-    "vim.enableNeovim": true,
-    "vim.smartRelativeLine": true
-}

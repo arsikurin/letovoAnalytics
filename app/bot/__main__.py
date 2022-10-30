@@ -1,14 +1,11 @@
 import asyncio
 import contextlib
 import logging as log
-import os
 
 import aiohttp
 import aiorun
 from pyrogram import Client, compose
 
-# noinspection PyUnresolvedReferences
-import essential
 from app.bot import handlers, CallbackQuery, InlineQuery
 from app.dependencies import Postgresql, Firestore, run_sequence, types as types_l
 from config import settings
@@ -24,12 +21,12 @@ async def firestore_pinger(fs: Firestore):
 async def main():
     client = Client(
         name="letovoAnalytics", api_id=settings().TG_API_ID, api_hash=settings().TG_API_HASH,
-        bot_token=settings().TG_BOT_TOKEN, workers=min(32, (os.cpu_count() or 1) + 4),
+        bot_token=settings().TG_BOT_TOKEN, workers=settings().CONCURRENCY,
         test_mode=~settings().production + 2, in_memory=~settings().production + 2
     )
     client_i = Client(
         name="letovoAnalyticsInline", api_id=settings().TG_API_ID, api_hash=settings().TG_API_HASH,
-        bot_token=settings().TG_BOT_TOKEN_INLINE, workers=min(32, (os.cpu_count() or 1) + 4),
+        bot_token=settings().TG_BOT_TOKEN_INLINE, workers=settings().CONCURRENCY,
         test_mode=~settings().production + 2, in_memory=~settings().production + 2
     )
 

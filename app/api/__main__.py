@@ -11,8 +11,6 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from ics import Calendar
 
-# noinspection PyUnresolvedReferences
-import essential
 from app.dependencies import API, Firestore, run_parallel, errors as errors_l
 from config import settings
 
@@ -50,7 +48,7 @@ async def index(request: Request):
 
 
 @app.get("/ics/{user_id}")
-async def lol(user_id: int):
+async def webcal_ics(user_id: int):
     try:
         response = await api.receive_schedule_ics(sender_id=str(user_id))
     except (errors_l.UnauthorizedError, errors_l.NothingFoundError, aiohttp.ClientConnectionError) as err:
@@ -288,7 +286,7 @@ if __name__ == "__main__":
     import uvicorn
 
     c = uvicorn.Config(
-        app=app, host="0.0.0.0", port=settings().PORT, workers=settings().WEB_CONCURRENCY, http="httptools",
+        app=app, host="0.0.0.0", port=settings().PORT, workers=settings().CONCURRENCY, http="httptools",
         loop="uvloop"
     )  # limit_concurrency
 

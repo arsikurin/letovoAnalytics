@@ -1,3 +1,4 @@
+import os
 from functools import cache
 from zoneinfo import ZoneInfo
 
@@ -22,7 +23,7 @@ class AppSettings(BaseSettings):
     TG_BOT_TOKEN: str
     TG_BOT_TOKEN_INLINE: str
     DATABASE_URL: PostgresDsn
-    WEB_CONCURRENCY: int = 4
+    CONCURRENCY: int = min(32, (os.cpu_count() or 1) + 4)
     PORT: int = 8084
     production: bool = True
     title_api: str = "Letovo Analytics Bot API"
