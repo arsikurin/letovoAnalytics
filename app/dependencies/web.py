@@ -6,7 +6,7 @@ import typing
 import aiohttp
 import orjson
 
-from app.dependencies import errors as errors_l, types as types_l, run_parallel, Firestore
+from app.dependencies import errors as errors_l, types as types_l, Firestore
 from config import settings
 
 creds_not_found_text = "Credentials not found in the database.\nConsider entering /start and registering afterwards"
@@ -75,9 +75,8 @@ class API:
             str: auth token
         """
         if None in {login, password}:
-            login, password = await run_parallel(
-                self.fs.get_login(sender_id=sender_id),
-                self.fs.get_password(sender_id=sender_id)
+            login, password = await self.fs.get_data(
+                sender_id=sender_id, values=[types_l.FSData.login, types_l.FSData.password]
             )
             if errors_l.NothingFoundError in {login, password}:
                 raise errors_l.NothingFoundError(
@@ -123,7 +122,7 @@ class API:
             int: student id
         """
         if token is None:
-            token = await self.fs.get_token(sender_id=sender_id)
+            token = await self.fs.get_data(sender_id=sender_id, values=[types_l.FSData.token])
             if token is errors_l.NothingFoundError:
                 raise errors_l.NothingFoundError(
                     creds_not_found_text
@@ -160,10 +159,10 @@ class API:
         Returns:
             bytes
         """
-        student_id, token = await run_parallel(
-            self.fs.get_student_id(sender_id=sender_id),
-            self.fs.get_token(sender_id=sender_id)
+        student_id, token = await self.fs.get_data(
+            sender_id=sender_id, values=[types_l.FSData.student_id, types_l.FSData.token]
         )
+
         if errors_l.NothingFoundError in {student_id, token}:
             raise errors_l.NothingFoundError(
                 creds_not_found_text
@@ -210,9 +209,8 @@ class API:
         Returns:
             json
         """
-        student_id, token = await run_parallel(
-            self.fs.get_student_id(sender_id=sender_id),
-            self.fs.get_token(sender_id=sender_id)
+        student_id, token = await self.fs.get_data(
+            sender_id=sender_id, values=[types_l.FSData.student_id, types_l.FSData.token]
         )
 
         if errors_l.NothingFoundError in {student_id, token}:
@@ -264,10 +262,10 @@ class API:
         Returns:
             json
         """
-        student_id, token = await run_parallel(
-            self.fs.get_student_id(sender_id=sender_id),
-            self.fs.get_token(sender_id=sender_id)
+        student_id, token = await self.fs.get_data(
+            sender_id=sender_id, values=[types_l.FSData.student_id, types_l.FSData.token]
         )
+
         if errors_l.NothingFoundError in {student_id, token}:
             raise errors_l.NothingFoundError(
                 creds_not_found_text

@@ -40,56 +40,57 @@ log.getLogger("aiorun").setLevel(log.INFO)
 # start_time = time.perf_counter()
 # datetime.timedelta(seconds=time.perf_counter() - start_time)
 
-if sys.argv[-1].lower() == "bot":
-    from app.bot.__main__ import main
+match sys.argv[-1].lower():
+    case "bot":
+        from app.bot.__main__ import main
 
-    asyncio.run(main())
+        asyncio.run(main())
 
-elif sys.argv[-1].lower() == "api":
-    import uvicorn
-    from app.api.__main__ import app
+    case "api":
+        import uvicorn
+        from app.api.__main__ import app
 
-    c = uvicorn.Config(
-        app=app, host="0.0.0.0", port=settings().PORT, workers=settings().CONCURRENCY, http="httptools",
-        loop="uvloop"
-    )  # limit_concurrency
+        c = uvicorn.Config(
+            app=app, host="0.0.0.0", port=settings().PORT, workers=settings().CONCURRENCY, http="httptools",
+            loop="uvloop"
+        )  # limit_concurrency
 
-    uvicorn.Server(config=c).run()
+        uvicorn.Server(config=c).run()
 
-elif sys.argv[-1].lower() == "update":
-    import aiohttp
-    from app.dependencies import API, Postgresql, Firestore, run_immediately, run_parallel
-
-
-    @run_immediately
-    async def _():
-        log.info("Updating tokens in the Firebase")
-        async with aiohttp.ClientSession() as session, Postgresql() as db, Firestore(app_name="helper") as fs:
-            log.debug("established connections to the databases")
-
-            api = API(session=session, fs=fs)
-            await run_parallel(
-                fs.update_tokens(api),
-                db.reset_analytics()
-            )
-            log.debug("done reset analytics")
-
-elif sys.argv[-1].lower() == "ping":
-    import aiohttp
-    from app.dependencies import run_immediately
+    case "update":
+        # noinspection PyUnresolvedReferences
+        import aiohttp
+        from app.dependencies import API, Postgresql, Firestore, run_immediately, run_parallel
 
 
-    @run_immediately
-    async def _() -> bytes:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url=settings().URL_MAIN_API) as resp:
-                if resp.status != 200:
-                    log.info(f"Something went wrong. {resp.status}")
-                else:
-                    log.info("Sent ping to the API")
+        @run_immediately
+        async def _():
+            log.info("Updating tokens in the Firebase")
+            async with aiohttp.ClientSession() as session, Postgresql() as db, Firestore(app_name="helper") as fs:
+                log.debug("established connections to the databases")
 
-                return await resp.content.read()
+                api = API(session=session, fs=fs)
+                await run_parallel(
+                    fs.update_tokens(api),
+                    db.reset_analytics()
+                )
+                log.debug("done reset analytics")
+
+    case "ping":
+        import aiohttp
+        from app.dependencies import run_immediately
 
 
-else:
-    print("ERROR: Neither `bot` nor `api` nor `update` nor `ping` provided")
+        @run_immediately
+        async def _() -> bytes:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url=settings().URL_MAIN_API) as resp:
+                    if resp.status != 200:
+                        log.info(f"Something went wrong. {resp.status}")
+                    else:
+                        log.info("Sent ping to the API")
+
+                    return await resp.content.read()
+
+    case _:
+        print("ERROR: Neither `bot` nor `api` nor `update` nor `ping` provided")

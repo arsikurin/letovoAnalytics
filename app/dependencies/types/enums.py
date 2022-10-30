@@ -1,15 +1,15 @@
 import re
-from enum import Enum
+from enum import IntEnum, Enum
 
 
-class MarkTypes(Enum):
+class MarkTypes(IntEnum):
     RECENT = 1
     SUMMATIVE = 2
     FINAL = 3
     ALL = -10
 
 
-class Weekdays(Enum):
+class Weekdays(IntEnum):
     Monday = 1
     Tuesday = 2
     Wednesday = 3
@@ -19,6 +19,18 @@ class Weekdays(Enum):
     SundayHW = 7
     Sunday = 0
     Week = -10
+
+
+class FSData(str, Enum):
+    student_id = "data.student_id"
+    token = "data.token"
+    password = "data.analytics_password"
+    login = "data.analytics_login"
+
+
+class FSNames(str, Enum):
+    first_name = "data.first_name"
+    last_name = "data.last_name"
 
 
 class MatchWeekdays:

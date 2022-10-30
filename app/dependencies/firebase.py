@@ -12,8 +12,9 @@ import yaml
 from firebase_admin import auth
 from firebase_admin import credentials, _DEFAULT_APP_NAME
 from google.cloud.firestore_v1.async_client import AsyncClient, AsyncDocumentReference, DocumentSnapshot
+from google.cloud.firestore_v1.field_path import get_nested_value
 
-from app.dependencies import errors as errors_l
+from app.dependencies import errors as errors_l, types as types_l
 from config import settings
 
 
@@ -212,7 +213,7 @@ class Firestore:
         Update user's name in the database
 
         Warnings:
-            Fill in at least one param in each map!
+            Fill in at least one param in each hashmap!
             Otherwise, all data will be erased there
         """
         space = ""
@@ -240,7 +241,7 @@ class Firestore:
             sender_id (str): user's Telegram ID
 
         Returns:
-            bool: `True` if user's credentials are in presented in the database. Otherwise, `False`
+            bool: `True` if user's credentials are present in the database. Otherwise, `False`
         """
         doc: DocumentSnapshot = await self._client.collection("users").document(sender_id).get()
         try:
@@ -256,6 +257,33 @@ class Firestore:
             AsyncIterator
         """
         return self._client.collection("users").stream()
+
+    async def get_data(self, sender_id: str, values: list[types_l.FSData] | list[types_l.FSNames]):
+        """
+        Get user's data from the database
+
+        Args:
+            sender_id (str): user's Telegram ID
+            values (list of types_l.FSData | list of types_l.FSNames):
+
+        Returns:
+            list of (asked value or `errors_l.NothingFoundError` if not found in the database)
+        """
+
+        if isinstance(values[0], types_l.FSData):
+            collection = "users"
+        else:
+            collection = "names"
+
+        resp = []
+        doc = (await self._client.collection(collection).document(sender_id).get()).to_dict()
+        for value in values:
+            try:
+                resp.append(get_nested_value(str(value.value), doc))
+            except KeyError:
+                resp.append(errors_l.NothingFoundError)
+
+        return resp
 
     async def get_student_id(self, sender_id: str) -> int | type[errors_l.NothingFoundError]:
         """

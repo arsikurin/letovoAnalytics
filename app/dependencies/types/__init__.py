@@ -1,12 +1,14 @@
 from collections import namedtuple
 from dataclasses import dataclass
 
-from .enums import MarkTypes, MatchWeekdays, Weekdays
+from .enums import MarkTypes, MatchWeekdays, Weekdays, FSData, FSNames
 
 __all__ = (
     "Weekdays",
     "MarkTypes",
     "MatchWeekdays",
+    "FSData",
+    "FSNames",
     "AnalyticsResponse",
     "Clients"
 )
