@@ -19,7 +19,7 @@ class Postgresql:
     """
     Class for dealing with Postgresql
     """
-    __slots__ = ("__connection",)
+    __slots__ = ("_connection",)
     counter = 0
 
     def __init__(self):
@@ -36,14 +36,6 @@ class Postgresql:
             exc_tb: types.TracebackType | None,
     ):
         await self._connection.__aexit__(exc_type=exc_type, exc_val=exc_val, exc_tb=exc_tb)
-
-    @property
-    def _connection(self) -> psycopg.AsyncConnection[typing.Any]:
-        return self.__connection
-
-    @_connection.setter
-    def _connection(self, value: psycopg.AsyncConnection[typing.Any]):
-        self.__connection = value
 
     @staticmethod
     async def create() -> Postgresql:

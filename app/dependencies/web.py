@@ -23,7 +23,7 @@ class API:
         session (aiohttp.ClientSession): an instance of `aiohttp.ClientSession`
         fs (Firestore): connection to the database with users' credentials
     """
-    __slots__ = ("_session", "_fs")
+    __slots__ = ("session", "fs")
     _instance = None
 
     # def __new__(cls, *args, **kwargs):
@@ -34,22 +34,6 @@ class API:
     def __init__(self, session: aiohttp.ClientSession, fs: Firestore):
         self.session: aiohttp.ClientSession = session
         self.fs: Firestore = fs
-
-    @property
-    def session(self) -> aiohttp.ClientSession:
-        return self._session
-
-    @session.setter
-    def session(self, value: aiohttp.ClientSession):
-        self._session = value
-
-    @property
-    def fs(self) -> Firestore:
-        return self._fs
-
-    @fs.setter
-    def fs(self, value: Firestore):
-        self._fs = value
 
     async def receive_token(
             self, sender_id: str | None = None, login: str | None = None,

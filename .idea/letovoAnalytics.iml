@@ -22,7 +22,7 @@
       <excludeFolder url="file://$MODULE_DIR$/.idea/ZeppelinRemoteNotebooks" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
-    <orderEntry type="jdk" jdkName="Poetry (letovoAnalytics) (2)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Poetry (letovoAnalytics)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="hack" level="application" />
     <orderEntry type="library" name="jquery" level="application" />

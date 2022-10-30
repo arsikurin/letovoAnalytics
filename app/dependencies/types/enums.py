@@ -1,5 +1,5 @@
 import re
-from enum import IntEnum, Enum
+from enum import IntEnum, StrEnum
 
 
 class MarkTypes(IntEnum):
@@ -21,14 +21,14 @@ class Weekdays(IntEnum):
     Week = -10
 
 
-class FSData(str, Enum):
+class FSData(StrEnum):
     student_id = "data.student_id"
     token = "data.token"
     password = "data.analytics_password"
     login = "data.analytics_login"
 
 
-class FSNames(str, Enum):
+class FSNames(StrEnum):
     first_name = "data.first_name"
     last_name = "data.last_name"
 
