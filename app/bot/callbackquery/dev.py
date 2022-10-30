@@ -3,7 +3,7 @@
 from pyrogram import types
 
 from app.bot.callbackquery.base import CBQueryBase
-from app.dependencies import run_parallel, errors as errors_l
+from app.dependencies import run_parallel, errors as errors_l, types as types_l
 
 choose_an_option_below_text = "Choose an option below ↴"
 back_btn_text = "« Back"
@@ -24,14 +24,16 @@ class CBQueryDev(CBQueryBase):
                     resp.options_counter, resp.help_counter, resp.about_counter
             )): continue  # noqa: more beautiful imho
 
-            name, surname, login = await run_parallel(
-                self._fs.get_name(resp.sender_id),
-                self._fs.get_surname(resp.sender_id),
-                self._fs.get_login(resp.sender_id),
+            namesurname, login = await run_parallel(
+                self._fs.get_data(
+                    sender_id=resp.sender_id, values=[types_l.FSNames.first_name, types_l.FSNames.last_name]
+                ),
+                self._fs.get_data(sender_id=resp.sender_id, values=[types_l.FSData.login])
             )
-            name = name if name is not errors_l.NothingFoundError else ""
-            surname = surname if surname is not errors_l.NothingFoundError else ""
-            login = login if login is not errors_l.NothingFoundError else ""
+
+            name = namesurname[0] if namesurname[0] is not errors_l.NothingFoundError else ""
+            surname = namesurname[1] if namesurname[1] is not errors_l.NothingFoundError else ""
+            login = login[0] if login[0] is not errors_l.NothingFoundError else ""
             await self.client.send_message(
                 chat_id=sender.id,
                 text=f"ID: {resp.sender_id}\n"

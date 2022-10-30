@@ -105,8 +105,6 @@ w
 G.idea/sonarlint/issuestore/8/5/85184068eed665f48fe4298f36800c878bbfe8f0,8/d/8dff5f523924082aaac2d219163fc49f34b9d848
 w
 G.idea/sonarlint/issuestore/0/5/05a721ebe3ba0754116825ed1359ff1785f4bbac,5/8/58f6b98a484ad2430dccb901877c18b89a777b74
-R
-"app/dependencies/types/__init__.py,8/7/87837dddac4617928ecedd08a5fc7eeb710ece5a
 w
 G.idea/sonarlint/issuestore/3/9/39cb6e837ef03a8514272599aca4ad28578f8fb0,1/b/1b622450c8dac99df69ef0139a3fb3b905481bc3
 w
