@@ -23,8 +23,6 @@ G
 app/__init__.py,6/b/6b5a07a517e9a3845a279675e888c81b77b9d712
 G
 app/schemas/__init__.py,7/5/7501a9306d02b3a60f7536482442b11b2a950344
-6
-go.mod,c/4/c47645c391ad0571c40779079363c9d48412e18b
 J
 app/tests/test_unittest.py,4/2/42e2cf386919ff91e660724c8606c250a7ec2ea1
 H
@@ -160,18 +158,12 @@ w
 G.idea/sonarlint/issuestore/3/0/308a364541eddbaac2671eac3a398e64e8c1b598,0/a/0a927e142c2600a9db61a401aa6948671de28a8c
 w
 G.idea/sonarlint/issuestore/0/9/0951acb2967857dbe364488cc2208624aca19187,4/4/44bb92dfbe255840314bbd02da437e74efd7a25b
-;
-app/main.go,d/2/d2a6d45f180563daa10332156aad7e1e43c1387f
 L
 app/bot/handlers/iquery_7.py,a/d/ad6d5f176d172a0d7aedfe93ea2fae945fa0c6ab
 N
 app/bot/handlers/homework_4.py,d/e/de0bd5ceaf68a0f63931ae9b7bfe1e2f167c17ef
 E
 app/tests/conftest.py,9/f/9f467a9fcd7ffe82aaeae615d9ddff23c4b4f90c
-B
-app/pinger/main.rs,b/e/be5b52ca91661b53af66ca096e2f07095c879ef2
-B
-app/helper/main.go,d/9/d99ccbfb596630ddbd9fd59dc974513b7d45666d
 9
 	README.md,8/e/8ec9a00bfd09b3190ac6b22251dbb1aa95a0579d
 K
