@@ -1,0 +1,6 @@
+<component name="CopyrightManager">
+  <copyright>
+    <option name="notice" value="Made by arsikurin in &amp;#36;originalComment.match(&quot;Made by arsikurin in (\d+)&quot;, 1, &quot;-&quot;, &quot;&amp;#36;today.year&quot;)&amp;#36;today.year." />
+    <option name="myName" value="made by arsikurin" />
+  </copyright>
+</component>

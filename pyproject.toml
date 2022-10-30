@@ -5,7 +5,7 @@ description = "Letovo Analytics bot helps letovians access s.letovo.ru resources
 authors = ["arsikurin <arseny.kurin@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = "3.10.5"
+python = "3.10.8"
 orjson = "^3.6.4"
 fastapi = "^0.75.0"
 firebase-admin = "^5.1.0"
@@ -42,7 +42,7 @@ pytest-cov = "^3.0.0"
 # Hypothesis
 pytest-mock = "^3.6.1"
 tox-gh-actions = "^2.9.1"
-mypy = { git = "https://github.com/python/mypy.git", rev = "9b3147701f054bf8ef42bd96e33153b05976a5e1" }
+#mypy = { git = "https://github.com/python/mypy.git", rev = "9b3147701f054bf8ef42bd96e33153b05976a5e1" }
 types-PyYAML = "^6.0.4"
 bandit = { extras = ["toml"], version = "^1.7.4" }
 

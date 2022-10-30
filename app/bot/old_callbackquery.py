@@ -2,10 +2,8 @@ import asyncio
 import datetime
 import logging
 import typing
-from io import BytesIO
 
 import aiohttp
-from ics import Calendar
 from pyrogram import Client, types, enums
 
 from app.dependencies import (
@@ -1109,7 +1107,7 @@ class CallbackQueryEventEditors(CallbackQuerySenders):
     #     buttons: types.ReplyInlineMarkup = (await event.get_message()).reply_markup
     #
     #     if len(buttons.rows[to_remove - 1].buttons) == 3:
-    #         await event.answer("Cannot remove address in use!")
+    #         await event.answer("Cannot remove address that is in use!")
     #     else:
     #         buttons.rows[to_remove - 1].buttons.clear()
     #         buttons.rows[to_remove - 1].buttons.append(Button.url("Add", settings().URL_LOGIN_LOCAL))
