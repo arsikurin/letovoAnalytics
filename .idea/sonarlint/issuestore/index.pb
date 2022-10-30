@@ -162,8 +162,6 @@ w
 G.idea/sonarlint/issuestore/0/9/0951acb2967857dbe364488cc2208624aca19187,4/4/44bb92dfbe255840314bbd02da437e74efd7a25b
 ;
 app/main.go,d/2/d2a6d45f180563daa10332156aad7e1e43c1387f
-=
-app/pinger.py,4/7/47be40247f87156c5a9f341307f2dabcb6b8de10
 L
 app/bot/handlers/iquery_7.py,a/d/ad6d5f176d172a0d7aedfe93ea2fae945fa0c6ab
 N

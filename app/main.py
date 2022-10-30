@@ -74,5 +74,22 @@ elif sys.argv[-1].lower() == "update":
             )
             log.debug("done reset analytics")
 
+elif sys.argv[-1].lower() == "ping":
+    import aiohttp
+    from app.dependencies import run_immediately
+
+
+    @run_immediately
+    async def _() -> bytes:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url=settings().URL_MAIN_API) as resp:
+                if resp.status != 200:
+                    log.info(f"Something went wrong. {resp.status}")
+                else:
+                    log.info("Sent ping to the API")
+
+                return await resp.content.read()
+
+
 else:
-    print("ERROR: Neither `bot` nor `api` nor `update` provided")
+    print("ERROR: Neither `bot` nor `api` nor `update` nor `ping` provided")
