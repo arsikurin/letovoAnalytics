@@ -28,7 +28,7 @@ asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 # initialize logger
 log.basicConfig(
     format=f"{Style.Bold}(%(levelname)s) {Fg.Green}%(asctime)s{Fg.Reset} {Style.Bold}%(message)s{Style.Reset}"
-           f"\n[%(name)s] — (%(filename)s).%(funcName)s(%(lineno)d)\n",
+           "\n[%(name)s] — (%(filename)s).%(funcName)s(%(lineno)d)\n",
     level=log.DEBUG, stream=sys.stdout
 )
 log.getLogger("pyrogram.session.session").setLevel(log.INFO)

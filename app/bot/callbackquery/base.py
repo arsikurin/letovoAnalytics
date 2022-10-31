@@ -11,7 +11,6 @@ from pyrogram import Client, types
 
 from app.dependencies import API, Postgresql, Firestore, errors as errors_l, types as types_l
 from app.schemas import ScheduleAndHWResponse
-from config import settings
 
 
 class CBQueryBase(abc.ABC):
@@ -73,7 +72,11 @@ class CBQueryBase(abc.ABC):
             try:
                 resp = await self._api.receive_marks_and_teachers(str(sender.id))
             except (errors_l.UnauthorizedError, errors_l.NothingFoundError, aiohttp.ClientConnectionError) as err:
-                await event.answer(f"[✘] {err}", show_alert=True)
+                if hasattr(err, "__notes__"):
+                    notes = f". \n{err.__notes__}"
+                else:
+                    notes = ""
+                await event.answer(f"[✘] {err}{notes}", show_alert=True)
                 raise errors_l.StopPropagation
             except asyncio.TimeoutError as err:
                 await self.client.send_message(
@@ -100,7 +103,11 @@ class CBQueryBase(abc.ABC):
                         sender_id=str(sender.id), specific_day=specific_day
                     )
             except (errors_l.UnauthorizedError, errors_l.NothingFoundError, aiohttp.ClientConnectionError) as err:
-                await event.answer(f"[✘] {err}", show_alert=True)
+                if hasattr(err, "__notes__"):
+                    notes = f". \n{err.__notes__}"
+                else:
+                    notes = ""
+                await event.answer(f"[✘] {err}{notes}", show_alert=True)
                 raise errors_l.StopPropagation
             except asyncio.TimeoutError as err:
                 await self.client.send_message(
@@ -125,30 +132,6 @@ class CBQueryBase(abc.ABC):
             payload = (
                 f"__{specific_day.name}, "
                 f"{date_of_lessons:%d.%m.%Y}__\n"
-            )
-        return await self.client.send_message(
-            chat_id=sender.id,
-            text=payload,
-            reply_markup=types.InlineKeyboardMarkup([[
-                types.InlineKeyboardButton("Close", b"close")
-            ]]),
-            disable_notification=True
-        )
-
-    async def _send_close_message_marks(self, sender: types.User, specific: types_l.MarkTypes.SUMMATIVE):
-        now = datetime.datetime.now(tz=settings().timezone)
-        if specific == types_l.MarkTypes.RECENT:
-            payload = (
-                f"__{specific.name.capitalize()} marks, "
-                f"{(now - datetime.timedelta(7)) :%d.%m.%Y} — {now:%d.%m.%Y}__\n"
-            )
-        elif specific == types_l.MarkTypes.FINAL:
-            payload = (
-                f"__{specific.name.capitalize()} marks, semester__\n"
-            )
-        else:
-            payload = (
-                f"__{specific.name.capitalize()} marks, {now:%d.%m.%Y}__\n"
             )
         return await self.client.send_message(
             chat_id=sender.id,

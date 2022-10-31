@@ -2,6 +2,7 @@ class NothingFoundError(Exception):
     """
     Occurs when anything cannot be found in the database
     """
+    __notes__ = "Consider entering /start and registering afterwards"
 
     def __init__(self, detail: str | None = None):
         if detail is None:
@@ -49,7 +50,7 @@ class StopPropagation(Exception):
 
 class TooManyRequests(Exception):
     """
-    Occurs when got 429 http.
+    Occurs when got 429 http code
     """
 
     def __init__(self, detail: str | None = None, fix: str | None = None):

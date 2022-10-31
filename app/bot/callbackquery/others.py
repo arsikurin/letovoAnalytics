@@ -1,10 +1,12 @@
 #  Made by arsikurin in 2022.
+import datetime
 
 from pyrogram import types
 
 from app.bot.callbackquery.base import CBQueryBase
 from app.dependencies import errors as errors_l
 from app.schemas import TeachersResponse
+from config import settings
 
 choose_an_option_below_text = "Choose an option below ↴"
 back_btn_text = "« Back"
@@ -55,6 +57,8 @@ class CBQOthers(CBQueryBase):
             response = await self._handle_errors(self._api.receive_marks_and_teachers, event, sender)
         except errors_l.StopPropagation:
             return
+
+        msg_ids = []
         teachers_response = TeachersResponse.parse_obj(response)
         for subject in teachers_response.data:
             if subject.group.group_teachers:
@@ -68,13 +72,32 @@ class CBQOthers(CBQueryBase):
                     t = subject_teacher.teacher
                     payload += f"{t.teacher_name} {t.teacher_fath} {t.teacher_surname}\n{t.teacher_mail}\n\n"
 
-                await self.client.send_message(
+                msg = await self.client.send_message(
                     chat_id=sender.id,
                     text=payload,
                     disable_notification=True,
                     disable_web_page_preview=True
                 )
+                msg_ids.append(msg.id)
+
+        if msg_ids:
+            msg = await self._send_close_message_teachers(sender)
+            msg_ids.append(msg.id)
+            await self._db.set_msg_ids(sender_id=str(sender.id), msg_ids=" ".join(map(str, msg_ids)))
+
         await event.answer()
+
+    async def _send_close_message_teachers(
+            self, sender: types.User
+    ) -> types.Message:
+        return await self.client.send_message(
+            chat_id=sender.id,
+            text=f"__Teachers' info, {datetime.datetime.now(tz=settings().timezone):%d.%m.%Y}__\n",
+            reply_markup=types.InlineKeyboardMarkup([[
+                types.InlineKeyboardButton("Close", b"close")
+            ]]),
+            disable_notification=True
+        )
 
     @staticmethod
     async def to_others_page(event: types.CallbackQuery):

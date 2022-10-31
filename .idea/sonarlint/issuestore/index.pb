@@ -1,6 +1,4 @@
 
-9
-	.pylintrc,5/8/58278ca6e186f004b12621f8c3155064b4dc09b6
 E
 app/tests/__init__.py,4/4/447707a821d80cc39e532ce0179db7ddffdf17c9
 >
@@ -9,8 +7,6 @@ E
 .deepsource.toml,f/7/f7fdb5a735547cbe989626708a7eab7e182a2c6f
 >
 api.dockerfile,5/f/5f7e1b96a3e5b5ebfafa25bef5891dbc1c36c60e
-6
-go.sum,5/a/5aa1ac64de2b0c4821af9393b44965020e4a521d
 >
 SQL/create.sql,d/d/dd4cbd5bae2856080323f378773a8754a7afc8fb
 =
@@ -19,12 +15,6 @@ J
 app/tests/test_unittest.py,4/2/42e2cf386919ff91e660724c8606c250a7ec2ea1
 H
 app/tests/test_pytest.py,7/9/79bc96eefeff50432cd9135cb3ff467e1088b202
-=
-database.json,7/0/70ce63583630b19bbe3e0f9ec2c79804f70d4baa
->
-database2.json,d/0/d07f99f87adbdfcac27b7d705a9750d7778f1b66
-w
-G.idea/sonarlint/issuestore/6/b/6b5a07a517e9a3845a279675e888c81b77b9d712,0/d/0d4b49a2dd4e9e06c83f8c9e11d8468035ab577e
 w
 G.idea/sonarlint/issuestore/5/a/5aa1ac64de2b0c4821af9393b44965020e4a521d,9/8/98b36d73fdebb2dd687a24b8428bbd69eefeac61
 H
@@ -37,8 +27,6 @@ w
 G.idea/sonarlint/issuestore/e/f/ef8def03dc8f162799089e9b5f4321201c8810d5,8/4/84cee910007e409d590b121a25231a4f7ec98caa
 w
 G.idea/sonarlint/issuestore/4/4/447707a821d80cc39e532ce0179db7ddffdf17c9,a/9/a95e0a6b76f73f3a414b8a4d1a10706d0c73bff3
-w
-G.idea/sonarlint/issuestore/c/4/c47645c391ad0571c40779079363c9d48412e18b,8/5/85487fc2ba5c65f3978510d5f9cefbeb666dfda9
 w
 G.idea/sonarlint/issuestore/5/f/5f7e1b96a3e5b5ebfafa25bef5891dbc1c36c60e,0/3/03ba51b115cf5ba8b158cf459464ac4660e99910
 w
@@ -77,8 +65,6 @@ W
 'app/api/static/templates/pageError.html,3/9/39cb6e837ef03a8514272599aca4ad28578f8fb0
 w
 G.idea/sonarlint/issuestore/0/3/03ba51b115cf5ba8b158cf459464ac4660e99910,7/1/71b18200d80b887db17ec42a990b1d311e3caa66
-w
-G.idea/sonarlint/issuestore/9/e/9e913b2e7e335ecf82b791bfc4924f020c7d8b81,f/0/f0109667c3d47e5b5080bdd26d49351ab1caef2a
 w
 G.idea/sonarlint/issuestore/b/4/b4a0b63ce8560bbc5de0f9995c20cc861dc2adb3,b/0/b04578cffb47b1e57970601a0cacef6081245859
 w
@@ -153,3 +139,53 @@ E
 	README.md,8/e/8ec9a00bfd09b3190ac6b22251dbb1aa95a0579d
 K
 .github/workflows/test.yaml,a/6/a60e2382fd0c34cb06177a3d7034264e22531192
+L
+app/bot/handlers/__init__.py,7/6/760e0d9ec6b043553c59d37ab141a04ac941b23e
+M
+app/bot/callbackquery/core.py,9/e/9e7d629d4cb189e887081db743cf96ba58fd68f1
+U
+%.idea/copyright/made_by_arsikurin.xml,e/9/e93697f436d3869469c88e2b6fe88c67073511e5
+U
+%.idea/copyright/profiles_settings.xml,8/c/8c00054dc44a9aac96957ae70e12d95773e087f7
+Q
+!app/bot/callbackquery/accounts.py,9/0/90ca8b914a0cd80fb0eb8730f87f8639c871b9ac
+C
+app/bot/__init__.py,e/9/e9f6b277e939d65a41b31370495c48afd7ea6e31
+C
+docker-compose.yaml,e/f/ef8def03dc8f162799089e9b5f4321201c8810d5
+<
+privacy.html,0/3/0394c97ae270b6b4ed93bc6173b6755895e9b338
+7
+tox.ini,6/1/61be067c7cf3bdbf8a6b021a2b5167eb30612d0c
+Q
+!app/bot/callbackquery/__init__.py,7/1/71777da1e6dfbcb968f039c8b6b02e8b207b7fe7
+8
+Procfile,b/c/bc3c68e880d1a01632bce79f69dd1387c7ba9c54
+J
+app/bot/handlers/core_1.py,5/c/5cdbc63397087b637fa1057e874dd6dd2b0acd27
+I
+app/bot/handlers/dev_6.py,9/5/95f4f7cbabb728dcd5f5f3d7d60ff2fbfdc59431
+R
+"app/dependencies/types/__init__.py,8/7/87837dddac4617928ecedd08a5fc7eeb710ece5a
+A
+app/.dockerignore,2/a/2a64350c28aa37ca0f8a85df5dbdf86b487b71e6
+D
+app/schemas/marks.py,9/7/97fbf3327d40eabbec68aaacbf6136cde8685bd8
+K
+app/dependencies/filters.py,9/0/90767c85d2c8f18598f7d4ecdf7a88ebc2f87ac5
+F
+app/bot/inlinequery.py,6/b/6b4f48e076da4edc40a2c1d7a121a47d8cf4618c
+9
+	config.py,1/a/1a1b9769344cb239f2e540e1e6ee1efa2d3034ea
+G
+app/schemas/__init__.py,7/5/7501a9306d02b3a60f7536482442b11b2a950344
+8
+Makefile,8/3/836efb6e25a091dcb4ff8e1dbb2f0be6a5cbf14c
+;
+poetry.lock,0/0/0068a1506b061a8948c37d78b0dd5697211558d3
+>
+pyproject.toml,5/d/5d07e7d72637aa0d59c89d381fe6dc4cf46e2491
+9
+	.pylintrc,5/8/58278ca6e186f004b12621f8c3155064b4dc09b6
+C
+app/api/__main__.py,c/8/c84a8cb014f9bed0ae207de0880d05d3fec7e7a4

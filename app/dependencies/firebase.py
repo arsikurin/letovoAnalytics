@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import asyncio
 import contextlib
 import logging as log
@@ -33,7 +31,7 @@ class Firestore:
         self.app_name = app_name
         self._counter = 0
 
-    async def __aenter__(self) -> Firestore:
+    async def __aenter__(self) -> typing.Self:
         self._client = await self._connect()
         return self
 
@@ -58,7 +56,7 @@ class Firestore:
         self.__counter = 0
 
     @classmethod
-    async def create(cls, *, app_name: str = _DEFAULT_APP_NAME) -> Firestore:
+    async def create(cls, *, app_name: str = _DEFAULT_APP_NAME) -> typing.Self:
         """
         Factory used for initializing database connection object
 

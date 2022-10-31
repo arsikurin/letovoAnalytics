@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import itertools as it
 import logging as log
 import types
@@ -25,7 +23,7 @@ class Postgresql:
     def __init__(self):
         self._connection: psycopg.AsyncConnection[typing.Any] = ...
 
-    async def __aenter__(self) -> Postgresql:
+    async def __aenter__(self) -> typing.Self:
         self._connection = await self._connect()
         return self
 
@@ -37,8 +35,8 @@ class Postgresql:
     ):
         await self._connection.__aexit__(exc_type=exc_type, exc_val=exc_val, exc_tb=exc_tb)
 
-    @staticmethod
-    async def create() -> Postgresql:
+    @classmethod
+    async def create(cls) -> typing.Self:
         """
         Factory used for initializing database connection object
 
@@ -49,7 +47,7 @@ class Postgresql:
         Returns:
             class instance with database connection
         """
-        self = Postgresql()
+        self = cls()
         self._connection = await self._connect()
         return self
 
