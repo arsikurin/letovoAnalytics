@@ -83,59 +83,45 @@ class CBQMarks(CBQueryBase):
             subject (MarksDataList): school subject
             check_date (bool): check for recency or not
         """
-        mark_a, mark_b, mark_c, mark_d, mark_s = [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]
+        mark_a, mark_b, mark_c = types_l.Mark(criterion="A"), types_l.Mark(criterion="B"), types_l.Mark(criterion="C")
+        mark_d, mark_s = types_l.Mark(criterion="D"), types_l.Mark(criterion="S")
         for mark in subject.summative_list:
             if mark.mark_value.isdigit():
                 if mark.mark_criterion == "A":
-                    mark_a[0] += int(mark.mark_value)
-                    mark_a[1] += 1
+                    mark_a.sum += int(mark.mark_value)
+                    mark_a.count += 1
                 elif mark.mark_criterion == "B":
-                    mark_b[0] += int(mark.mark_value)
-                    mark_b[1] += 1
+                    mark_b.sum += int(mark.mark_value)
+                    mark_b.count += 1
                 elif mark.mark_criterion == "C":
-                    mark_c[0] += int(mark.mark_value)
-                    mark_c[1] += 1
+                    mark_c.sum += int(mark.mark_value)
+                    mark_c.count += 1
                 elif mark.mark_criterion == "D":
-                    mark_d[0] += int(mark.mark_value)
-                    mark_d[1] += 1
+                    mark_d.sum += int(mark.mark_value)
+                    mark_d.count += 1
                 elif mark.mark_criterion == "S":
-                    mark_s[0] += int(mark.mark_value)
-                    mark_s[1] += 1
+                    mark_s.sum += int(mark.mark_value)
+                    mark_s.count += 1
             if not check_date or (
                     datetime.datetime.now(tz=settings().timezone) -
                     datetime.datetime.fromisoformat(mark.created_at).replace(tzinfo=settings().timezone)
             ).days < 8:
                 self._payload += f"**{mark.mark_value}**{mark.mark_criterion} "
 
-        if mark_a[1] == 0:
-            mark_a[1] = 1
-        if mark_b[1] == 0:
-            mark_b[1] = 1
-        if mark_c[1] == 0:
-            mark_c[1] = 1
-        if mark_d[1] == 0:
-            mark_d[1] = 1
-        if mark_s[1] == 0:
-            mark_s[1] = 1
-
-        mark_a_avg, mark_b_avg = f"{(mark_a[0] / mark_a[1]):.2g}", f"{(mark_b[0] / mark_b[1]):.2g}"
-        mark_c_avg, mark_d_avg = f"{(mark_c[0] / mark_c[1]):.2g}", f"{(mark_d[0] / mark_d[1]):.2g}"
-        mark_s_avg = f"{(mark_s[0] / mark_s[1]):.2g}"
-
         if self._payload[-2] == "*":
             self._payload += "no recent marks"
 
         self._payload += " | __avg:__ "
-        if float(mark_a_avg) > 0:
-            self._payload += f"**{mark_a_avg}**A "
-        if float(mark_b_avg) > 0:
-            self._payload += f"**{mark_b_avg}**B "
-        if float(mark_c_avg) > 0:
-            self._payload += f"**{mark_c_avg}**C "
-        if float(mark_d_avg) > 0:
-            self._payload += f"**{mark_d_avg}**D "
-        if float(mark_s_avg) > 0:
-            self._payload += f"**{mark_s_avg}**S "
+        self._add_avg_mark_if_exists(mark_a)
+        self._add_avg_mark_if_exists(mark_b)
+        self._add_avg_mark_if_exists(mark_c)
+        self._add_avg_mark_if_exists(mark_d)
+        self._add_avg_mark_if_exists(mark_s)
+
+    def _add_avg_mark_if_exists(self, mark: types_l.Mark):
+        if mark.count != 0:
+            mark_avg = mark.sum / mark.count
+            self._payload += f"**{mark_avg:.2g}**{mark.criterion} "
 
     async def _send_final_marks(self, _marks_response: MarksResponse, sender: types.User):
         """

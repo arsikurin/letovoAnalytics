@@ -40,7 +40,7 @@ async def main():
         log.debug("Entered mainloop")
         await run_sequence(
             handlers.init(
-                clients=types_l.Clients(client=client, client_i=client_i), cbQuery=cbQuery, iQuery=iQuery, db=db, fs=fs
+                clients=types_l.clients(client=client, client_i=client_i), cbQuery=cbQuery, iQuery=iQuery, db=db, fs=fs
             ),
             aiorun.shutdown_waits_for(compose([client, client_i]))
         )

@@ -9,7 +9,7 @@ from app.dependencies import run_sequence, run_parallel, Firestore, Postgresql, 
 from config import settings
 
 
-async def init(clients: types_l.Clients[Client], cbQuery: CallbackQuery, db: Postgresql, fs: Firestore):
+async def init(clients: types_l.clients[Client], cbQuery: CallbackQuery, db: Postgresql, fs: Firestore):
     client = clients.client
 
     async def inline_or_regular(client_: Client, sender: types.User):
@@ -101,7 +101,7 @@ async def init(clients: types_l.Clients[Client], cbQuery: CallbackQuery, db: Pos
         except Exception as err:
             await _client.send_message(
                 chat_id=sender.id,
-                text=f"**[✘] Something went wrong!**\n\nThis incident will be reported. Try again later"
+                text="**[✘] Something went wrong!**\n\nThis incident will be reported. Try again later"
             )
             await client.send_message(
                 chat_id=606336225 if settings().production else 2200163963,

@@ -5,7 +5,7 @@ from app.bot import InlineQuery
 from app.dependencies import types as types_l, Firestore
 
 
-async def init(clients: types_l.Clients[Client], iQuery: InlineQuery, fs: Firestore):
+async def init(clients: types_l.clients[Client], iQuery: InlineQuery, fs: Firestore):
     client = clients.client_i
 
     @client.on_inline_query()

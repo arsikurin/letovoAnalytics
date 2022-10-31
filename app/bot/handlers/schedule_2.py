@@ -10,7 +10,7 @@ from app.dependencies import Postgresql, types as types_l
 from config import settings
 
 
-async def init(clients: types_l.Clients[Client], cbQuery: CallbackQuery, db: Postgresql):
+async def init(clients: types_l.clients[Client], cbQuery: CallbackQuery, db: Postgresql):
     client = clients.client
 
     @client.on_callback_query(pyrogram.filters.regex(re.compile(r"^schedule_page$")))

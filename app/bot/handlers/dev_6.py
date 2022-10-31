@@ -12,7 +12,7 @@ from app.bot import CallbackQuery
 from app.dependencies import API, Firestore, types as types_l, run_sequence, run_parallel
 
 
-async def init(clients: types_l.Clients[Client], cbQuery: CallbackQuery, fs: Firestore):
+async def init(clients: types_l.clients[Client], cbQuery: CallbackQuery, fs: Firestore):
     client = clients.client
 
     @client.on_message(pyrogram.filters.user([606336225, 2200163963]) & pyrogram.filters.regex(re.compile(r"^#dev$")))
