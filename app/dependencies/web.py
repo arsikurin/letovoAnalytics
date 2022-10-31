@@ -9,9 +9,9 @@ import orjson
 from app.dependencies import errors as errors_l, types as types_l, Firestore
 from config import settings
 
-creds_not_found_text = "Credentials not found in the database.\nConsider entering /start and registering afterwards"
+creds_not_found_text = "Credentials not found in the database"
 no_conn_text = "Cannot establish connection to s.letovo.ru"
-too_long_conn_text = "s.letovo.ru takes too long to respond\n"
+too_long_conn_text = "s.letovo.ru takes too long to respond"
 
 
 @typing.final
@@ -73,15 +73,18 @@ class API:
         try:
             async with self.session.post(url=settings().URL_LOGIN_LETOVO, data=login_data) as resp:
                 if resp.status == 429:
+                    log.error(f"Cannot get data from s.letovo.ru (too many requests). Error {resp.status}")
                     raise errors_l.TooManyRequests()
                 elif resp.status != 200:
+                    log.error(f"Cannot get data from s.letovo.ru. Error {resp.status}")
                     raise errors_l.UnauthorizedError(f"Cannot get data from s.letovo.ru. Error {resp.status}")
                 resp_j = await resp.json(loads=orjson.loads)
                 return f'{resp_j["data"]["token_type"]} {resp_j["data"]["token"]}'
-        except aiohttp.ClientConnectionError:
+        except aiohttp.ClientConnectionError as err:
+            log.exception(err)
             raise aiohttp.ClientConnectionError(no_conn_text)
         except asyncio.TimeoutError as err:
-            log.error(err)
+            log.exception(err)
             raise asyncio.TimeoutError(too_long_conn_text)
 
     async def receive_student_id(
@@ -117,13 +120,15 @@ class API:
         try:
             async with self.session.post(url="https://s-api.letovo.ru/api/me", headers=headers) as resp:
                 if resp.status != 200:
+                    log.error(f"Cannot get data from s.letovo.ru. Error {resp.status}")
                     raise errors_l.UnauthorizedError(f"Cannot get data from s.letovo.ru. Error {resp.status}")
                 resp_j = await resp.json(loads=orjson.loads)
                 return int(resp_j["data"]["user"]["student_id"])
-        except aiohttp.ClientConnectionError:
+        except aiohttp.ClientConnectionError as err:
+            log.exception(err)
             raise aiohttp.ClientConnectionError(no_conn_text)
         except asyncio.TimeoutError as err:
-            log.error(err)
+            log.exception(err)
             raise asyncio.TimeoutError(too_long_conn_text)
 
     async def receive_schedule_ics(
@@ -165,13 +170,14 @@ class API:
         try:
             async with self.session.get(url=url, headers=headers, timeout=10) as resp:
                 if resp.status != 200:
+                    log.error(f"Cannot get data from s.letovo.ru. Error {resp.status}")
                     raise errors_l.UnauthorizedError(f"Cannot get data from s.letovo.ru. Error {resp.status}")
                 return await resp.read()
         except aiohttp.ClientConnectionError as err:
-            log.error(err)
+            log.exception(err)
             raise aiohttp.ClientConnectionError(no_conn_text)
         except asyncio.TimeoutError as err:
-            log.error(err)
+            log.exception(err)
             raise asyncio.TimeoutError(too_long_conn_text)
 
     async def receive_schedule_and_hw(
@@ -220,13 +226,14 @@ class API:
         try:
             async with self.session.get(url=url, headers=headers, timeout=10) as resp:
                 if resp.status != 200:
+                    log.error(f"Cannot get data from s.letovo.ru. Error {resp.status}")
                     raise errors_l.UnauthorizedError(f"Cannot get data from s.letovo.ru. Error {resp.status}")
                 return await resp.json(loads=orjson.loads)
         except aiohttp.ClientConnectionError as err:
-            log.error(err)
+            log.exception(err)
             raise aiohttp.ClientConnectionError(no_conn_text)
         except asyncio.TimeoutError as err:
-            log.error(err)
+            log.exception(err)
             raise asyncio.TimeoutError(too_long_conn_text)
 
     async def receive_marks_and_teachers(
@@ -267,11 +274,12 @@ class API:
         try:
             async with self.session.get(url=url, headers=headers, timeout=10) as resp:
                 if resp.status != 200:
+                    log.error(f"Cannot get data from s.letovo.ru. Error {resp.status}")
                     raise errors_l.UnauthorizedError(f"Cannot get data from s.letovo.ru. Error {resp.status}")
                 return await resp.json(loads=orjson.loads)
         except aiohttp.ClientConnectionError as err:
-            log.error(err)
+            log.exception(err)
             raise aiohttp.ClientConnectionError(no_conn_text)
         except asyncio.TimeoutError as err:
-            log.error(err)
+            log.exception(err)
             raise asyncio.TimeoutError(too_long_conn_text)

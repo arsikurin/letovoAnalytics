@@ -77,11 +77,12 @@ class CBQSchedule(CBQueryBase):
                 )
                 msg_ids.append(msg.id)
 
-        msg = await self._send_close_message_sch_and_hw(
-            sender, specific_day, schedule_response
-        )
-        msg_ids.append(msg.id)
-        await self._db.set_msg_ids(sender_id=str(sender.id), msg_ids=" ".join(map(str, msg_ids)))
+        if msg_ids:
+            msg = await self._send_close_message_sch_and_hw(
+                sender, specific_day, schedule_response
+            )
+            msg_ids.append(msg.id)
+            await self._db.set_msg_ids(sender_id=str(sender.id), msg_ids=" ".join(map(str, msg_ids)))
 
         await event.answer()
 

@@ -249,6 +249,30 @@ class CBQMarks(CBQueryBase):
                 )
                 self._msg_ids.append(msg.id)
 
+    async def _send_close_message_marks(self, sender: types.User, specific: types_l.MarkTypes):
+        now = datetime.datetime.now(tz=settings().timezone)
+        if specific == types_l.MarkTypes.RECENT:
+            payload = (
+                f"__{specific.name.capitalize()} marks, "
+                f"{(now - datetime.timedelta(7)) :%d.%m.%Y} — {now:%d.%m.%Y}__\n"
+            )
+        elif specific == types_l.MarkTypes.FINAL:
+            payload = (
+                f"__{specific.name.capitalize()} marks, semester__\n"
+            )
+        else:
+            payload = (
+                f"__{specific.name.capitalize()} marks, {now:%d.%m.%Y}__\n"
+            )
+        return await self.client.send_message(
+            chat_id=sender.id,
+            text=payload,
+            reply_markup=types.InlineKeyboardMarkup([[
+                types.InlineKeyboardButton("Close", b"close")
+            ]]),
+            disable_notification=True
+        )
+
     @staticmethod
     async def to_marks_page(event: types.CallbackQuery):
         """
