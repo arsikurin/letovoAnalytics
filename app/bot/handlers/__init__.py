@@ -14,7 +14,7 @@ from app.dependencies import Postgresql, Firestore, run_parallel, types as types
 
 
 async def init(
-        clients: types_l.Clients[Client], cbQuery: CallbackQuery, iQuery: InlineQuery, db: Postgresql, fs: Firestore
+        clients: types_l.clients[Client], cbQuery: CallbackQuery, iQuery: InlineQuery, db: Postgresql, fs: Firestore
 ):
     handlers = [
         # Dynamically import

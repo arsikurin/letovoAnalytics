@@ -91,8 +91,6 @@ w
 G.idea/sonarlint/issuestore/3/5/352060e690e20468709e6ce67711a906e70ebc0b,f/9/f946c31abb8ee753e43b13d4c57aa99dfaed37ce
 w
 G.idea/sonarlint/issuestore/7/0/70e56e791623d93683a0ba6921bd0a49930b156f,d/b/db2c9eda126cbd92dff36f220f145bb412699bc2
-K
-app/bot/handlers/marks_3.py,b/d/bd2dd2d80373328e5593546c1d5881c71a9cce5d
 w
 G.idea/sonarlint/issuestore/3/f/3f30f9391629b0b03861dde866a06d5cd1ca5d60,8/0/80aa5c0d12a7b6a77baba1443a585bb1a52d8570
 w
@@ -129,16 +127,10 @@ w
 G.idea/sonarlint/issuestore/3/0/308a364541eddbaac2671eac3a398e64e8c1b598,0/a/0a927e142c2600a9db61a401aa6948671de28a8c
 w
 G.idea/sonarlint/issuestore/0/9/0951acb2967857dbe364488cc2208624aca19187,4/4/44bb92dfbe255840314bbd02da437e74efd7a25b
-L
-app/bot/handlers/iquery_7.py,a/d/ad6d5f176d172a0d7aedfe93ea2fae945fa0c6ab
-N
-app/bot/handlers/homework_4.py,d/e/de0bd5ceaf68a0f63931ae9b7bfe1e2f167c17ef
 E
 app/tests/conftest.py,9/f/9f467a9fcd7ffe82aaeae615d9ddff23c4b4f90c
 9
 	README.md,8/e/8ec9a00bfd09b3190ac6b22251dbb1aa95a0579d
-L
-app/bot/handlers/__init__.py,7/6/760e0d9ec6b043553c59d37ab141a04ac941b23e
 M
 app/bot/callbackquery/core.py,9/e/9e7d629d4cb189e887081db743cf96ba58fd68f1
 U
@@ -157,16 +149,8 @@ Q
 !app/bot/callbackquery/__init__.py,7/1/71777da1e6dfbcb968f039c8b6b02e8b207b7fe7
 8
 Procfile,b/c/bc3c68e880d1a01632bce79f69dd1387c7ba9c54
-J
-app/bot/handlers/core_1.py,5/c/5cdbc63397087b637fa1057e874dd6dd2b0acd27
-I
-app/bot/handlers/dev_6.py,9/5/95f4f7cbabb728dcd5f5f3d7d60ff2fbfdc59431
-R
-"app/dependencies/types/__init__.py,8/7/87837dddac4617928ecedd08a5fc7eeb710ece5a
 A
 app/.dockerignore,2/a/2a64350c28aa37ca0f8a85df5dbdf86b487b71e6
-D
-app/schemas/marks.py,9/7/97fbf3327d40eabbec68aaacbf6136cde8685bd8
 K
 app/dependencies/filters.py,9/0/90767c85d2c8f18598f7d4ecdf7a88ebc2f87ac5
 F
@@ -181,5 +165,3 @@ G
 poetry.lock,0/0/0068a1506b061a8948c37d78b0dd5697211558d3
 9
 	.pylintrc,5/8/58278ca6e186f004b12621f8c3155064b4dc09b6
-C
-app/api/__main__.py,c/8/c84a8cb014f9bed0ae207de0880d05d3fec7e7a4

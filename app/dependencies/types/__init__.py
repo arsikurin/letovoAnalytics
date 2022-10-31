@@ -10,7 +10,8 @@ __all__ = (
     "FSData",
     "FSNames",
     "AnalyticsResponse",
-    "Clients"
+    "Mark",
+    "clients"
 )
 
 
@@ -28,4 +29,11 @@ class AnalyticsResponse:
     inline_counter: int
 
 
-Clients = namedtuple("Clients", ["client", "client_i"])
+@dataclass(slots=True)
+class Mark:
+    criterion: str
+    count: int = 0
+    sum: int = 0
+
+
+clients = namedtuple("clients", ["client", "client_i"])

@@ -7,7 +7,7 @@ from app.bot import CallbackQuery
 from app.dependencies import Postgresql, run_parallel, types as types_l
 
 
-async def init(clients: types_l.Clients[Client], cbQuery: CallbackQuery, db: Postgresql):
+async def init(clients: types_l.clients[Client], cbQuery: CallbackQuery, db: Postgresql):
     client = clients.client
 
     @client.on_callback_query(pyrogram.filters.regex(re.compile(r"^others_page$")))
