@@ -137,8 +137,6 @@ E
 app/tests/conftest.py,9/f/9f467a9fcd7ffe82aaeae615d9ddff23c4b4f90c
 9
 	README.md,8/e/8ec9a00bfd09b3190ac6b22251dbb1aa95a0579d
-K
-.github/workflows/test.yaml,a/6/a60e2382fd0c34cb06177a3d7034264e22531192
 L
 app/bot/handlers/__init__.py,7/6/760e0d9ec6b043553c59d37ab141a04ac941b23e
 M
@@ -155,8 +153,6 @@ C
 docker-compose.yaml,e/f/ef8def03dc8f162799089e9b5f4321201c8810d5
 <
 privacy.html,0/3/0394c97ae270b6b4ed93bc6173b6755895e9b338
-7
-tox.ini,6/1/61be067c7cf3bdbf8a6b021a2b5167eb30612d0c
 Q
 !app/bot/callbackquery/__init__.py,7/1/71777da1e6dfbcb968f039c8b6b02e8b207b7fe7
 8
@@ -183,8 +179,6 @@ G
 Makefile,8/3/836efb6e25a091dcb4ff8e1dbb2f0be6a5cbf14c
 ;
 poetry.lock,0/0/0068a1506b061a8948c37d78b0dd5697211558d3
->
-pyproject.toml,5/d/5d07e7d72637aa0d59c89d381fe6dc4cf46e2491
 9
 	.pylintrc,5/8/58278ca6e186f004b12621f8c3155064b4dc09b6
 C
