@@ -28,7 +28,7 @@ async def get(app: FastAPI, func: Callable[..., T], request: Request = None) -> 
 
     if errors:
         for err in errors:
-            log.error(err)
+            log.exception(err)
         return ORJSONResponse({"code": 400, "status": "error", "detail": f"{errors}"}, status_code=400)
 
     return await run_endpoint_function(
@@ -48,7 +48,7 @@ class AcceptContent:
     async def __call__(self, request: Request, accept=Header(...)):  # noqa
         """as API endpoint"""
         for accept_content in accept.split(","):
-            route = self.routes.get(accept_content, None)
+            route = self.routes.get(accept_content)
             if route is not None:
                 return await get(request.app, route, request)
         raise HTTPException(406)
