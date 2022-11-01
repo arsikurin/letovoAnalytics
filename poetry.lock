@@ -19,17 +19,6 @@ yarl = ">=1.0,<2.0"
 speedups = ["Brotli", "aiodns", "cchardet"]
 
 [[package]]
-name = "aiorun"
-version = "2022.4.1"
-description = "Boilerplate for asyncio applications"
-category = "main"
-optional = false
-python-versions = ">=3.5"
-
-[package.extras]
-dev = ["pytest", "pytest-cov"]
-
-[[package]]
 name = "aiosignal"
 version = "1.2.0"
 description = "aiosignal: a list of registered asynchronous callbacks"
@@ -1329,7 +1318,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "3.11.0"
-content-hash = "54f6e439efbdd35dbb83b44c1ff0447de03665e35095769445242d8dd4a29bc4"
+content-hash = "3b221f69de37709feae7c46f151e03b9c3c369d79e6d9e3f310acc9004f988a1"
 
 [metadata.files]
 aiohttp = [
@@ -1420,10 +1409,6 @@ aiohttp = [
     {file = "aiohttp-3.8.3-cp39-cp39-win32.whl", hash = "sha256:f178d2aadf0166be4df834c4953da2d7eef24719e8aec9a65289483eeea9d618"},
     {file = "aiohttp-3.8.3-cp39-cp39-win_amd64.whl", hash = "sha256:88e5be56c231981428f4f506c68b6a46fa25c4123a2e86d156c58a8369d31ab7"},
     {file = "aiohttp-3.8.3.tar.gz", hash = "sha256:3828fb41b7203176b82fe5d699e0d845435f2374750a44b480ea6b930f6be269"},
-]
-aiorun = [
-    {file = "aiorun-2022.4.1-py3-none-any.whl", hash = "sha256:3a7925d66c394f6812a0150495fda8d359b4cdf24cf0c223f005b61ad02baaa7"},
-    {file = "aiorun-2022.4.1.tar.gz", hash = "sha256:6aafa65c4004c1697088d8f09a9a68e8d486a5403f2e35956f5f0173ce7501f5"},
 ]
 aiosignal = [
     {file = "aiosignal-1.2.0-py3-none-any.whl", hash = "sha256:26e62109036cd181df6e6ad646f91f0dcfd05fe16d0cb924138ff2ab75d64e3a"},

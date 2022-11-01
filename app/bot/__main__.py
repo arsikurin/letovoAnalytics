@@ -3,7 +3,6 @@ import contextlib
 import logging as log
 
 import aiohttp
-import aiorun
 from pyrogram import Client, compose
 
 from app.bot import handlers, CallbackQuery, InlineQuery
@@ -42,7 +41,7 @@ async def main():
             handlers.init(
                 clients=types_l.clients(client=client, client_i=client_i), cbQuery=cbQuery, iQuery=iQuery, db=db, fs=fs
             ),
-            aiorun.shutdown_waits_for(compose([client, client_i]))
+            compose([client, client_i])
         )
 
         fs_pinger.cancel()
@@ -52,4 +51,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-    # aiorun.run(main(), use_uvloop=True, executor_workers=min(32, (os.cpu_count() or 1) + 4))

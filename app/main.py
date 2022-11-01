@@ -6,13 +6,13 @@ import sys
 import uvloop
 from colourlib import Fg, Style
 
-"""
-add root folder of the project to the PYTHONPATH
-in order to access files using absolute paths
-
-for example:
-`import root.module.submodule`
-"""
+# -------------------------------------------------
+# add root folder of the project to the PYTHONPATH
+# in order to access files using absolute paths
+#
+# for example:
+# `import root.module.submodule`
+# -------------------------------------------------
 PROJECT_ROOT = os.path.abspath(
     os.path.join(
         os.path.dirname(__file__),
@@ -52,7 +52,7 @@ match sys.argv[-1].lower():
 
         c = uvicorn.Config(
             app=app, host="0.0.0.0", port=settings().PORT, workers=settings().CONCURRENCY, http="httptools",
-            loop="uvloop"
+            loop="uvloop", interface="asgi3"
         )  # limit_concurrency
 
         uvicorn.Server(config=c).run()
@@ -86,7 +86,7 @@ match sys.argv[-1].lower():
             async with aiohttp.ClientSession() as session:
                 async with session.get(url=settings().URL_MAIN_API) as resp:
                     if resp.status != 200:
-                        log.info(f"Something went wrong. {resp.status}")
+                        log.info("Something went wrong. %d", resp.status)
                     else:
                         log.info("Sent ping to the API")
 

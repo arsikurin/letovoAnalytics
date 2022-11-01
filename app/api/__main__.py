@@ -52,13 +52,13 @@ async def webcal_ics(user_id: int):
     try:
         response = await api.receive_schedule_ics(sender_id=str(user_id))
     except (errors_l.UnauthorizedError, errors_l.NothingFoundError, aiohttp.ClientConnectionError) as err:
-        log.error(err)
+        log.exception(err)
         raise HTTPException(
             status_code=400, detail=err.__str__(),
             headers={"fix": ""}
         )
     except asyncio.TimeoutError as err:
-        log.error(err)
+        log.exception(err)
         raise HTTPException(
             status_code=400, detail=err.__str__(),
             headers={"fix": "Try again later"}

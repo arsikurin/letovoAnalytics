@@ -88,7 +88,7 @@ class CBQueryBase(abc.ABC):
                 raise errors_l.StopPropagation
             return resp
 
-        elif func == self._api.receive_schedule_and_hw:
+        if func == self._api.receive_schedule_and_hw:
             if specific_day is None:
                 log.critical("Specific day value not provided!")
                 raise errors_l.StopPropagation

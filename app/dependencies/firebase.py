@@ -106,11 +106,11 @@ class Firestore:
             try:
                 token = await self._do_receive_token(api, user.id)
             except (errors_l.NothingFoundError, errors_l.UnauthorizedError, aiohttp.ClientConnectionError) as err:
-                log.info(f"Skipped {user.id} {err}")
+                log.info("Skipped %s %s", user.id, err)
                 continue
 
             await self.update_data(sender_id=user.id, token=token)
-            log.info(f"Updated {user.id}")
+            log.info("Updated %s", user.id)
 
         del self._counter
 

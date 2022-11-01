@@ -73,11 +73,13 @@ class API:
         try:
             async with self.session.post(url=settings().URL_LOGIN_LETOVO, data=login_data) as resp:
                 if resp.status == 429:
-                    log.error(f"Cannot get data from s.letovo.ru (too many requests). Error {resp.status}")
+                    log.error("Cannot get data from s.letovo.ru (too many requests). Error %d", resp.status)
                     raise errors_l.TooManyRequests()
-                elif resp.status != 200:
-                    log.error(f"Cannot get data from s.letovo.ru. Error {resp.status}")
+
+                if resp.status != 200:
+                    log.error(f"Cannot get data from s.letovo.ru. Error %d", resp.status)
                     raise errors_l.UnauthorizedError(f"Cannot get data from s.letovo.ru. Error {resp.status}")
+
                 resp_j = await resp.json(loads=orjson.loads)
                 return f'{resp_j["data"]["token_type"]} {resp_j["data"]["token"]}'
         except aiohttp.ClientConnectionError as err:
@@ -120,7 +122,7 @@ class API:
         try:
             async with self.session.post(url="https://s-api.letovo.ru/api/me", headers=headers) as resp:
                 if resp.status != 200:
-                    log.error(f"Cannot get data from s.letovo.ru. Error {resp.status}")
+                    log.error(f"Cannot get data from s.letovo.ru. Error %d", resp.status)
                     raise errors_l.UnauthorizedError(f"Cannot get data from s.letovo.ru. Error {resp.status}")
                 resp_j = await resp.json(loads=orjson.loads)
                 return int(resp_j["data"]["user"]["student_id"])
@@ -170,7 +172,7 @@ class API:
         try:
             async with self.session.get(url=url, headers=headers, timeout=10) as resp:
                 if resp.status != 200:
-                    log.error(f"Cannot get data from s.letovo.ru. Error {resp.status}")
+                    log.error(f"Cannot get data from s.letovo.ru. Error %d", resp.status)
                     raise errors_l.UnauthorizedError(f"Cannot get data from s.letovo.ru. Error {resp.status}")
                 return await resp.read()
         except aiohttp.ClientConnectionError as err:
@@ -226,7 +228,7 @@ class API:
         try:
             async with self.session.get(url=url, headers=headers, timeout=10) as resp:
                 if resp.status != 200:
-                    log.error(f"Cannot get data from s.letovo.ru. Error {resp.status}")
+                    log.error(f"Cannot get data from s.letovo.ru. Error %d", resp.status)
                     raise errors_l.UnauthorizedError(f"Cannot get data from s.letovo.ru. Error {resp.status}")
                 return await resp.json(loads=orjson.loads)
         except aiohttp.ClientConnectionError as err:
@@ -274,7 +276,7 @@ class API:
         try:
             async with self.session.get(url=url, headers=headers, timeout=10) as resp:
                 if resp.status != 200:
-                    log.error(f"Cannot get data from s.letovo.ru. Error {resp.status}")
+                    log.error(f"Cannot get data from s.letovo.ru. Error %d", resp.status)
                     raise errors_l.UnauthorizedError(f"Cannot get data from s.letovo.ru. Error {resp.status}")
                 return await resp.json(loads=orjson.loads)
         except aiohttp.ClientConnectionError as err:
