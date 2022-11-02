@@ -24,7 +24,6 @@ class CBQMarks(CBQueryBase):
             event (types.CallbackQuery): a return object of CallbackQuery
             specific (types_l.MarkTypes): SUMMATIVE, FINAL, RECENT, ALL
         """
-
         sender: types.User = event.from_user
         try:
             response = await self._handle_errors(self._api.receive_marks_and_teachers, event, sender)

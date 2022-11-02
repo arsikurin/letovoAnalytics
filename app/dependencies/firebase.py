@@ -24,6 +24,7 @@ class Firestore:
     Args:
         app_name (str): name of the connection. If not specified, the default value will be used
     """
+
     __slots__ = ("_client", "app_name", "__counter")
 
     def __init__(self, app_name: str = _DEFAULT_APP_NAME):
@@ -149,9 +150,9 @@ class Firestore:
         }
         data = f'{{"requestType": "PASSWORD_RESET", "email": "{email}"}}'
 
-        async with aiohttp.ClientSession() as session:
-            async with session.post(url=api_url, headers=headers, data=data) as resp:
-                return await resp.content.read()
+        async with aiohttp.ClientSession() as session, \
+                session.post(url=api_url, headers=headers, data=data) as resp:
+            return await resp.content.read()
 
     async def update_data(
             self,

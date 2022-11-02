@@ -90,7 +90,6 @@ def get_init_coro(handler, /, **kwargs):
 
 async def _init_handler(handler, kwargs):
     try:
-        # log.debug(f"Loading handler {handler.__name__}…")
         start_time = time.perf_counter()
         await handler.init(**kwargs)
         took = datetime.timedelta(seconds=time.perf_counter() - start_time)

@@ -17,6 +17,7 @@ class Postgresql:
     """
     Class for dealing with Postgresql
     """
+
     __slots__ = ("_connection",)
     counter = 0
 
