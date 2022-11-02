@@ -1,23 +1,32 @@
-# =======================================================================================================
-
-# Outdated
-
-# =======================================================================================================
-
-
-FROM python:3.10.2-bullseye
+FROM python:3.11-bullseye AS base
 
 WORKDIR /app-data
 
-COPY pyproject.toml pyproject.toml
-COPY poetry.lock poetry.lock
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-#RUN curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/install-poetry.py | python -
-#RUN $HOME/.local/bin/poetry export -o requirements.txt
-#RUN pip install -r requirements.txt
+RUN curl -sSL https://install.python-poetry.org | python3 -
+RUN "${HOME}"/.local/bin/poetry config virtualenvs.create false
+
+COPY pyproject.toml ./
+COPY poetry.lock ./
+RUN "${HOME}"/.local/bin/poetry install --no-dev --no-interaction --no-ansi --no-cache
 
 COPY . .
 
+
+FROM base AS dev
+
+RUN echo "dev version"
+
 EXPOSE ${PORT}
 
-CMD ["uvicorn", "app:app", "--workers 4", "--host 0.0.0.0", "--port=${PORT}", "--log-level debug"]
+CMD ["make", "api-dev"]
+
+
+FROM base AS prod
+
+RUN echo "prod version"
+
+EXPOSE ${PORT}
+
+CMD ["make", "api-prod"]

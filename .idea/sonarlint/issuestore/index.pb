@@ -1,12 +1,8 @@
 
 E
 app/tests/__init__.py,4/4/447707a821d80cc39e532ce0179db7ddffdf17c9
->
-bot.dockerfile,3/7/37e479da2902e14c74a879e6f3fbe39d2c5b4158
 @
 .deepsource.toml,f/7/f7fdb5a735547cbe989626708a7eab7e182a2c6f
->
-api.dockerfile,5/f/5f7e1b96a3e5b5ebfafa25bef5891dbc1c36c60e
 >
 SQL/create.sql,d/d/dd4cbd5bae2856080323f378773a8754a7afc8fb
 =
@@ -101,8 +97,6 @@ U
 %.idea/copyright/profiles_settings.xml,8/c/8c00054dc44a9aac96957ae70e12d95773e087f7
 C
 app/bot/__init__.py,e/9/e9f6b277e939d65a41b31370495c48afd7ea6e31
-C
-docker-compose.yaml,e/f/ef8def03dc8f162799089e9b5f4321201c8810d5
 <
 privacy.html,0/3/0394c97ae270b6b4ed93bc6173b6755895e9b338
 8
@@ -111,12 +105,8 @@ A
 app/.dockerignore,2/a/2a64350c28aa37ca0f8a85df5dbdf86b487b71e6
 F
 app/bot/inlinequery.py,6/b/6b4f48e076da4edc40a2c1d7a121a47d8cf4618c
-9
-	config.py,1/a/1a1b9769344cb239f2e540e1e6ee1efa2d3034ea
 G
 app/schemas/__init__.py,7/5/7501a9306d02b3a60f7536482442b11b2a950344
-8
-Makefile,8/3/836efb6e25a091dcb4ff8e1dbb2f0be6a5cbf14c
 9
 	.pylintrc,5/8/58278ca6e186f004b12621f8c3155064b4dc09b6
 O
