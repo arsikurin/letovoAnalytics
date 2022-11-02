@@ -15,7 +15,7 @@ from app.schemas import ScheduleAndHWResponse
 
 class CBQueryBase(abc.ABC):
     """
-    Class for dealing with callback query messages
+    Baseclass for dealing with callback query messages
 
     Args:
         session (aiohttp.ClientSession): an instance of `TelegramClient` with credentials filled in
@@ -23,6 +23,7 @@ class CBQueryBase(abc.ABC):
         db (Postgresql): connection to the database with users' usage analytics
         fs (Firestore): connection to the database with users' credentials
     """
+
     __slots__ = ("client", "_api", "_db", "_fs", "__payload", "__msg_ids")
 
     def __init__(

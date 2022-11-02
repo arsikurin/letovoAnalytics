@@ -144,8 +144,6 @@ K
 7
 tox.ini,6/1/61be067c7cf3bdbf8a6b021a2b5167eb30612d0c
 Q
-!app/bot/callbackquery/__init__.py,7/1/71777da1e6dfbcb968f039c8b6b02e8b207b7fe7
-Q
 !app/bot/callbackquery/accounts.py,9/0/90ca8b914a0cd80fb0eb8730f87f8639c871b9ac
 L
 app/bot/callbackquery/dev.py,d/3/d34a35b765d78ac7165e5845f3439ab6565c931b
@@ -155,31 +153,17 @@ O
 app/bot/callbackquery/others.py,7/4/74fc5e36e601d9777e67f79fb2308253d7656df0
 Q
 !app/bot/callbackquery/schedule.py,5/5/5520752c4d6a1892e43fabf1f755c6843fb4f51b
-M
-app/bot/callbackquery/core.py,9/e/9e7d629d4cb189e887081db743cf96ba58fd68f1
 J
 app/bot/handlers/core_1.py,5/c/5cdbc63397087b637fa1057e874dd6dd2b0acd27
-L
-app/dependencies/database.py,e/f/efd82d6b5893028ad00dca7d1540f837ac7f56e5
-J
-app/dependencies/errors.py,2/3/23cb45a7ed3c7410b0737d8fcf73c476f0fa392a
 K
 app/dependencies/filters.py,9/0/90767c85d2c8f18598f7d4ecdf7a88ebc2f87ac5
-L
-app/dependencies/firebase.py,6/b/6b1c4b59608a4b10fd367358fe9fd5a5ebe982a4
-L
-app/bot/handlers/__init__.py,7/6/760e0d9ec6b043553c59d37ab141a04ac941b23e
 ;
 poetry.lock,0/0/0068a1506b061a8948c37d78b0dd5697211558d3
 >
 pyproject.toml,5/d/5d07e7d72637aa0d59c89d381fe6dc4cf46e2491
 N
 app/bot/handlers/schedule_2.py,0/b/0bb90cfd6e94e190505c9787438b2d5599ebce11
-C
-app/bot/__main__.py,1/b/1b87bca64c05727f43ef5534b58a2c073e6dcc2c
 @
 app/api/utils.py,3/5/352060e690e20468709e6ce67711a906e70ebc0b
-N
-app/bot/callbackquery/marks.py,4/7/47e1ae24ffdc14cf8c9c95a4226942a8d9ec9e61
 I
 app/dependencies/utils.py,6/4/64aa3860a93bfe6dcd4e04b26e95503044aad6b2

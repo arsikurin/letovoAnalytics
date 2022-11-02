@@ -83,14 +83,14 @@ match sys.argv[-1].lower():
 
         @run_immediately
         async def _() -> bytes:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(url=settings().URL_MAIN_API) as resp:
-                    if resp.status != 200:
-                        log.info("Something went wrong. %d", resp.status)
-                    else:
-                        log.info("Sent ping to the API")
+            async with aiohttp.ClientSession() as session, \
+                    session.get(url=settings().URL_MAIN_API) as resp:
+                if resp.status != 200:
+                    log.info("Something went wrong. %d", resp.status)
+                else:
+                    log.info("Sent ping to the API")
 
-                    return await resp.content.read()
+                return await resp.content.read()
 
     case _:
         print("ERROR: Neither `bot` nor `api` nor `update` nor `ping` provided")

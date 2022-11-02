@@ -16,4 +16,15 @@ class CallbackQuery(
     CBQOthers,
     CBQueryDev
 ):
-    pass
+    """
+    Class for dealing with callback query messages
+
+    Args:
+        session (aiohttp.ClientSession): an instance of `TelegramClient` with credentials filled in
+        session (aiohttp.ClientSession): an instance of `aiohttp.ClientSession`
+        db (Postgresql): connection to the database with users' usage analytics
+        fs (Firestore): connection to the database with users' credentials
+
+    Methods:
+        # TODO add docs
+    """

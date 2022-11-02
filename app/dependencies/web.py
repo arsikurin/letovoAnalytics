@@ -23,6 +23,7 @@ class API:
         session (aiohttp.ClientSession): an instance of `aiohttp.ClientSession`
         fs (Firestore): connection to the database with users' credentials
     """
+
     __slots__ = ("session", "fs")
     _instance = None
 

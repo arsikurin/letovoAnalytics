@@ -2,6 +2,7 @@ class NothingFoundError(Exception):
     """
     Occurs when anything cannot be found in the database
     """
+
     __notes__ = "Consider entering /start and registering afterwards"
 
     def __init__(self, detail: str | None = None):
