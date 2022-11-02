@@ -23,7 +23,7 @@ update-tokens:
 	python3 $(MAIN_SRC) update
 
 run-dev:
-	docker compose up
+	docker compose -f docker-compose-dev.yaml up
 
 build-wasm:
 	env GOOS=js GOARCH=wasm go build -o $(OUTPUT_SRC) $(ROOT_SRC)

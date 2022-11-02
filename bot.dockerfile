@@ -1,34 +1,28 @@
-FROM python:3.10.2-bullseye AS dev
+FROM python:3.11-bullseye AS base
 
 WORKDIR /app-data
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-RUN curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/install-poetry.py | python -
+RUN curl -sSL https://install.python-poetry.org | python3 -
 RUN "${HOME}"/.local/bin/poetry config virtualenvs.create false
 
-COPY pyproject.toml pyproject.toml
-COPY poetry.lock poetry.lock
-RUN "${HOME}"/.local/bin/poetry install --no-dev --no-interaction --no-ansi
+COPY pyproject.toml ./
+COPY poetry.lock ./
+RUN "${HOME}"/.local/bin/poetry install --no-dev --no-interaction --no-ansi --no-cache
 
 COPY . .
+
+
+FROM base AS dev
+
+RUN echo "dev version"
 
 CMD ["make", "bot-dev"]
 
 
-FROM python:3.10.2-bullseye AS prod
+FROM base AS prod
 
-WORKDIR /app-data
-
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-
-RUN curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/install-poetry.py | python -
-RUN "${HOME}"/.local/bin/poetry config virtualenvs.create false
-
-COPY pyproject.toml pyproject.toml
-COPY poetry.lock poetry.lock
-RUN "${HOME}"/.local/bin/poetry install --no-dev --no-interaction --no-ansi
-
-COPY . .
+RUN echo "prod version"
 
 CMD ["make", "bot-prod"]
