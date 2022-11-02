@@ -1,46 +1,47 @@
 services:
 
-  bot:
-    container_name: bot
-    restart: always
-    environment:
-      - PIP_DEFAULT_TIMEOUT=100
-      - PIP_DISABLE_PIP_VERSION_CHECK=1
-#      - PIP_NO_CACHE_DIR=1
-#      - PYTHONUNBUFFERED=1
-#      - POETRY_VERSION=1.0.5
+    bot:
+        container_name: bot
+        restart: always
+        environment:
+            - PIP_DEFAULT_TIMEOUT=100
+            - PIP_DISABLE_PIP_VERSION_CHECK=1
+            - PIP_NO_CACHE_DIR=1
+            - PYTHONUNBUFFERED=1
+        build:
+            dockerfile: bot.dockerfile
+            context: .
+            target: prod
+    #    depends_on:
+    #      - db
 
-    build:
-      dockerfile: bot.dockerfile
-      context: .
-      target: dev
-    volumes:
-      - /Users/arsikurin/PycharmProjects/letovoAnalytics:/app-data
-#    depends_on:
-#      - db
+    api:
+        container_name: api
+        restart: always
+        ports:
+            - 8084:${PORT:-8084}
+        build:
+            dockerfile: api.dockerfile
+            context: .
+            target: prod
+    #    depends_on:
+    #        - db
 
-#  api:
-#    restart: always
-#    ports:
-#      - 8081:80
-#    build:
-#      dockerfile: api.dockerfile
-#      context: .
+#    db:
+#        image: postgres
+#        restart: always
+#        ports:
+#            - 5432:5432
+#        volumes:
+#            - db-data:/var/lib/postgresql/data
 
-#  db:
-#    image: postgres
-#    restart: always
-#    ports:
-#      - 5432:5432
-#    volumes:
-#      - db-data:/var/lib/postgresql/data
 
 #volumes:
-#  db-data:
+#    db-data:
 
-#    volumes:
-#      - type: bind
+#volumes:
+#    -   type: bind
 #        source: .
 #        target: /app
 #        volume:
-#          nocopy: true
+#            nocopy: true
