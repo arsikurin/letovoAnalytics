@@ -1,9 +1,10 @@
 #  Made by arsikurin in 2022.
+import asyncio
 
 from pyrogram import types
 
 from app.bot.callbackquery.base import CBQueryBase
-from app.dependencies import run_parallel, errors as errors_l, types as types_l
+from app.dependencies import errors as errors_l, types as types_l
 
 choose_an_option_below_text = "Choose an option below ↴"
 back_btn_text = "« Back"
@@ -24,16 +25,19 @@ class CBQueryDev(CBQueryBase):
                     resp.options_counter, resp.help_counter, resp.about_counter
             )): continue  # noqa: more beautiful imho
 
-            namesurname, login = await run_parallel(
-                self._fs.get_name(
+            async with asyncio.TaskGroup() as tg:
+                namesurname = tg.create_task(self._fs.get_name(
                     sender_id=resp.sender_id, values=[types_l.FSNames.first_name, types_l.FSNames.last_name]
-                ),
-                self._fs.get_data(sender_id=resp.sender_id, values=[types_l.FSData.login])
-            )
+                ))
+                login = tg.create_task(self._fs.get_data(sender_id=resp.sender_id, values=[types_l.FSData.login]))
 
-            name = namesurname[0] if namesurname[0] is not errors_l.NothingFoundError else ""
-            surname = namesurname[1] if namesurname[1] is not errors_l.NothingFoundError else ""
-            login = login[0] if login[0] is not errors_l.NothingFoundError else ""
+                await namesurname
+                name = namesurname.result()[0] if namesurname.result()[0] is not errors_l.NothingFoundError else ""
+                surname = namesurname.result()[1] if namesurname.result()[1] is not errors_l.NothingFoundError else ""
+
+                await login
+                login = login.result()[0] if login.result()[0] is not errors_l.NothingFoundError else ""
+
             await self.client.send_message(
                 chat_id=sender.id,
                 text=f"ID: {resp.sender_id}\n"
