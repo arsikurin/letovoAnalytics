@@ -111,16 +111,12 @@ R
 "app/dependencies/types/__init__.py,8/7/87837dddac4617928ecedd08a5fc7eeb710ece5a
 N
 app/bot/handlers/homework_4.py,d/e/de0bd5ceaf68a0f63931ae9b7bfe1e2f167c17ef
-L
-app/bot/handlers/others_5.py,d/0/d0aeae8eb0be5344517f9818e669e3675fbb9a55
 K
 .github/workflows/test.yaml,a/6/a60e2382fd0c34cb06177a3d7034264e22531192
 7
 tox.ini,6/1/61be067c7cf3bdbf8a6b021a2b5167eb30612d0c
 Q
 !app/bot/callbackquery/accounts.py,9/0/90ca8b914a0cd80fb0eb8730f87f8639c871b9ac
-J
-app/bot/handlers/core_1.py,5/c/5cdbc63397087b637fa1057e874dd6dd2b0acd27
 K
 app/dependencies/filters.py,9/0/90767c85d2c8f18598f7d4ecdf7a88ebc2f87ac5
 ;
@@ -140,11 +136,7 @@ J
 L
 app/dependencies/database.py,e/f/efd82d6b5893028ad00dca7d1540f837ac7f56e5
 L
-app/dependencies/firebase.py,6/b/6b1c4b59608a4b10fd367358fe9fd5a5ebe982a4
-L
 app/bot/handlers/__init__.py,7/6/760e0d9ec6b043553c59d37ab141a04ac941b23e
-G
-app/dependencies/web.py,2/2/2285712a844bafccc48ea239e067136cadf2ed18
 F
 .env.development.local,0/f/0fe212be3a1410c8c1b84c710d79d55e3d8f0e1e
 9

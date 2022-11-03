@@ -1,3 +1,4 @@
+import asyncio
 import json
 import re
 
@@ -32,25 +33,25 @@ async def init(clients: types_l.clients[Client], cbQuery: CallbackQuery, db: Pos
     async def _options_page(_client: Client, message: types.Message):
         sender = message.from_user
         sender_id = str(sender.id)
-        _, il = await run_parallel(
-            cbQuery.send_greeting(sender=sender, client=_client),
-            fs.is_logged(sender_id=sender_id),
-        )
-        if not il:
-            _, ii = await run_parallel(
-                cbQuery.send_help_page(sender=sender),
-                db.is_inited(sender_id=sender_id)
-            )
-            if not ii:
-                await db.init_user(sender_id=sender_id)
 
-            await db.increase_options_counter(sender_id=sender_id)
-            raise pyrogram.StopPropagation
+        async with asyncio.TaskGroup() as tg:
+            greeting = tg.create_task(cbQuery.send_greeting(sender=sender, client=_client))
+            il = tg.create_task(fs.is_logged(sender_id=sender_id))
 
-        await run_parallel(
-            cbQuery.send_landing_page(sender=sender),
-            db.increase_options_counter(sender_id=sender_id)
-        )
+            if not await il:
+                ii = tg.create_task(db.is_inited(sender_id=sender_id))
+                await greeting
+                tg.create_task(cbQuery.send_help_page(sender=sender))
+
+                if not await ii:
+                    await tg.create_task(db.init_user(sender_id=sender_id))
+
+                tg.create_task(db.increase_options_counter(sender_id=sender_id))
+
+            else:
+                tg.create_task(cbQuery.send_landing_page(sender=sender))
+                tg.create_task(db.increase_options_counter(sender_id=sender_id))
+
         raise pyrogram.StopPropagation
 
     @client.on_message(pyrogram.filters.regex(pattern=re.compile(r"(?i).*start")))
@@ -162,9 +163,10 @@ async def init(clients: types_l.clients[Client], cbQuery: CallbackQuery, db: Pos
     async def _handle_close(_client: Client, callback_query: types.CallbackQuery):
         sender: types.User = callback_query.from_user
         sender_id = str(sender.id)
-        _, msg_ids_to_delete = await run_parallel(
-            callback_query.edit_message_reply_markup(reply_markup=None),
-            db.get_msg_ids(sender_id=sender_id)
-        )
-        await client.delete_messages(sender.id, tuple(map(int, msg_ids_to_delete.split())))
+
+        async with asyncio.TaskGroup() as tg:
+            tg.create_task(callback_query.edit_message_reply_markup(reply_markup=None))
+            msg_ids_to_delete = await tg.create_task(db.get_msg_ids(sender_id=sender_id))
+            tg.create_task(client.delete_messages(sender.id, tuple(map(int, msg_ids_to_delete.split()))))
+
         raise pyrogram.StopPropagation

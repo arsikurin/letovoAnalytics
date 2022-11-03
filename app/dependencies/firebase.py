@@ -257,7 +257,9 @@ class Firestore:
         """
         return self._client.collection("users").stream()
 
-    async def get_data(self, sender_id: str, values: list[types_l.FSData]):
+    async def get_data(
+            self, sender_id: str, values: list[types_l.FSData]
+    ) -> list[typing.Any | errors_l.NothingFoundError]:
         """
         Get user's data from the database
 
@@ -278,7 +280,9 @@ class Firestore:
 
         return resp
 
-    async def get_name(self, sender_id: str, values: list[types_l.FSNames]):
+    async def get_name(
+            self, sender_id: str, values: list[types_l.FSNames]
+    ) -> list[typing.Any | errors_l.NothingFoundError]:
         """
         Get user's name from the database
 
