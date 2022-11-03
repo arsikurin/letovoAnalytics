@@ -6,7 +6,6 @@ __pycache__
 .coverage
 .tox
 .mypy_cache
-.idea/sonarlint
 privacy.html
 terms.html
 

@@ -24,7 +24,7 @@ class CBQueryBase(abc.ABC):
         fs (Firestore): connection to the database with users' credentials
     """
 
-    __slots__ = ("client", "_api", "_db", "_fs", "__payload", "__msg_ids")
+    __slots__ = ("client", "_api", "_db", "_fs", "__msg_ids")
 
     def __init__(
             self, client: Client, session: aiohttp.ClientSession, db: Postgresql, fs: Firestore
@@ -33,32 +33,6 @@ class CBQueryBase(abc.ABC):
         self._api: API = API(session=session, fs=fs)
         self._db: Postgresql = db
         self._fs: Firestore = fs
-        self._payload = ""
-        self._msg_ids = []
-
-    @property
-    def _payload(self) -> str:
-        return self.__payload
-
-    @_payload.setter
-    def _payload(self, value: str):
-        self.__payload = value
-
-    @_payload.deleter
-    def _payload(self):
-        self.__payload = ""
-
-    @property
-    def _msg_ids(self) -> list:
-        return self.__msg_ids
-
-    @_msg_ids.setter
-    def _msg_ids(self, value: list):
-        self.__msg_ids = value
-
-    @_msg_ids.deleter
-    def _msg_ids(self):
-        self.__msg_ids.clear()
 
     async def _handle_errors(
             self, func: typing.Callable[[...], typing.Coroutine[typing.Any, typing.Any, dict]],

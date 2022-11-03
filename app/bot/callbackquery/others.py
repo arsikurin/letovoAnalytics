@@ -53,6 +53,7 @@ class CBQOthers(CBQueryBase):
             event (types.CallbackQuery): a return object of CallbackQuery
         """
         sender: types.User = event.from_user
+
         try:
             response = await self._handle_errors(self._api.receive_marks_and_teachers, event, sender)
         except errors_l.StopPropagation:
@@ -66,15 +67,15 @@ class CBQOthers(CBQueryBase):
                     subject_name = subject.group.subject.subject_name_eng
                 else:
                     subject_name = subject.group.subject.subject_name
-                payload = f"**{subject_name} {subject.group.group_name}**\n"
+                payload = [f"**{subject_name} {subject.group.group_name}**\n"]
 
                 for subject_teacher in subject.group.group_teachers:
                     t = subject_teacher.teacher
-                    payload += f"{t.teacher_name} {t.teacher_fath} {t.teacher_surname}\n{t.teacher_mail}\n\n"
+                    payload.append(f"{t.teacher_name} {t.teacher_fath} {t.teacher_surname}\n{t.teacher_mail}\n\n")
 
                 msg = await self.client.send_message(
                     chat_id=sender.id,
-                    text=payload,
+                    text="".join(payload),
                     disable_notification=True,
                     disable_web_page_preview=True
                 )
