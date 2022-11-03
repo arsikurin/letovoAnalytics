@@ -25,10 +25,12 @@ class CBQHomework(CBQueryBase):
             return await event.answer("Congrats! Tomorrow's Sunday, no hw", show_alert=False)
 
         sender: types.User = event.from_user
+
         try:
             response = await self._handle_errors(self._api.receive_schedule_and_hw, event, sender, specific_day)
         except errors_l.StopPropagation:
             return
+
         await event.answer("Homework might not be displayed properly as it is in beta")
 
         homework_response = ScheduleAndHWResponse.parse_obj(response)
@@ -51,48 +53,50 @@ class CBQHomework(CBQueryBase):
                     subject = day.schedules[0].group.subject.subject_name_eng
                 else:
                     subject = day.schedules[0].group.subject.subject_name
-                payload = (
-                    f"{day.period_name}: <strong>{subject}</strong>\n"
-                )
+                payload = [f"{day.period_name}: <strong>{subject}</strong>\n"]
+
                 if day.schedules[0].lessons:
                     if day.schedules[0].lessons[0].lesson_hw:
-                        payload += f"{day.schedules[0].lessons[0].lesson_hw}\n"
+                        payload.append(f"{day.schedules[0].lessons[0].lesson_hw}\n")
                     else:
-                        payload += "<em>No homework</em>\n"
+                        payload.append("<em>No homework</em>\n")
 
                     if day.schedules[0].lessons[0].lesson_url:
                         flag = True
-                        payload += f'<a href="{day.schedules[0].lessons[0].lesson_url}">Attached link</a>\n'
+                        payload.append(f'<a href="{day.schedules[0].lessons[0].lesson_url}">Attached link</a>\n')
 
                     if day.schedules[0].lessons[0].lesson_hw_url:
                         flag = True
-                        payload += f'<a href="{day.schedules[0].lessons[0].lesson_hw_url}">Attached hw link</a>\n'
+                        payload.append(f'<a href="{day.schedules[0].lessons[0].lesson_hw_url}">Attached hw link</a>\n')
 
                     if not flag:
-                        payload += "<em>No links attached</em>\n"
+                        payload.append("<em>No links attached</em>\n")
 
                     if day.schedules[0].lessons[0].lesson_topic:
-                        payload += f"{day.schedules[0].lessons[0].lesson_topic}\n"
+                        payload.append(f"{day.schedules[0].lessons[0].lesson_topic}\n")
                     else:
-                        payload += "<em>No topic</em>\n"
+                        payload.append("<em>No topic</em>\n")
+
                 else:
-                    payload += "Lessons not found\n"
+                    payload.append("Lessons not found\n")
 
                 msg = await self.client.send_message(
                     chat_id=sender.id,
-                    text=payload,
+                    text="".join(payload),
                     parse_mode=enums.ParseMode.HTML,
                     disable_notification=True,
                     disable_web_page_preview=True
                 )
                 msg_ids.append(msg.id)
+
             old_wd = wd
 
-        msg = await self._send_close_message_sch_and_hw(
-            sender, specific_day, homework_response
-        )
-        msg_ids.append(msg.id)
-        await self._db.set_msg_ids(sender_id=str(sender.id), msg_ids=" ".join(map(str, msg_ids)))
+        if msg_ids:
+            msg = await self._send_close_message_sch_and_hw(
+                sender, specific_day, homework_response
+            )
+            msg_ids.append(msg.id)
+            await self._db.set_msg_ids(sender_id=str(sender.id), msg_ids=" ".join(map(str, msg_ids)))
 
     @staticmethod
     async def to_homework_page(event: types.CallbackQuery):

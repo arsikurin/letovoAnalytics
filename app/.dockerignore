@@ -1,2 +1,3 @@
 tests
-my_sum
+*.session
+*.session-journal

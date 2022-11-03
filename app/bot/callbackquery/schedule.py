@@ -25,6 +25,7 @@ class CBQSchedule(CBQueryBase):
             return await event.answer("Congrats! It's Sunday, no lessons", show_alert=False)
 
         sender: types.User = event.from_user
+
         try:
             response = await self._handle_errors(self._api.receive_schedule_and_hw, event, sender, specific_day)
         except errors_l.StopPropagation:
@@ -43,34 +44,36 @@ class CBQSchedule(CBQueryBase):
                 )
                 msg_ids.append(msg.id)
 
-            payload = ""
+            payload = []
             if day.schedules:
-                payload += f"{day.period_name} | <em>{day.schedules[0].room.room_name}</em>:"
+                payload.append(f"{day.period_name} | <em>{day.schedules[0].room.room_name}</em>:")
 
                 if day.schedules[0].lessons and day.schedules[0].lessons[0].attendance:
-                    payload += "  Ditched\n"
+                    payload.append("  Ditched\n")
                 else:
-                    payload += "\n"
+                    payload.append("\n")
+
                 if day.schedules[0].group.subject.subject_name_eng:
                     subject = day.schedules[0].group.subject.subject_name_eng
                 else:
                     subject = day.schedules[0].group.subject.subject_name
-                payload += f"<strong>{subject} {day.schedules[0].group.group_name}</strong>\n"
+                payload.append(f"<strong>{subject} {day.schedules[0].group.group_name}</strong>\n")
 
-                payload += f"{day.period_start} — {day.period_end}\n"
+                payload.append(f"{day.period_start} — {day.period_end}\n")
+
                 if day.schedules[0].zoom_meetings:
-                    payload += f"<a href='{day.schedules[0].zoom_meetings.meeting_url}'>ZOOM</a>"
+                    payload.append(f"<a href='{day.schedules[0].zoom_meetings.meeting_url}'>ZOOM</a>")
 
             elif day.period_start == "08:25":
-                payload += f"{day.period_name}:\n"
-                payload += f"{day.period_start} — {day.period_end}\n"
+                payload.append(f"{day.period_name}:\n")
+                payload.append(f"{day.period_start} — {day.period_end}\n")
 
             old_wd = wd
 
-            if payload != "":
+            if payload:
                 msg = await self.client.send_message(
                     chat_id=sender.id,
-                    text=payload,
+                    text="".join(payload),
                     parse_mode=enums.ParseMode.HTML,
                     disable_notification=True,
                     disable_web_page_preview=True

@@ -22,8 +22,6 @@ G.idea/sonarlint/issuestore/e/f/ef8def03dc8f162799089e9b5f4321201c8810d5,8/4/84
 w
 G.idea/sonarlint/issuestore/4/4/447707a821d80cc39e532ce0179db7ddffdf17c9,a/9/a95e0a6b76f73f3a414b8a4d1a10706d0c73bff3
 w
-G.idea/sonarlint/issuestore/5/f/5f7e1b96a3e5b5ebfafa25bef5891dbc1c36c60e,0/3/03ba51b115cf5ba8b158cf459464ac4660e99910
-w
 G.idea/sonarlint/issuestore/8/e/8ec9a00bfd09b3190ac6b22251dbb1aa95a0579d,b/4/b4a0b63ce8560bbc5de0f9995c20cc861dc2adb3
 w
 G.idea/sonarlint/issuestore/4/2/42e2cf386919ff91e660724c8606c250a7ec2ea1,7/4/740a430e1346c14027507fb7ea1a5eb6be49f3d5
@@ -32,13 +30,7 @@ G.idea/sonarlint/issuestore/7/9/79bc96eefeff50432cd9135cb3ff467e1088b202,0/8/08
 w
 G.idea/sonarlint/issuestore/f/7/f7fdb5a735547cbe989626708a7eab7e182a2c6f,4/4/44d14ffb7d7bda67a40aef5f2ab7f70b46cb3847
 w
-G.idea/sonarlint/issuestore/7/5/7501a9306d02b3a60f7536482442b11b2a950344,5/6/56368dcec58e0bbb8f9688d9618aeca560c963a0
-w
 G.idea/sonarlint/issuestore/c/3/c3f8643b2ddc712688caf3ab64ebd9688fdbfc30,7/e/7e00eb6c20dfb05d2a4f44607d08e10be854abf4
-w
-G.idea/sonarlint/issuestore/3/7/37e479da2902e14c74a879e6f3fbe39d2c5b4158,8/b/8bdbedd347454a21b66cbb232736aba03dc5e42b
-=
-.dockerignore,0/5/05a721ebe3ba0754116825ed1359ff1785f4bbac
 Y
 )app/api/static/images/icons/forbidden.svg,7/0/70e56e791623d93683a0ba6921bd0a49930b156f
 U
@@ -60,11 +52,7 @@ L
 w
 G.idea/sonarlint/issuestore/0/5/05a721ebe3ba0754116825ed1359ff1785f4bbac,5/8/58f6b98a484ad2430dccb901877c18b89a777b74
 w
-G.idea/sonarlint/issuestore/3/9/39cb6e837ef03a8514272599aca4ad28578f8fb0,1/b/1b622450c8dac99df69ef0139a3fb3b905481bc3
-w
 G.idea/sonarlint/issuestore/7/1/71b8bbc4dab5b9906a8d8d98ad7c675317b5ea0f,5/9/597b09727816697163dc2ef21c7ba42ec9b4a18e
-B
-app/api/.gitignore,3/1/3145fcf2bea6c693578d39d85eb52ca2cdde89aa
 w
 G.idea/sonarlint/issuestore/7/0/70e56e791623d93683a0ba6921bd0a49930b156f,d/b/db2c9eda126cbd92dff36f220f145bb412699bc2
 w
@@ -73,8 +61,6 @@ w
 G.idea/sonarlint/issuestore/0/8/08f45a0ad2eac27e0f18f1a41ad30057b2975ee9,6/5/6574b8a9c9ab919be100dec98df3e6b17e9b2603
 w
 G.idea/sonarlint/issuestore/8/4/84cee910007e409d590b121a25231a4f7ec98caa,1/2/12a1a0bd448c77053618d45781ebe0cc3ddd3a30
-w
-G.idea/sonarlint/issuestore/8/c/8c00054dc44a9aac96957ae70e12d95773e087f7,f/d/fd6854fd7b8a4b2a6f00843c93ccdd75c43fb90e
 w
 G.idea/sonarlint/issuestore/7/e/7e00eb6c20dfb05d2a4f44607d08e10be854abf4,e/2/e2b5c87d63acc685f93dcb7e25f63f3aeb5c08ab
 w
@@ -101,8 +87,6 @@ C
 privacy.html,0/3/0394c97ae270b6b4ed93bc6173b6755895e9b338
 8
 Procfile,b/c/bc3c68e880d1a01632bce79f69dd1387c7ba9c54
-A
-app/.dockerignore,2/a/2a64350c28aa37ca0f8a85df5dbdf86b487b71e6
 F
 app/bot/inlinequery.py,6/b/6b4f48e076da4edc40a2c1d7a121a47d8cf4618c
 G
@@ -135,14 +119,6 @@ K
 tox.ini,6/1/61be067c7cf3bdbf8a6b021a2b5167eb30612d0c
 Q
 !app/bot/callbackquery/accounts.py,9/0/90ca8b914a0cd80fb0eb8730f87f8639c871b9ac
-L
-app/bot/callbackquery/dev.py,d/3/d34a35b765d78ac7165e5845f3439ab6565c931b
-Q
-!app/bot/callbackquery/homework.py,8/f/8ffc4e19022169af1e4fedd2b8a936889a054dea
-O
-app/bot/callbackquery/others.py,7/4/74fc5e36e601d9777e67f79fb2308253d7656df0
-Q
-!app/bot/callbackquery/schedule.py,5/5/5520752c4d6a1892e43fabf1f755c6843fb4f51b
 J
 app/bot/handlers/core_1.py,5/c/5cdbc63397087b637fa1057e874dd6dd2b0acd27
 K
@@ -155,5 +131,25 @@ N
 app/bot/handlers/schedule_2.py,0/b/0bb90cfd6e94e190505c9787438b2d5599ebce11
 @
 app/api/utils.py,3/5/352060e690e20468709e6ce67711a906e70ebc0b
-I
-app/dependencies/utils.py,6/4/64aa3860a93bfe6dcd4e04b26e95503044aad6b2
+W
+'app/api/static/templates/pageError.html,3/9/39cb6e837ef03a8514272599aca4ad28578f8fb0
+C
+app/api/__main__.py,c/8/c84a8cb014f9bed0ae207de0880d05d3fec7e7a4
+J
+app/dependencies/errors.py,2/3/23cb45a7ed3c7410b0737d8fcf73c476f0fa392a
+L
+app/dependencies/database.py,e/f/efd82d6b5893028ad00dca7d1540f837ac7f56e5
+L
+app/dependencies/firebase.py,6/b/6b1c4b59608a4b10fd367358fe9fd5a5ebe982a4
+L
+app/bot/handlers/__init__.py,7/6/760e0d9ec6b043553c59d37ab141a04ac941b23e
+G
+app/dependencies/web.py,2/2/2285712a844bafccc48ea239e067136cadf2ed18
+F
+.env.development.local,0/f/0fe212be3a1410c8c1b84c710d79d55e3d8f0e1e
+9
+	config.py,1/a/1a1b9769344cb239f2e540e1e6ee1efa2d3034ea
+>
+bot.dockerfile,3/7/37e479da2902e14c74a879e6f3fbe39d2c5b4158
+>
+api.dockerfile,5/f/5f7e1b96a3e5b5ebfafa25bef5891dbc1c36c60e
