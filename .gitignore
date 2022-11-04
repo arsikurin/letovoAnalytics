@@ -9,6 +9,7 @@ __pycache__
 privacy.html
 terms.html
 
+# json with text values
 # redo postgres
 # new webcal
 # new bot UI

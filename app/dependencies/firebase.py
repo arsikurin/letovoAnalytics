@@ -9,11 +9,14 @@ import firebase_admin
 import yaml
 from firebase_admin import auth
 from firebase_admin import credentials, _DEFAULT_APP_NAME
-from google.cloud.firestore_v1.async_client import AsyncClient, AsyncDocumentReference, DocumentSnapshot
+from google.cloud.firestore_v1 import AsyncClient, DocumentSnapshot
 from google.cloud.firestore_v1.field_path import get_nested_value
 
 from app.dependencies import errors as errors_l, types as types_l
 from config import settings
+
+if typing.TYPE_CHECKING:
+    from app.dependencies import API
 
 
 @typing.final
@@ -28,7 +31,7 @@ class Firestore:
     __slots__ = ("_client", "app_name", "__counter")
 
     def __init__(self, app_name: str = _DEFAULT_APP_NAME):
-        self._client: AsyncClient = ...
+        self._client: AsyncClient
         self.app_name = app_name
         self._counter = 0
 
@@ -42,7 +45,7 @@ class Firestore:
             exc_val: BaseException | None,
             exc_tb: types.TracebackType | None,
     ):
-        self._client.close()
+        await self.disconnect()
 
     @property
     def _counter(self) -> int:
@@ -59,7 +62,7 @@ class Firestore:
     @classmethod
     async def create(cls, *, app_name: str = _DEFAULT_APP_NAME) -> typing.Self:
         """
-        Factory used for initializing database connection object
+        Factory, used for initializing database connection object
 
         Notes:
             Instead, use context manager, i.e. the `with` statement,
@@ -77,7 +80,7 @@ class Firestore:
 
     async def _connect(self) -> AsyncClient:
         """
-        Internal method used for connecting to the database
+        Internal method, used for connecting to the database
 
         Returns:
             database connection
@@ -171,36 +174,23 @@ class Firestore:
         Warnings:
             Fill in at least one param in each hashmap!
             Otherwise, all data will be erased there
-        """
-        space = ""
-        st = f'"student_id": {student_id!r},'
-        ma = f'"mail_address": {mail_address!r},'
-        mp = f'"mail_password": {mail_password!r},'
-        al = f'"analytics_login": {analytics_login!r},'
-        ap = f'"analytics_password": {analytics_password!r},'
-        t = f'"token": {token!r},'
-        ll = f'"lang": {lang!r},'
 
-        request_payload = (
-            '''
-        {
-            "data": {'''
-            f'{st if student_id else space}'
-            f'{ma if mail_address else space}'
-            f'{mp if mail_password else space}'
-            f'{al if analytics_login else space}'
-            f'{ap if analytics_password else space}'
-            f'{t if token else space}'
-            '".service": "data"'
-            '''},
-                "preferences": {'''
-            f'{ll if lang else space}'
-            '".service": "preferences"'
-            '''}
-        }'''
-        )
-        doc_ref: AsyncDocumentReference = self._client.collection("users").document(sender_id)
-        await doc_ref.set(yaml.full_load(request_payload), merge=True)
+            !!! Language code turned off
+        """
+        kwargs = locals()
+        kwargs.pop("self")
+        kwargs.pop("lang")
+        kwargs.pop("sender_id")
+
+        for key, value in kwargs.copy().items():
+            if value is None:
+                kwargs.pop(key)
+
+        payload = {"data": {".service": "data"}, "preferences": {".service": "preferences"}}
+        payload["data"].update(**kwargs)
+
+        doc_ref = self._client.collection("users").document(sender_id)
+        await doc_ref.set(payload, merge=True)
 
     async def update_name(
             self,
@@ -215,22 +205,19 @@ class Firestore:
             Fill in at least one param in each hashmap!
             Otherwise, all data will be erased there
         """
-        space = ""
-        fn = f'"first_name": {first_name!r},'
-        la = f'"last_name": {last_name!r},'
+        kwargs = locals()
+        kwargs.pop("self")
+        kwargs.pop("sender_id")
 
-        request_payload = (
-            '''
-        {
-            "data": {'''
-            f'{fn if first_name else space}'
-            f'{la if last_name else space}'
-            '".service": "data"'
-            '''}
-        }'''
-        )
-        doc_ref: AsyncDocumentReference = self._client.collection("names").document(sender_id)
-        await doc_ref.set(yaml.full_load(request_payload), merge=True)
+        for key, value in kwargs.copy().items():
+            if value is None:
+                kwargs.pop(key)
+
+        payload = {"data": {".service": "data"}}
+        payload["data"].update(**kwargs)
+
+        doc_ref = self._client.collection("names").document(sender_id)
+        await doc_ref.set(payload, merge=True)
 
     async def is_logged(self, sender_id: str) -> bool:
         """
@@ -272,6 +259,7 @@ class Firestore:
         """
         resp = []
         doc = (await self._client.collection("users").document(sender_id).get()).to_dict()
+
         for value in values:
             try:
                 resp.append(get_nested_value(str(value.value), doc))
@@ -295,6 +283,7 @@ class Firestore:
         """
         resp = []
         doc = (await self._client.collection("names").document(sender_id).get()).to_dict()
+
         for value in values:
             try:
                 resp.append(get_nested_value(str(value.value), doc))

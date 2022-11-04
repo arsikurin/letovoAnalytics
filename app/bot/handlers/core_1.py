@@ -71,8 +71,10 @@ async def init(clients: types_l.clients[Client], cbQuery: CallbackQuery, db: Pos
             fs.update_data(sender_id=sender_id, lang=sender.language_code),
             fs.update_name(sender_id=sender_id, first_name=sender.first_name, last_name=sender.last_name),
         )
+
         if not await db.is_inited(sender_id=sender_id):
             await db.init_user(sender_id=sender_id)
+
         raise pyrogram.StopPropagation
 
     @client.on_message(pyrogram.filters.service & filters.web_app)
@@ -82,10 +84,12 @@ async def init(clients: types_l.clients[Client], cbQuery: CallbackQuery, db: Pos
 
         try:
             data = json.loads(message.web_app_data.data)
+
             await fs.update_data(
                 sender_id=str(sender.id), student_id=data["studentID"], lang=sender.language_code,
                 analytics_password=data["password"], analytics_login=data["login"], token=data["token"]
             )
+
             await run_parallel(
                 run_sequence(
                     _client.send_message(
@@ -99,16 +103,19 @@ async def init(clients: types_l.clients[Client], cbQuery: CallbackQuery, db: Pos
                 ),
                 fs.send_email_to(data["login"])
             )
+
         except Exception as err:
             await _client.send_message(
                 chat_id=sender.id,
                 text="**[✘] Something went wrong!**\n\nThis incident will be reported. Try again later"
             )
+
             await client.send_message(
                 chat_id=606336225 if settings().production else 2200163963,
                 text=f"**[✘] Error occurred!** ||ID={sender.id}||\n\n```"
                      f"{err.__repr__()=}\n{err.__traceback__=}\n{err.__doc__=}```"
             )
+
         raise pyrogram.StopPropagation
 
     @client.on_callback_query(pyrogram.filters.regex(pattern=re.compile(r"^main_page$")))
@@ -130,6 +137,7 @@ async def init(clients: types_l.clients[Client], cbQuery: CallbackQuery, db: Pos
     async def _about_page(_client: Client, message: types.Message):
         sender: types.User = message.from_user
         sender_id = str(sender.id)
+
         if not await db.is_inited(sender_id=sender_id):
             await db.init_user(sender_id=sender_id)
 
@@ -140,6 +148,7 @@ async def init(clients: types_l.clients[Client], cbQuery: CallbackQuery, db: Pos
             ),
             db.increase_about_counter(sender_id=sender_id)
         )
+
         raise pyrogram.StopPropagation
 
     @client.on_message(pyrogram.filters.regex(pattern=re.compile(r"(?i).*help")))
@@ -147,6 +156,7 @@ async def init(clients: types_l.clients[Client], cbQuery: CallbackQuery, db: Pos
     async def _help_page(_client: Client, message: types.Message):
         sender: types.User = message.from_user
         sender_id = str(sender.id)
+
         if not await db.is_inited(sender_id=sender_id):
             await db.init_user(sender_id=sender_id)
 
@@ -157,6 +167,7 @@ async def init(clients: types_l.clients[Client], cbQuery: CallbackQuery, db: Pos
             ),
             db.increase_help_counter(sender_id=sender_id)
         )
+
         raise pyrogram.StopPropagation
 
     @client.on_callback_query(pyrogram.filters.regex(pattern=re.compile(r"^close$")))

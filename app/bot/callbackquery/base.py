@@ -46,13 +46,16 @@ class CBQueryBase(abc.ABC):
         if func == self._api.receive_marks_and_teachers:
             try:
                 resp = await self._api.receive_marks_and_teachers(str(sender.id))
+
             except (errors_l.UnauthorizedError, errors_l.NothingFoundError, aiohttp.ClientConnectionError) as err:
                 if hasattr(err, "__notes__"):
                     notes = f". \n{err.__notes__}"
                 else:
                     notes = ""
                 await event.answer(f"[✘] {err}{notes}", show_alert=True)
+
                 raise errors_l.StopPropagation
+
             except asyncio.TimeoutError as err:
                 await self.client.send_message(
                     chat_id=sender.id,
@@ -61,9 +64,10 @@ class CBQueryBase(abc.ABC):
                     disable_web_page_preview=True
                 )
                 raise errors_l.StopPropagation
+
             return resp
 
-        elif func == self._api.receive_schedule_and_hw:
+        if func == self._api.receive_schedule_and_hw:
             if specific_day is None:
                 log.critical("Specific day value not provided!")
                 raise errors_l.StopPropagation
@@ -77,13 +81,16 @@ class CBQueryBase(abc.ABC):
                     resp = await self._api.receive_schedule_and_hw(
                         sender_id=str(sender.id), specific_day=specific_day
                     )
+
             except (errors_l.UnauthorizedError, errors_l.NothingFoundError, aiohttp.ClientConnectionError) as err:
                 if hasattr(err, "__notes__"):
                     notes = f". \n{err.__notes__}"
                 else:
                     notes = ""
                 await event.answer(f"[✘] {err}{notes}", show_alert=True)
+
                 raise errors_l.StopPropagation
+
             except asyncio.TimeoutError as err:
                 await self.client.send_message(
                     chat_id=sender.id,
@@ -92,7 +99,10 @@ class CBQueryBase(abc.ABC):
                     disable_web_page_preview=True
                 )
                 raise errors_l.StopPropagation
+
             return resp
+
+        raise ValueError("Unknown func provided")
 
     async def _send_close_message_sch_and_hw(
             self, sender: types.User, specific_day: types_l.Weekdays, schedule_response: ScheduleAndHWResponse

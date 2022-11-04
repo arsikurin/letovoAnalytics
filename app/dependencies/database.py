@@ -22,7 +22,7 @@ class Postgresql:
     counter = 0
 
     def __init__(self):
-        self._connection: psycopg.AsyncConnection[typing.Any] = ...
+        self._connection: psycopg.AsyncConnection[typing.Any]
 
     async def __aenter__(self) -> typing.Self:
         self._connection = await self._connect()
@@ -39,7 +39,7 @@ class Postgresql:
     @classmethod
     async def create(cls) -> typing.Self:
         """
-        Factory used for initializing database connection object
+        Factory, used for initializing database connection object
 
         Notes:
             Instead, use context manager, i.e. the `with` statement,
@@ -49,13 +49,12 @@ class Postgresql:
             class instance with database connection
         """
         self = cls()
-        self._connection = await self._connect()
-        return self
+        return await cls.__aenter__(self)
 
     @staticmethod
     async def _connect() -> psycopg.AsyncConnection[typing.Any]:
         """
-        Connect to Postgres
+        Internal method, used for connecting to the database
 
         Returns:
             database connection

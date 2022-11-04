@@ -8,6 +8,7 @@ services:
             - PIP_DISABLE_PIP_VERSION_CHECK=1
             - PIP_NO_CACHE_DIR=1
             - PYTHONUNBUFFERED=1
+            - PYTHONDONTWRITEBYTECODE 1
         build:
             dockerfile: bot.dockerfile
             context: .
@@ -22,6 +23,12 @@ services:
         restart: always
         ports:
             - 8084:${PORT:-8084}
+        environment:
+            - PIP_DEFAULT_TIMEOUT=100
+            - PIP_DISABLE_PIP_VERSION_CHECK=1
+            - PIP_NO_CACHE_DIR=1
+            - PYTHONUNBUFFERED=1
+            - PYTHONDONTWRITEBYTECODE 1
         build:
             dockerfile: api.dockerfile
             context: .

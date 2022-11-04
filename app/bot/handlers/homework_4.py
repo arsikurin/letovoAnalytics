@@ -31,6 +31,7 @@ async def init(clients: types_l.clients[Client], cbQuery: CallbackQuery, db: Pos
             cbQuery.send_homework,
             event=callback_query
         )
+
         match callback_query.data:
             case "tomorrows_homework":
                 await send_homework(specific_day=types_l.Weekdays(
@@ -50,5 +51,7 @@ async def init(clients: types_l.clients[Client], cbQuery: CallbackQuery, db: Pos
                 await send_homework(specific_day=types_l.Weekdays.Friday)
             case "saturday_homework":
                 await send_homework(specific_day=types_l.Weekdays.Saturday)
+
         await db.increase_homework_counter(sender_id=sender_id)
+
         raise pyrogram.StopPropagation
