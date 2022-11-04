@@ -24,6 +24,7 @@ async def init(clients: types_l.clients[Client], cbQuery: CallbackQuery, db: Pos
             cbQuery.send_marks,
             event=callback_query
         )
+
         match callback_query.data:
             case "all_marks":
                 await send_marks(specific=types_l.MarkTypes.ALL)
@@ -33,5 +34,7 @@ async def init(clients: types_l.clients[Client], cbQuery: CallbackQuery, db: Pos
                 await send_marks(specific=types_l.MarkTypes.FINAL)
             case "recent_marks":
                 await send_marks(specific=types_l.MarkTypes.RECENT)
+
         await db.increase_marks_counter(sender_id=sender_id)
+
         raise pyrogram.StopPropagation

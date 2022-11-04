@@ -6,8 +6,11 @@ import typing
 import aiohttp
 import orjson
 
-from app.dependencies import errors as errors_l, types as types_l, Firestore
+from app.dependencies import errors as errors_l, types as types_l
 from config import settings
+
+if typing.TYPE_CHECKING:
+    from app.dependencies import Firestore
 
 creds_not_found_text = "Credentials not found in the database"
 no_conn_text = "Cannot establish connection to s.letovo.ru"
@@ -32,9 +35,9 @@ class API:
     #         cls._instance = super().__new__(cls)
     #     return cls._instance
 
-    def __init__(self, session: aiohttp.ClientSession, fs: Firestore):
+    def __init__(self, session: aiohttp.ClientSession, fs: "Firestore"):
         self.session: aiohttp.ClientSession = session
-        self.fs: Firestore = fs
+        self.fs: "Firestore" = fs
 
     async def receive_token(
             self, sender_id: str | None = None, login: str | None = None,

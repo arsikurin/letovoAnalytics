@@ -27,8 +27,10 @@ async def init(clients: types_l.clients[Client], cbQuery: CallbackQuery, db: Pos
     async def _holidays(_client: Client, callback_query: types.CallbackQuery):
         sender: types.User = callback_query.from_user
         sender_id = str(sender.id)
+
         await run_parallel(
             cbQuery.send_holidays(event=callback_query),
             db.increase_holidays_counter(sender_id=sender_id)
         )
+
         raise pyrogram.StopPropagation
