@@ -44,7 +44,7 @@ async def init(clients: types_l.clients[Client], cbQuery: CallbackQuery, db: Pos
                 tg.create_task(cbQuery.send_help_page(sender=sender))
 
                 if not await ii:
-                    await tg.create_task(db.init_user(sender_id=sender_id))
+                    await db.init_user(sender_id=sender_id)
 
                 tg.create_task(db.increase_options_counter(sender_id=sender_id))
 

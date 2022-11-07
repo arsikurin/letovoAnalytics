@@ -8,6 +8,7 @@ __pycache__
 .mypy_cache
 privacy.html
 terms.html
+.idea/sonarlint/issuestore
 
 # json with text values
 # redo postgres

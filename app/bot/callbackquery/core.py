@@ -96,7 +96,7 @@ class CBQCore(CBQueryBase):
                  "\n"
                  "\n"
                  "**Marks CI**\n"
-                 "From **0** to **8** followed by a criterion:\n"
+                 "From **0** to **8**, followed by a criterion:\n"
                  "**A**, **B**, **C** or **D** — Summative marks\n"
                  "**F** — Formative marks\n"
                  "\n"
