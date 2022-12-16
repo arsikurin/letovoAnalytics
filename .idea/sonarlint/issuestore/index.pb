@@ -81,8 +81,6 @@ G
 app/schemas/__init__.py,7/5/7501a9306d02b3a60f7536482442b11b2a950344
 9
 	.pylintrc,5/8/58278ca6e186f004b12621f8c3155064b4dc09b6
-O
-app/dependencies/types/enums.py,a/d/add192dd5900bbc6abb219898117113ab4898b5b
 G
 app/schemas/teachers.py,b/7/b7fe50f648ce84c03ec53348cf07faa9ed023d88
 G
@@ -111,14 +109,10 @@ L
 app/bot/handlers/__init__.py,7/6/760e0d9ec6b043553c59d37ab141a04ac941b23e
 F
 .env.development.local,0/f/0fe212be3a1410c8c1b84c710d79d55e3d8f0e1e
-9
-	config.py,1/a/1a1b9769344cb239f2e540e1e6ee1efa2d3034ea
 Q
 !app/bot/callbackquery/__init__.py,7/1/71777da1e6dfbcb968f039c8b6b02e8b207b7fe7
 w
 G.idea/sonarlint/issuestore/5/9/597b09727816697163dc2ef21c7ba42ec9b4a18e,6/5/654397ddb47ce4e2310c4cfb47b27feee65ff519
-O
-app/bot/callbackquery/others.py,7/4/74fc5e36e601d9777e67f79fb2308253d7656df0
 Q
 !app/bot/callbackquery/homework.py,8/f/8ffc4e19022169af1e4fedd2b8a936889a054dea
 w
@@ -188,8 +182,6 @@ G.idea/sonarlint/issuestore/0/3/0394c97ae270b6b4ed93bc6173b6755895e9b338,b/8/b8
 w
 G.idea/sonarlint/issuestore/3/5/352060e690e20468709e6ce67711a906e70ebc0b,f/9/f946c31abb8ee753e43b13d4c57aa99dfaed37ce
 w
-G.idea/sonarlint/issuestore/0/0/0068a1506b061a8948c37d78b0dd5697211558d3,7/0/70ffd35989684632ecf3a55a44653510e2f63a10
-w
 G.idea/sonarlint/issuestore/7/6/760e0d9ec6b043553c59d37ab141a04ac941b23e,0/9/097d0bf345247e54321f16f8c6ead08a6bb4ffad
 w
 G.idea/sonarlint/issuestore/b/0/b04578cffb47b1e57970601a0cacef6081245859,7/2/72d60672c1f4ee9fd0ef10acd6189a6dce5f9e9f
@@ -211,8 +203,6 @@ w
 G.idea/sonarlint/issuestore/6/5/6574b8a9c9ab919be100dec98df3e6b17e9b2603,0/6/068eece9d2e12d46557b20150b845afa9f93c127
 w
 G.idea/sonarlint/issuestore/c/3/c39703241a39b627bb7b10fd05166c86ad6a080f,1/9/19f19d57732cd5e146ec3032b9ff963f447ee634
-;
-app/main.py,6/0/60a964aea4a6760d2f0fe80a7725ed9d569edd6c
 L
 app/bot/handlers/iquery_7.py,a/d/ad6d5f176d172a0d7aedfe93ea2fae945fa0c6ab
 L
@@ -223,8 +213,6 @@ I
 	README.md,8/e/8ec9a00bfd09b3190ac6b22251dbb1aa95a0579d
 Q
 !app/bot/callbackquery/schedule.py,5/5/5520752c4d6a1892e43fabf1f755c6843fb4f51b
->
-api.dockerfile,5/f/5f7e1b96a3e5b5ebfafa25bef5891dbc1c36c60e
 >
 bot.dockerfile,3/7/37e479da2902e14c74a879e6f3fbe39d2c5b4158
 N
@@ -257,8 +245,6 @@ w
 G.idea/sonarlint/issuestore/2/a/2a64350c28aa37ca0f8a85df5dbdf86b487b71e6,4/1/416ef47e8d72b968430ebf64af7d66a72badc909
 w
 G.idea/sonarlint/issuestore/6/e/6ecb5f8bee2831c5c76e9926d3de6c6cc09706a7,0/c/0c3b3109649254ba32f812b5bcc221ffa51880f6
-w
-G.idea/sonarlint/issuestore/c/2/c2151206b3afe9a24663373e5c2f71a2c3a5194b,8/7/8721fa4a1ecee7f91c2aaec6cb56d619958c7bfa
 N
 app/bot/handlers/schedule_2.py,0/b/0bb90cfd6e94e190505c9787438b2d5599ebce11
 w
@@ -314,8 +300,6 @@ G
 w
 G.idea/sonarlint/issuestore/d/f/df27d08eeb8e254a3c656dece9dfdbac5cd326a7,d/b/db25a66c0721bdffcbc2f7213e8b3ce9fa39b74d
 w
-G.idea/sonarlint/issuestore/7/0/70ffd35989684632ecf3a55a44653510e2f63a10,e/d/ed093a4aad323f9c981609b0ac588ecf0c5b98c5
-w
 G.idea/sonarlint/issuestore/0/9/0951acb2967857dbe364488cc2208624aca19187,4/4/44bb92dfbe255840314bbd02da437e74efd7a25b
 w
 G.idea/sonarlint/issuestore/0/9/097d0bf345247e54321f16f8c6ead08a6bb4ffad,8/d/8d0d6dc4335c00620b5cce5778d2ae354ce1b6bf
@@ -355,7 +339,22 @@ w
 G.idea/sonarlint/issuestore/1/9/19f19d57732cd5e146ec3032b9ff963f447ee634,7/2/721d0a12490c7033c8b180c62c81d69bda766bae
 8
 Makefile,8/3/836efb6e25a091dcb4ff8e1dbb2f0be6a5cbf14c
-L
-app/dependencies/database.py,e/f/efd82d6b5893028ad00dca7d1540f837ac7f56e5
+:
+
+.gitignore,a/5/a5cc2925ca8258af241be7e5b0381edf30266302
+J
+app/bot/handlers/core_1.py,5/c/5cdbc63397087b637fa1057e874dd6dd2b0acd27
+;
+poetry.lock,0/0/0068a1506b061a8948c37d78b0dd5697211558d3
 L
 app/dependencies/firebase.py,6/b/6b1c4b59608a4b10fd367358fe9fd5a5ebe982a4
+O
+app/dependencies/types/enums.py,a/d/add192dd5900bbc6abb219898117113ab4898b5b
+>
+pyproject.toml,5/d/5d07e7d72637aa0d59c89d381fe6dc4cf46e2491
+C
+app/bot/__main__.py,1/b/1b87bca64c05727f43ef5534b58a2c073e6dcc2c
+O
+app/bot/callbackquery/others.py,7/4/74fc5e36e601d9777e67f79fb2308253d7656df0
+>
+api.dockerfile,5/f/5f7e1b96a3e5b5ebfafa25bef5891dbc1c36c60e

@@ -69,7 +69,7 @@ class Postgresql:
     async def get_users(self) -> typing.Iterator[str]:
         try:
             cursor = await self._connection.execute(
-                "SELECT sender_id FROM users"
+                "SELECT sender_id FROM users2"
             )
             return it.chain.from_iterable(await cursor.fetchall())
         except psycopg.OperationalError as err:
@@ -85,7 +85,7 @@ class Postgresql:
         try:
             cursor = await self._connection.execute(
                 "SELECT sender_id, schedule_counter, homework_counter, marks_counter, holidays_counter, clear_counter,"
-                "options_counter, help_counter, about_counter, inline_counter FROM users WHERE sender_id = %s",
+                "options_counter, help_counter, about_counter, inline_counter FROM users2 WHERE sender_id = %s",
                 (sender_id,)
             )
             cursor.row_factory = class_row(types_l.AnalyticsResponse)
@@ -102,7 +102,7 @@ class Postgresql:
     async def is_inited(self, sender_id: str) -> bool:
         try:
             cursor = await self._connection.execute(
-                "SELECT sender_id FROM users WHERE sender_id = %s",
+                "SELECT sender_id FROM users2 WHERE sender_id = %s",
                 (sender_id,)
             )
             return bool(await cursor.fetchone())
@@ -118,7 +118,7 @@ class Postgresql:
     async def init_user(self, sender_id: str):
         try:
             await self._connection.execute(
-                "INSERT INTO users ("
+                "INSERT INTO users2 ("
                 "sender_id, schedule_counter, homework_counter, marks_counter, holidays_counter, "
                 "clear_counter, options_counter, help_counter, about_counter, inline_counter"
                 ") VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
@@ -138,7 +138,7 @@ class Postgresql:
         try:
             # noinspection SqlWithoutWhere
             await self._connection.execute(
-                "UPDATE users SET "
+                "UPDATE users2 SET "
                 "schedule_counter = %s, homework_counter = %s, marks_counter = %s, holidays_counter = %s, msg_ids = %s,"
                 "clear_counter = %s, options_counter = %s, help_counter = %s, about_counter = %s, inline_counter = %s",
                 (0, 0, 0, 0, "", 0, 0, 0, 0, 0)
@@ -156,7 +156,7 @@ class Postgresql:
     async def set_msg_ids(self, sender_id: str, msg_ids: str):
         try:
             await self._connection.execute(
-                "UPDATE users SET msg_ids = %s WHERE sender_id = %s",
+                "UPDATE users2 SET msg_ids = %s WHERE sender_id = %s",
                 (msg_ids, sender_id)
             )
             await self._connection.commit()
@@ -172,7 +172,7 @@ class Postgresql:
     async def get_msg_ids(self, sender_id: str) -> str:
         try:
             cursor = await self._connection.execute(
-                "SELECT msg_ids FROM users WHERE sender_id = %s",
+                "SELECT msg_ids FROM users2 WHERE sender_id = %s",
                 (sender_id,)
             )
             return (await cursor.fetchone())[0]
@@ -188,7 +188,7 @@ class Postgresql:
     async def increase_schedule_counter(self, sender_id: str):
         try:
             await self._connection.execute(
-                "UPDATE users SET schedule_counter = schedule_counter + 1 WHERE sender_id = %s",
+                "UPDATE users2 SET schedule_counter = schedule_counter + 1 WHERE sender_id = %s",
                 (sender_id,)
             )
             await self._connection.commit()
@@ -204,7 +204,7 @@ class Postgresql:
     async def increase_homework_counter(self, sender_id: str):
         try:
             await self._connection.execute(
-                "UPDATE users SET homework_counter = homework_counter + 1 WHERE sender_id = %s",
+                "UPDATE users2 SET homework_counter = homework_counter + 1 WHERE sender_id = %s",
                 (sender_id,)
             )
             await self._connection.commit()
@@ -220,7 +220,7 @@ class Postgresql:
     async def increase_marks_counter(self, sender_id: str):
         try:
             await self._connection.execute(
-                "UPDATE users SET marks_counter = marks_counter + 1 WHERE sender_id = %s",
+                "UPDATE users2 SET marks_counter = marks_counter + 1 WHERE sender_id = %s",
                 (sender_id,)
             )
             await self._connection.commit()
@@ -236,7 +236,7 @@ class Postgresql:
     async def increase_holidays_counter(self, sender_id: str):
         try:
             await self._connection.execute(
-                "UPDATE users SET holidays_counter = holidays_counter + 1 WHERE sender_id = %s",
+                "UPDATE users2 SET holidays_counter = holidays_counter + 1 WHERE sender_id = %s",
                 (sender_id,)
             )
             await self._connection.commit()
@@ -252,7 +252,7 @@ class Postgresql:
     async def increase_options_counter(self, sender_id: str):
         try:
             await self._connection.execute(
-                "UPDATE users SET options_counter = options_counter + 1 WHERE sender_id= %s",
+                "UPDATE users2 SET options_counter = options_counter + 1 WHERE sender_id= %s",
                 (sender_id,)
             )
             await self._connection.commit()
@@ -268,7 +268,7 @@ class Postgresql:
     async def increase_help_counter(self, sender_id: str):
         try:
             await self._connection.execute(
-                "UPDATE users SET help_counter = help_counter + 1 WHERE sender_id = %s",
+                "UPDATE users2 SET help_counter = help_counter + 1 WHERE sender_id = %s",
                 (sender_id,)
             )
             await self._connection.commit()
@@ -284,7 +284,7 @@ class Postgresql:
     async def increase_inline_counter(self, sender_id: str):
         try:
             await self._connection.execute(
-                "UPDATE users SET inline_counter = inline_counter + 1 WHERE sender_id = %s",
+                "UPDATE users2 SET inline_counter = inline_counter + 1 WHERE sender_id = %s",
                 (sender_id,)
             )
             await self._connection.commit()
@@ -300,7 +300,7 @@ class Postgresql:
     async def increase_about_counter(self, sender_id: str):
         try:
             await self._connection.execute(
-                "UPDATE users SET about_counter = inline_counter + 1 WHERE sender_id = %s",
+                "UPDATE users2 SET about_counter = inline_counter + 1 WHERE sender_id = %s",
                 (sender_id,)
             )
             await self._connection.commit()
