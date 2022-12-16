@@ -60,7 +60,7 @@ class Postgresql:
             database connection
         """
         return await psycopg.AsyncConnection.connect(
-            conninfo=settings().DATABASE_URL, sslmode="require"  # , row_factory=class_row(`class`)
+            conninfo=settings().DATABASE_URL  # , row_factory=class_row(`class`)
         )
 
     async def disconnect(self):

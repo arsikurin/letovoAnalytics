@@ -55,7 +55,7 @@ class CBQCore(CBQueryBase):
                 [
                     types.KeyboardButton(
                         text="Click here to register",
-                        web_app=types.WebAppInfo(url="https://letovo-analytics.web.app/webview")
+                        web_app=types.WebAppInfo(url="https://arsikur.in/webview")
                     )
                 ]
             ], resize_keyboard=True)
