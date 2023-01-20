@@ -9,7 +9,7 @@ from app.bot import CallbackQuery
 from app.dependencies import run_sequence, run_parallel, Firestore, Postgresql, filters, types as types_l
 from config import settings
 
-
+# noinspection PyPep8Naming
 async def init(clients: types_l.clients[Client], cbQuery: CallbackQuery, db: Postgresql, fs: Firestore):
     client = clients.client
 

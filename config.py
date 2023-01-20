@@ -13,9 +13,9 @@ class AppSettings(BaseSettings):
     EPS: float = 2.220446049250313e-16
     URL_MAIN_LETOVO: HttpUrl = "https://s.letovo.ru"
     URL_MAIN_API: HttpUrl = "https://letovo-analytics-api.herokuapp.com"
-    URL_MAIN_LOCAL: HttpUrl = "https://letovo-analytics.web.app"
+    URL_MAIN_LOCAL: HttpUrl = "https://arsikur.in"
     URL_LOGIN_LETOVO: HttpUrl = "https://s-api.letovo.ru/api/login"
-    URL_LOGIN_LOCAL: HttpUrl = "https://letovo-analytics.web.app/login"
+    URL_LOGIN_LOCAL: HttpUrl = "https://arsikur.in/login"
     GOOGLE_FS_KEY: str
     GOOGLE_API_KEY: str
     TG_API_ID: int

@@ -34,18 +34,20 @@ class CBQSchedule(CBQueryBase):
         schedule_response = ScheduleAndHWResponse.parse_obj(response)
         old_wd = ""
         msg_ids = []
+
         for day in schedule_response.data:
             wd = types_l.Weekdays(int(day.period_num_day)).name
-            if specific_day == types_l.Weekdays.Week and wd != old_wd:
-                msg = await self.client.send_message(
-                    chat_id=sender.id,
-                    text=f"\n==={wd}===\n",
-                    disable_notification=True
-                )
-                msg_ids.append(msg.id)
-
             payload = []
+
             if day.schedules:
+                if specific_day == types_l.Weekdays.Week and wd != old_wd:
+                    msg = await self.client.send_message(
+                        chat_id=sender.id,
+                        text=f"\n==={wd}===\n",
+                        disable_notification=True
+                    )
+                    msg_ids.append(msg.id)
+
                 payload.append(f"{day.period_name} | <em>{day.schedules[0].room.room_name}</em>:")
 
                 if day.schedules[0].lessons and day.schedules[0].lessons[0].attendance:

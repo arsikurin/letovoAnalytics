@@ -31,10 +31,6 @@ w
 G.idea/sonarlint/issuestore/c/3/c3f8643b2ddc712688caf3ab64ebd9688fdbfc30,7/e/7e00eb6c20dfb05d2a4f44607d08e10be854abf4
 Y
 )app/api/static/images/icons/forbidden.svg,7/0/70e56e791623d93683a0ba6921bd0a49930b156f
-U
-%app/api/static/templates/webview.html,a/2/a2fdb90099a3b9ce6a4b3cfc3d2706743056c886
-V
-&app/api/static/templates/indexAPI.html,7/1/71b8bbc4dab5b9906a8d8d98ad7c675317b5ea0f
 w
 G.idea/sonarlint/issuestore/b/4/b4a0b63ce8560bbc5de0f9995c20cc861dc2adb3,b/0/b04578cffb47b1e57970601a0cacef6081245859
 w
@@ -75,46 +71,26 @@ C
 privacy.html,0/3/0394c97ae270b6b4ed93bc6173b6755895e9b338
 8
 Procfile,b/c/bc3c68e880d1a01632bce79f69dd1387c7ba9c54
-F
-app/bot/inlinequery.py,6/b/6b4f48e076da4edc40a2c1d7a121a47d8cf4618c
 G
 app/schemas/__init__.py,7/5/7501a9306d02b3a60f7536482442b11b2a950344
 9
 	.pylintrc,5/8/58278ca6e186f004b12621f8c3155064b4dc09b6
-G
-app/schemas/teachers.py,b/7/b7fe50f648ce84c03ec53348cf07faa9ed023d88
-G
-app/schemas/schedule.py,9/6/96c011d5ff1bf463e51c727c7749b4decd5aa48f
-D
-app/schemas/marks.py,9/7/97fbf3327d40eabbec68aaacbf6136cde8685bd8
 R
 "app/dependencies/types/__init__.py,8/7/87837dddac4617928ecedd08a5fc7eeb710ece5a
 K
 .github/workflows/test.yaml,a/6/a60e2382fd0c34cb06177a3d7034264e22531192
-7
-tox.ini,6/1/61be067c7cf3bdbf8a6b021a2b5167eb30612d0c
-Q
-!app/bot/callbackquery/accounts.py,9/0/90ca8b914a0cd80fb0eb8730f87f8639c871b9ac
 K
 app/dependencies/filters.py,9/0/90767c85d2c8f18598f7d4ecdf7a88ebc2f87ac5
 @
 app/api/utils.py,3/5/352060e690e20468709e6ce67711a906e70ebc0b
-W
-'app/api/static/templates/pageError.html,3/9/39cb6e837ef03a8514272599aca4ad28578f8fb0
 C
 app/api/__main__.py,c/8/c84a8cb014f9bed0ae207de0880d05d3fec7e7a4
 J
 app/dependencies/errors.py,2/3/23cb45a7ed3c7410b0737d8fcf73c476f0fa392a
 L
 app/bot/handlers/__init__.py,7/6/760e0d9ec6b043553c59d37ab141a04ac941b23e
-F
-.env.development.local,0/f/0fe212be3a1410c8c1b84c710d79d55e3d8f0e1e
-Q
-!app/bot/callbackquery/__init__.py,7/1/71777da1e6dfbcb968f039c8b6b02e8b207b7fe7
 w
 G.idea/sonarlint/issuestore/5/9/597b09727816697163dc2ef21c7ba42ec9b4a18e,6/5/654397ddb47ce4e2310c4cfb47b27feee65ff519
-Q
-!app/bot/callbackquery/homework.py,8/f/8ffc4e19022169af1e4fedd2b8a936889a054dea
 w
 G.idea/sonarlint/issuestore/d/4/d4d40a76f4038c18c35ba398e44a38142d3fa495,0/2/02030184b2e11978a9d9c8b130c7604b88ec33e2
 w
@@ -125,8 +101,6 @@ w
 G.idea/sonarlint/issuestore/9/f/9f467a9fcd7ffe82aaeae615d9ddff23c4b4f90c,9/7/97d8a2f50a198600e57fb10929203df1005f1ea9
 w
 G.idea/sonarlint/issuestore/9/1/91dc6134e15a04bd1249542b12e858a7500c0f77,7/2/72e28ab96cb47c439394a96c8418bc215264b025
-=
-.dockerignore,0/5/05a721ebe3ba0754116825ed1359ff1785f4bbac
 w
 G.idea/sonarlint/issuestore/2/9/29a68e1d74704a5a25e119892ed8fd4b6fc0d8dd,2/c/2c6a3ce41ca55c65282350ac97eb3dbf040be4e3
 w
@@ -204,15 +178,11 @@ G.idea/sonarlint/issuestore/6/5/6574b8a9c9ab919be100dec98df3e6b17e9b2603,0/6/06
 w
 G.idea/sonarlint/issuestore/c/3/c39703241a39b627bb7b10fd05166c86ad6a080f,1/9/19f19d57732cd5e146ec3032b9ff963f447ee634
 L
-app/bot/handlers/iquery_7.py,a/d/ad6d5f176d172a0d7aedfe93ea2fae945fa0c6ab
-L
 app/bot/callbackquery/dev.py,d/3/d34a35b765d78ac7165e5845f3439ab6565c931b
 I
 app/dependencies/utils.py,6/4/64aa3860a93bfe6dcd4e04b26e95503044aad6b2
 9
 	README.md,8/e/8ec9a00bfd09b3190ac6b22251dbb1aa95a0579d
-Q
-!app/bot/callbackquery/schedule.py,5/5/5520752c4d6a1892e43fabf1f755c6843fb4f51b
 >
 bot.dockerfile,3/7/37e479da2902e14c74a879e6f3fbe39d2c5b4158
 N
@@ -221,8 +191,6 @@ w
 G.idea/sonarlint/issuestore/7/2/72d60672c1f4ee9fd0ef10acd6189a6dce5f9e9f,5/1/51f4a46ee3860af2c6cfa0846f5bf418ee0a7e4b
 w
 G.idea/sonarlint/issuestore/7/2/72e28ab96cb47c439394a96c8418bc215264b025,b/1/b133e54867f796067b74762800508e82fdf7916e
-M
-app/bot/callbackquery/base.py,8/9/8906649b451bc05a6bff3c5dbf3e64e92e74dc0f
 w
 G.idea/sonarlint/issuestore/6/4/64aa3860a93bfe6dcd4e04b26e95503044aad6b2,3/0/308a364541eddbaac2671eac3a398e64e8c1b598
 w
@@ -245,12 +213,8 @@ w
 G.idea/sonarlint/issuestore/2/a/2a64350c28aa37ca0f8a85df5dbdf86b487b71e6,4/1/416ef47e8d72b968430ebf64af7d66a72badc909
 w
 G.idea/sonarlint/issuestore/6/e/6ecb5f8bee2831c5c76e9926d3de6c6cc09706a7,0/c/0c3b3109649254ba32f812b5bcc221ffa51880f6
-N
-app/bot/handlers/schedule_2.py,0/b/0bb90cfd6e94e190505c9787438b2d5599ebce11
 w
 G.idea/sonarlint/issuestore/0/3/03ba51b115cf5ba8b158cf459464ac4660e99910,7/1/71b18200d80b887db17ec42a990b1d311e3caa66
-N
-app/bot/handlers/homework_4.py,d/e/de0bd5ceaf68a0f63931ae9b7bfe1e2f167c17ef
 w
 G.idea/sonarlint/issuestore/1/b/1b622450c8dac99df69ef0139a3fb3b905481bc3,c/9/c94684ad268798a44bf56cd4c5ed2019983c7a4b
 w
@@ -295,8 +259,6 @@ w
 G.idea/sonarlint/issuestore/6/c/6ca29f5350a683b0838aed8d4847d23991106eb5,6/f/6f76751280f142f80c68d1fd35e193deab90107f
 w
 G.idea/sonarlint/issuestore/8/3/8394a55fee856edd4fa4465b1028db49074a0a8f,4/0/40ce38c1ca91abf674dcfbf38fb879ed28b770f6
-G
-app/dependencies/web.py,2/2/2285712a844bafccc48ea239e067136cadf2ed18
 w
 G.idea/sonarlint/issuestore/d/f/df27d08eeb8e254a3c656dece9dfdbac5cd326a7,d/b/db25a66c0721bdffcbc2f7213e8b3ce9fa39b74d
 w
@@ -342,19 +304,11 @@ G.idea/sonarlint/issuestore/1/9/19f19d57732cd5e146ec3032b9ff963f447ee634,7/2/72
 :
 
 .gitignore,a/5/a5cc2925ca8258af241be7e5b0381edf30266302
-J
-app/bot/handlers/core_1.py,5/c/5cdbc63397087b637fa1057e874dd6dd2b0acd27
-;
-poetry.lock,0/0/0068a1506b061a8948c37d78b0dd5697211558d3
 L
 app/dependencies/firebase.py,6/b/6b1c4b59608a4b10fd367358fe9fd5a5ebe982a4
-O
-app/dependencies/types/enums.py,a/d/add192dd5900bbc6abb219898117113ab4898b5b
->
-pyproject.toml,5/d/5d07e7d72637aa0d59c89d381fe6dc4cf46e2491
-C
-app/bot/__main__.py,1/b/1b87bca64c05727f43ef5534b58a2c073e6dcc2c
-O
-app/bot/callbackquery/others.py,7/4/74fc5e36e601d9777e67f79fb2308253d7656df0
 >
 api.dockerfile,5/f/5f7e1b96a3e5b5ebfafa25bef5891dbc1c36c60e
+M
+app/bot/callbackquery/core.py,9/e/9e7d629d4cb189e887081db743cf96ba58fd68f1
+;
+app/main.py,6/0/60a964aea4a6760d2f0fe80a7725ed9d569edd6c

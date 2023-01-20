@@ -21,13 +21,14 @@
         }
 
         body {
-            background-color: #000;
+            background-color: rgb(25, 26, 27);
             font-family: "Hack", monospace;
         }
 
         a {
             text-decoration: none;
             cursor: pointer;
+            color: rgb(60, 160, 250);
         }
 
         a:hover {
@@ -46,7 +47,7 @@
         }
 
         .text__fix {
-            margin-top: 135px;
+            margin-top: 150px;
             height: 30px;
             line-height: 30px;
             font-size: 1.5rem;
@@ -82,67 +83,49 @@
 
 </head>
 <body>
-<div class="text__error" data-text="{{ error }}"></div>
+<div class="text__error" id="text__error" data-text="{{ error }}"></div>
 <div class="text__detail" data-text="{{ detail }}"></div>
 <div class="text__fix" data-text="{{ fix }}"></div>
-<div class="text__link"><a href="https://letovo-analytics.web.app/" data-text="click here to go home"></a></div>
-<script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js'></script>
+<div class="text__link"><a id="text__link" href="https://arsikur.in/" data-text="click here to go home"></a></div>
+</div>
 <script>
     function setCharAt(str, index, chr) {
         if (index > str.length - 1) return str;
         return str.substr(0, index) + chr + str.substr(index + 1);
     }
 
-    let characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-=+<>,./?[{()}]!@#$%^&*~`\|'.split('');
+    const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-=+<>,./?[{()}]!@#$%^&*~`\|".split("");
 
-    let progress404 = 0;
-    let total404 = $('.text__error').data('text').length;
-
-    let progressDetail = 0;
-    let totalDetail = $('.text__detail').data('text').length;
-
-    let progressFix = 0;
-    let totalFix = $('.text__fix').data('text').length;
+    let progressError = 0;
+    let totalError = document.getElementById("text__error").dataset["text"].length
 
     let progressLink = 0;
-    let totalLink = $('.text__link a').data('text').length;
+    let totalLink = document.getElementById("text__link").dataset["text"].length
 
-    let scrambleInterval = setInterval(function () {
-        let string404 = $('.text__error').data('text');
-        let stringDetail = $('.text__detail').data('text');
-        let stringFix = $('.text__fix').data('text');
-        let stringLink = $('.text__link a').data('text');
+    let scrambleInterval = setInterval(() => {
+        let stringError = document.getElementById("text__error").dataset["text"]
+        let stringLink = document.getElementById("text__link").dataset["text"]
+        console.log()
 
-        for (let i = 0; i < total404; i++) {
-            if (i >= progress404) {
-                string404 = setCharAt(string404, i, characters[Math.round(Math.random() * (characters.length - 1))]);
+        for (let i = 0; i < totalError; i++) {
+            if (i >= progressError) {
+                stringError = setCharAt(stringError, i, characters[Math.round(Math.random() * (characters.length - 1))]);
             }
         }
-
-        //for (let i = 0; i < totalDetail; i++) {
-        //    if (i >= progressDetail) {
-        //        stringDetail = setCharAt(stringDetail, i, characters[Math.round(Math.random() * (characters.length - 1))]);
-        //    }
-        //}
 
         for (let i = 0; i < totalLink; i++) {
             if (i >= progressLink) {
                 stringLink = setCharAt(stringLink, i, characters[Math.round(Math.random() * (characters.length - 1))]);
             }
         }
+        document.getElementById("text__error").textContent = stringError;
+        document.getElementById("text__link").textContent = stringLink;
+    }, 50 / 60);
 
-        $('.text__error').text(string404);
-        $('.text__detail').text(stringDetail);
-        $('.text__fix').text(stringFix);
-        $('.text__link a').text(stringLink);
-    }, 1000 / 60);
-
-    setTimeout(function () {
-        let revealInterval = setInterval(function () {
-            if (progress404 < total404) {
-                progress404++;
-                //} else if (progressDetail < totalDetail) {
-                //    progressDetail++;
+    setTimeout(() => {
+        let revealInterval = setInterval(() => {
+            if (progressError < totalError) {
+                progressError++;
             } else if (progressLink < totalLink) {
                 progressLink++;
             } else {
@@ -150,7 +133,7 @@
                 clearInterval(scrambleInterval);
             }
         }, 50);
-    }, 1000);
+    }, 50);
 </script>
 
 </body>

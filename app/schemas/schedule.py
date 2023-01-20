@@ -103,7 +103,7 @@ class DataList(BaseModel):
     # period_order: str
     # period_feed: int
     # period_feed_name: Optional[str]
-    date: str
+    date: Optional[str]
     schedules: list[SchedulesList]
 
 

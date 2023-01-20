@@ -116,7 +116,7 @@ class CBQOthers(CBQueryBase):
                 ], [
                     types.InlineKeyboardButton(
                         "Subscribe to schedule",
-                        url=f"https://letovo-analytics.web.app/get_ics?user_id={event.from_user.id}"
+                        url=f"https://arsikur.in/get_ics?user_id={event.from_user.id}"
                     ),
                 ], [
                     types.InlineKeyboardButton("Holidays", b"holidays"),

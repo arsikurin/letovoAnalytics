@@ -125,18 +125,18 @@
         let login = document.getElementById("login").value;
         let password = document.getElementById("password").value;
 
-        if (webview === "") {
+        if (login === "") {
             Telegram.WebApp.notificationOccurred("error");
             displayErr("Login not specified");
             mainButton.hideProgress();
         } else if (password === "") {
             displayErr("Password not specified");
             mainButton.hideProgress();
-        } else if (!loginRegEx.test(webview)) {
+        } else if (!loginRegEx.test(login)) {
             displayErr("Please enter a valid login");
             mainButton.hideProgress();
         } else {
-            updateData(webview, password);
+            updateData(login, password);
         }
     }
 
@@ -146,7 +146,7 @@
         let studentID
 
         try {
-            token = obtainToken(webview, password);
+            token = obtainToken(login, password);
         } catch (err) {
             console.log(err.message);
             displayErr(err.message);
@@ -168,7 +168,7 @@
         }
 
         Telegram.WebApp.sendData(JSON.stringify({
-            "login": webview,
+            "login": login,
             "password": password,
             "studentID": studentID,
             "token": token,
@@ -182,7 +182,7 @@
         xhr.open("POST", "https://s-api.letovo.ru/api/login", false);
         xhr.setRequestHeader("Content-Type", "application/json;charset=utf-8");
         xhr.send(JSON.stringify({
-            "login": webview,
+            "login": login,
             "password": password,
         }));
 

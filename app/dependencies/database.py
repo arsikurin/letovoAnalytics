@@ -74,12 +74,6 @@ class Postgresql:
             return it.chain.from_iterable(await cursor.fetchall())
         except psycopg.OperationalError as err:
             log.exception(err)
-            if self.counter == 0:
-                self.counter += 1
-                log.info(f"Trying to fix `{err}` Error!")
-                await self._connection.close()
-                self._connection = await self._connect()
-                await self.get_users()
 
     async def get_analytics(self, sender_id: str) -> types_l.AnalyticsResponse:
         try:
@@ -92,12 +86,6 @@ class Postgresql:
             return await cursor.fetchone()
         except psycopg.OperationalError as err:
             log.exception(err)
-            if self.counter == 0:
-                self.counter += 1
-                log.info(f"Trying to fix `{err}` Error!")
-                await self._connection.close()
-                self._connection = await self._connect()
-                await self.get_analytics(sender_id)
 
     async def is_inited(self, sender_id: str) -> bool:
         try:
@@ -108,12 +96,6 @@ class Postgresql:
             return bool(await cursor.fetchone())
         except psycopg.OperationalError as err:
             log.exception(err)
-            if self.counter == 0:
-                self.counter += 1
-                log.info(f"Trying to fix `{err}` Error!")
-                await self._connection.close()
-                self._connection = await self._connect()
-                await self.is_inited(sender_id)
 
     async def init_user(self, sender_id: str):
         try:
@@ -127,12 +109,6 @@ class Postgresql:
             await self._connection.commit()
         except psycopg.OperationalError as err:
             log.exception(err)
-            if self.counter == 0:
-                self.counter += 1
-                log.info(f"Trying to fix `{err}` Error!")
-                await self._connection.close()
-                self._connection = await self._connect()
-                await self.init_user(sender_id)
 
     async def reset_analytics(self):
         try:
@@ -146,12 +122,6 @@ class Postgresql:
             await self._connection.commit()
         except psycopg.OperationalError as err:
             log.exception(err)
-            if self.counter == 0:
-                self.counter += 1
-                log.info(f"Trying to fix `{err}` Error!")
-                await self._connection.close()
-                self._connection = await self._connect()
-                await self.reset_analytics()
 
     async def set_msg_ids(self, sender_id: str, msg_ids: str):
         try:
@@ -162,12 +132,6 @@ class Postgresql:
             await self._connection.commit()
         except psycopg.OperationalError as err:
             log.exception(err)
-            if self.counter == 0:
-                self.counter += 1
-                log.info(f"Trying to fix `{err}` Error!")
-                await self._connection.close()
-                self._connection = await self._connect()
-                await self.set_msg_ids(sender_id, msg_ids)
 
     async def get_msg_ids(self, sender_id: str) -> str:
         try:
@@ -178,12 +142,6 @@ class Postgresql:
             return (await cursor.fetchone())[0]
         except psycopg.OperationalError as err:
             log.exception(err)
-            if self.counter == 0:
-                self.counter += 1
-                log.info(f"Trying to fix `{err}` Error!")
-                await self._connection.close()
-                self._connection = await self._connect()
-                await self.get_msg_ids(sender_id)
 
     async def increase_schedule_counter(self, sender_id: str):
         try:
@@ -194,12 +152,6 @@ class Postgresql:
             await self._connection.commit()
         except psycopg.OperationalError as err:
             log.exception(err)
-            if self.counter == 0:
-                self.counter += 1
-                log.info(f"Trying to fix `{err}` Error!")
-                await self._connection.close()
-                self._connection = await self._connect()
-                await self.increase_schedule_counter(sender_id)
 
     async def increase_homework_counter(self, sender_id: str):
         try:
@@ -210,12 +162,6 @@ class Postgresql:
             await self._connection.commit()
         except psycopg.OperationalError as err:
             log.exception(err)
-            if self.counter == 0:
-                self.counter += 1
-                log.info(f"Trying to fix `{err}` Error!")
-                await self._connection.close()
-                self._connection = await self._connect()
-                await self.increase_homework_counter(sender_id)
 
     async def increase_marks_counter(self, sender_id: str):
         try:
@@ -226,12 +172,6 @@ class Postgresql:
             await self._connection.commit()
         except psycopg.OperationalError as err:
             log.exception(err)
-            if self.counter == 0:
-                self.counter += 1
-                log.info(f"Trying to fix `{err}` Error!")
-                await self._connection.close()
-                self._connection = await self._connect()
-                await self.increase_marks_counter(sender_id)
 
     async def increase_holidays_counter(self, sender_id: str):
         try:
@@ -242,12 +182,6 @@ class Postgresql:
             await self._connection.commit()
         except psycopg.OperationalError as err:
             log.exception(err)
-            if self.counter == 0:
-                self.counter += 1
-                log.info(f"Trying to fix `{err}` Error!")
-                await self._connection.close()
-                self._connection = await self._connect()
-                await self.increase_holidays_counter(sender_id)
 
     async def increase_options_counter(self, sender_id: str):
         try:
@@ -258,12 +192,6 @@ class Postgresql:
             await self._connection.commit()
         except psycopg.OperationalError as err:
             log.exception(err)
-            if self.counter == 0:
-                self.counter += 1
-                log.info(f"Trying to fix `{err}` Error!")
-                await self._connection.close()
-                self._connection = await self._connect()
-                await self.increase_options_counter(sender_id)
 
     async def increase_help_counter(self, sender_id: str):
         try:
@@ -274,12 +202,6 @@ class Postgresql:
             await self._connection.commit()
         except psycopg.OperationalError as err:
             log.exception(err)
-            if self.counter == 0:
-                self.counter += 1
-                log.info(f"Trying to fix `{err}` Error!")
-                await self._connection.close()
-                self._connection = await self._connect()
-                await self.increase_help_counter(sender_id)
 
     async def increase_inline_counter(self, sender_id: str):
         try:
@@ -290,12 +212,6 @@ class Postgresql:
             await self._connection.commit()
         except psycopg.OperationalError as err:
             log.exception(err)
-            if self.counter == 0:
-                self.counter += 1
-                log.info(f"Trying to fix `{err}` Error!")
-                await self._connection.close()
-                self._connection = await self._connect()
-                await self.increase_inline_counter(sender_id)
 
     async def increase_about_counter(self, sender_id: str):
         try:
@@ -306,8 +222,3 @@ class Postgresql:
             await self._connection.commit()
         except psycopg.OperationalError as err:
             log.exception(err)
-            if err.__str__() == unknown_err:
-                log.info(f"Trying to fix `{err}` Error!")
-                await self._connection.close()
-                self._connection = await self._connect()
-                await self.increase_about_counter(sender_id)

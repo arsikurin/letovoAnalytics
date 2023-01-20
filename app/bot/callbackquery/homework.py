@@ -21,7 +21,7 @@ class CBQHomework(CBQueryBase):
             event (types.CallbackQuery): a return object of CallbackQuery
             specific_day (types_l.Weekdays): day of the week
         """
-        if specific_day == types_l.Weekdays.SundayHW:
+        if specific_day == types_l.Weekdays.Sunday:
             return await event.answer("Congrats! Tomorrow's Sunday, no hw", show_alert=False)
 
         sender: types.User = event.from_user
@@ -36,17 +36,19 @@ class CBQHomework(CBQueryBase):
         homework_response = ScheduleAndHWResponse.parse_obj(response)
         old_wd = ""
         msg_ids = []
+
         for day in homework_response.data:
             wd = types_l.Weekdays(int(day.period_num_day)).name
-            if specific_day == types_l.Weekdays.Week and wd != old_wd:
-                msg = await self.client.send_message(
-                    chat_id=sender.id,
-                    text=f"\n==={wd}===\n",
-                    disable_notification=True
-                )
-                msg_ids.append(msg.id)
 
             if day.schedules:
+                if specific_day == types_l.Weekdays.Week and wd != old_wd:
+                    msg = await self.client.send_message(
+                        chat_id=sender.id,
+                        text=f"\n==={wd}===\n",
+                        disable_notification=True
+                    )
+                    msg_ids.append(msg.id)
+
                 flag = False
 
                 if day.schedules[0].group.subject.subject_name_eng:
