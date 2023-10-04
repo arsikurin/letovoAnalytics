@@ -174,7 +174,7 @@ class API:
             "Authorization": token,
         }
         try:
-            async with self.session.get(url=url, headers=headers, timeout=10) as resp:
+            async with self.session.get(url=url, headers=headers, timeout=60) as resp:
                 if resp.status != 200:
                     log.error("Cannot get data from s.letovo.ru. Error %d", resp.status)
                     raise errors_l.UnauthorizedError(f"Cannot get data from s.letovo.ru. Error {resp.status}")
@@ -230,7 +230,7 @@ class API:
             "Authorization": token,
         }
         try:
-            async with self.session.get(url=url, headers=headers, timeout=10) as resp:
+            async with self.session.get(url=url, headers=headers, timeout=60) as resp:
                 if resp.status != 200:
                     log.error("Cannot get data from s.letovo.ru. Error %d", resp.status)
                     raise errors_l.UnauthorizedError(f"Cannot get data from s.letovo.ru. Error {resp.status}")
@@ -278,7 +278,7 @@ class API:
             "Authorization": token,
         }
         try:
-            async with self.session.get(url=url, headers=headers, timeout=10) as resp:
+            async with self.session.get(url=url, headers=headers, timeout=60) as resp:
                 if resp.status != 200:
                     log.error("Cannot get data from s.letovo.ru. Error %d", resp.status)
                     raise errors_l.UnauthorizedError(f"Cannot get data from s.letovo.ru. Error {resp.status}")
