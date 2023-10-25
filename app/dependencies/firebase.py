@@ -242,7 +242,7 @@ class Firestore:
         Returns:
             AsyncIterator
         """
-        return self._client.collection("users").stream()
+        return self._client.collection("users").stream(timeout=1500)
 
     async def get_data(
             self, sender_id: str, values: list[types_l.FSData]
